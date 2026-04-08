@@ -111,21 +111,26 @@ jest.mock("../components/settings/SettingsTabContent", () => {
   return {
     __esModule: true,
     SettingsTabContent: ({
-      activeTab,
-      providers,
-      iterationLimit,
-      defaultModel,
+      shell,
+      providersData,
+      workflowGeneration,
     }) => (
       <div data-testid="settings-tab-content">
-        {activeTab === SETTINGS_TABS.LLM && (
+        {shell.activeTab === SETTINGS_TABS.LLM && (
           <div data-testid="llm-tab-content">
-            <div data-testid="provider-count">{providers.length} providers</div>
+            <div data-testid="provider-count">
+              {providersData.list.length} providers
+            </div>
           </div>
         )}
-        {activeTab === SETTINGS_TABS.WORKFLOW && (
+        {shell.activeTab === SETTINGS_TABS.WORKFLOW && (
           <div data-testid="workflow-tab-content">
-            <div data-testid="iteration-limit">{iterationLimit}</div>
-            <div data-testid="default-model">{defaultModel}</div>
+            <div data-testid="iteration-limit">
+              {workflowGeneration.iterationLimit}
+            </div>
+            <div data-testid="default-model">
+              {workflowGeneration.defaultModel}
+            </div>
           </div>
         )}
       </div>

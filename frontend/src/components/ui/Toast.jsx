@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { X, CheckCircle, XCircle, AlertCircle, Info } from "lucide-react";
 import { useEffect } from "react";
 import {
@@ -47,4 +48,13 @@ function Toast({ id, message, type = "info", duration = 5e3, onClose }) {
     </ToastRoot>
   );
 }
+
+Toast.propTypes = {
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  message: PropTypes.node.isRequired,
+  type: PropTypes.oneOf(["success", "error", "warning", "info"]),
+  duration: PropTypes.number,
+  onClose: PropTypes.func.isRequired,
+};
+
 export { Toast as default };

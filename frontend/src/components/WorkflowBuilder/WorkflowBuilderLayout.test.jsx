@@ -54,38 +54,53 @@ describe("WorkflowBuilderLayout", () => {
     current: null,
   };
   const defaultProps = {
-    nodes: mockNodes,
-    edges: mockEdges,
-    onNodesChange: jest.fn(),
-    onEdgesChange: jest.fn(),
-    onConnect: jest.fn(),
-    onDrop: jest.fn(),
-    onDragOver: jest.fn(),
-    onNodeClick: jest.fn(),
-    onNodeContextMenu: jest.fn(),
-    onEdgeContextMenu: jest.fn(),
-    onPaneClick: jest.fn(),
-    nodeExecutionStates: {},
-    reactFlowInstanceRef: mockReactFlowInstanceRef,
-    selectedNodeId: null,
-    setSelectedNodeId: jest.fn(),
-    selectedNodeIds: new Set(),
-    notifyModified: jest.fn(),
-    clipboardNode: null,
-    onCopy: jest.fn(),
-    onCut: jest.fn(),
-    onPaste: jest.fn(),
-    activeWorkflowId: null,
-    executions: [],
-    activeExecutionId: null,
-    onWorkflowUpdate: jest.fn(),
-    getWorkflowChatCanvasSnapshot: null,
-    workflowChatClearNonce: 0,
-    onExecutionLogUpdate: jest.fn(),
-    onExecutionStatusUpdate: jest.fn(),
-    onExecutionNodeUpdate: jest.fn(),
-    onRemoveExecution: jest.fn(),
-    onSaveWorkflow: jest.fn(),
+    graph: {
+      nodes: mockNodes,
+      edges: mockEdges,
+      nodeExecutionStates: {},
+    },
+    canvasHandlers: {
+      onNodesChange: jest.fn(),
+      onEdgesChange: jest.fn(),
+      onConnect: jest.fn(),
+      onDrop: jest.fn(),
+      onDragOver: jest.fn(),
+      onNodeClick: jest.fn(),
+      onNodeContextMenu: jest.fn(),
+      onEdgeContextMenu: jest.fn(),
+      onPaneClick: jest.fn(),
+    },
+    selection: {
+      selectedNodeId: null,
+      setSelectedNodeId: jest.fn(),
+      selectedNodeIds: new Set(),
+      notifyModified: jest.fn(),
+    },
+    keyboard: {
+      clipboardNode: null,
+      onCopy: jest.fn(),
+      onCut: jest.fn(),
+      onPaste: jest.fn(),
+    },
+    reactFlow: {
+      instanceRef: mockReactFlowInstanceRef,
+    },
+    executionConsole: {
+      activeWorkflowId: null,
+      workflowTabId: "tab-default",
+      executions: [],
+      activeExecutionId: null,
+      onWorkflowUpdate: jest.fn(),
+      getWorkflowChatCanvasSnapshot: null,
+      workflowChatClearNonce: 0,
+      onExecutionLogUpdate: jest.fn(),
+      onExecutionStatusUpdate: jest.fn(),
+      onExecutionNodeUpdate: jest.fn(),
+      onRemoveExecution: jest.fn(),
+    },
+    propertyPanel: {
+      onSaveWorkflow: jest.fn(),
+    },
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -110,8 +125,14 @@ describe("WorkflowBuilderLayout", () => {
   it("should pass props to child components", () => {
     const props = {
       ...defaultProps,
-      selectedNodeId: "node-1",
-      activeWorkflowId: "workflow-1",
+      selection: {
+        ...defaultProps.selection,
+        selectedNodeId: "node-1",
+      },
+      executionConsole: {
+        ...defaultProps.executionConsole,
+        activeWorkflowId: "workflow-1",
+      },
     };
     render(<WorkflowBuilderLayout {...props} />);
     expect(screen.getByTestId("node-panel")).toBeInTheDocument();

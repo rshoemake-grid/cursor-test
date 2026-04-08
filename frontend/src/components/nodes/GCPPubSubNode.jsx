@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Position } from "@xyflow/react";
 import { Radio } from "lucide-react";
 import {
@@ -51,4 +52,11 @@ function GCPPubSubNode({ data, selected }) {
     </WorkflowNodeCard>
   );
 }
+
+GCPPubSubNode.propTypes = {
+  data: PropTypes.object,
+  selected: PropTypes.bool,
+  id: PropTypes.string,
+};
+
 export { GCPPubSubNode as default };

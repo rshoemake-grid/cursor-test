@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { SettingsTabNavButton } from "../../styles/settings.styled";
 function SettingsTabButton({ label, isActive, onClick }) {
   return (
@@ -11,4 +12,11 @@ function SettingsTabButton({ label, isActive, onClick }) {
     </SettingsTabNavButton>
   );
 }
+
+SettingsTabButton.propTypes = {
+  label: PropTypes.string.isRequired,
+  isActive: PropTypes.bool.isRequired,
+  onClick: PropTypes.func.isRequired,
+};
+
 export { SettingsTabButton };

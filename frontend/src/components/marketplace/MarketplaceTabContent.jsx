@@ -1,34 +1,50 @@
 import { memo } from "react";
+import PropTypes from "prop-types";
 import { TemplateGrid } from "../TemplateGrid";
 import {
   EmptyStateCentered,
   MarketplaceLoadingSpinner,
   EmptyStateBelowSpinner,
 } from "../../styles/contentBlocks.styled";
+
+const defaultToolSelection = {
+  selectedIds: new Set(),
+  toggle: () => {},
+};
+
 const MarketplaceTabContent = memo(function MarketplaceTabContent2({
-  loading,
-  activeTab,
-  isAgentsTab,
-  isToolsTab = false,
-  isRepositoryWorkflowsSubTab,
-  isRepositoryAgentsSubTab,
-  agents,
-  tools = [],
-  templates,
-  repositoryAgents,
-  workflowsOfWorkflows,
-  agentSelection,
-  toolSelection = {
-    selectedIds: new Set(),
-    toggle: () => {},
-  },
-  templateSelection,
-  repositoryAgentSelection,
-  handleAgentCardClick,
-  handleToolCardClick = () => {},
-  handleCardClick,
-  handleRepositoryAgentCardClick,
+  viewState,
+  catalog,
+  selections,
+  cardHandlers,
 }) {
+  const {
+    loading,
+    activeTab,
+    isAgentsTab,
+    isToolsTab = false,
+    isRepositoryWorkflowsSubTab,
+    isRepositoryAgentsSubTab,
+  } = viewState;
+  const {
+    agents,
+    tools = [],
+    templates,
+    repositoryAgents,
+    workflowsOfWorkflows,
+  } = catalog;
+  const {
+    agentSelection,
+    toolSelection = defaultToolSelection,
+    templateSelection,
+    repositoryAgentSelection,
+  } = selections;
+  const {
+    handleAgentCardClick,
+    handleToolCardClick = () => {},
+    handleCardClick,
+    handleRepositoryAgentCardClick,
+  } = cardHandlers;
   if (loading) {
     return (
       <EmptyStateCentered>
@@ -101,4 +117,40 @@ const MarketplaceTabContent = memo(function MarketplaceTabContent2({
     />
   );
 });
+
+const selectionShape = PropTypes.shape({
+  selectedIds: PropTypes.object,
+  toggle: PropTypes.func.isRequired,
+});
+
+MarketplaceTabContent.propTypes = {
+  viewState: PropTypes.shape({
+    loading: PropTypes.bool.isRequired,
+    activeTab: PropTypes.string.isRequired,
+    isAgentsTab: PropTypes.bool.isRequired,
+    isToolsTab: PropTypes.bool,
+    isRepositoryWorkflowsSubTab: PropTypes.bool.isRequired,
+    isRepositoryAgentsSubTab: PropTypes.bool.isRequired,
+  }).isRequired,
+  catalog: PropTypes.shape({
+    agents: PropTypes.arrayOf(PropTypes.object).isRequired,
+    tools: PropTypes.arrayOf(PropTypes.object),
+    templates: PropTypes.arrayOf(PropTypes.object),
+    repositoryAgents: PropTypes.arrayOf(PropTypes.object).isRequired,
+    workflowsOfWorkflows: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+  selections: PropTypes.shape({
+    agentSelection: selectionShape.isRequired,
+    toolSelection: selectionShape,
+    templateSelection: selectionShape.isRequired,
+    repositoryAgentSelection: selectionShape.isRequired,
+  }).isRequired,
+  cardHandlers: PropTypes.shape({
+    handleAgentCardClick: PropTypes.func.isRequired,
+    handleToolCardClick: PropTypes.func,
+    handleCardClick: PropTypes.func.isRequired,
+    handleRepositoryAgentCardClick: PropTypes.func.isRequired,
+  }).isRequired,
+};
+
 export { MarketplaceTabContent };

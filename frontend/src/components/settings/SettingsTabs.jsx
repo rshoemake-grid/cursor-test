@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { SettingsTabButton } from "./SettingsTabButton";
 import { SETTINGS_TABS } from "../../constants/settingsConstants";
 import { SettingsTabsColumn } from "../../styles/settings.styled";
@@ -17,4 +18,10 @@ function SettingsTabs({ activeTab, onTabChange }) {
     </SettingsTabsColumn>
   );
 }
+
+SettingsTabs.propTypes = {
+  activeTab: PropTypes.string.isRequired,
+  onTabChange: PropTypes.func.isRequired,
+};
+
 export { SettingsTabs };

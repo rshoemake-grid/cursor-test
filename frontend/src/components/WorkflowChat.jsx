@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { Send, Loader, Bot, User, Mic, Volume2, RotateCcw } from "lucide-react";
 import { logger } from "../utils/logger";
+import { nullableString } from "../utils/propTypes";
 import { useAuth } from "../contexts/AuthContext";
 import { defaultAdapters } from "../types/adapters";
 import { api } from "../api/client";
@@ -472,7 +473,7 @@ function WorkflowChat({
 }
 WorkflowChat.propTypes = {
   workflowId: PropTypes.string,
-  tabId: PropTypes.string,
+  tabId: nullableString,
   chatClearNonce: PropTypes.number,
   onWorkflowUpdate: PropTypes.func,
   getCanvasSnapshot: PropTypes.func,

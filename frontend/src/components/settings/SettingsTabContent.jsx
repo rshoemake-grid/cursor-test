@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { ProviderForm } from "./ProviderForm";
 import { WorkflowSettingsTab } from "./WorkflowSettingsTab";
@@ -11,6 +12,7 @@ import {
   SettingsSignInBody,
   SettingsSignInLink,
 } from "../../styles/settings.styled";
+
 function settingsSignInNotice() {
   return (
     <SettingsSignInNotice>
@@ -26,35 +28,46 @@ function settingsSignInNotice() {
     </SettingsSignInNotice>
   );
 }
+
 function SettingsTabContent({
-  isAuthenticated = true,
-  activeTab,
-  iterationLimit,
-  onIterationLimitChange,
-  defaultModel,
-  onDefaultModelChange,
-  chatAssistantModel,
-  onChatAssistantModelChange,
-  providers,
-  showAddProvider,
-  onShowAddProvider,
-  selectedTemplate,
-  onSelectedTemplateChange,
-  onAddProvider,
-  showApiKeys,
-  expandedProviders,
-  expandedModels,
-  testingProvider,
-  testResults,
-  onToggleProviderModels,
-  onToggleApiKeyVisibility,
-  onUpdateProvider,
-  onDeleteProvider,
-  onAddCustomModel,
-  onTestProvider,
-  onToggleModel,
-  isModelExpanded,
+  shell,
+  workflowGeneration,
+  providersData,
+  addProvider,
+  providerManagement,
 }) {
+  const { isAuthenticated = true, activeTab } = shell;
+  const {
+    iterationLimit,
+    onIterationLimitChange,
+    defaultModel,
+    onDefaultModelChange,
+    chatAssistantModel,
+    onChatAssistantModelChange,
+  } = workflowGeneration;
+  const { list: providers } = providersData;
+  const {
+    showAddProvider,
+    onShowAddProvider,
+    selectedTemplate,
+    onSelectedTemplateChange,
+    onAddProvider,
+  } = addProvider;
+  const {
+    showApiKeys,
+    expandedProviders,
+    expandedModels,
+    testingProvider,
+    testResults,
+    onToggleProviderModels,
+    onToggleApiKeyVisibility,
+    onUpdateProvider,
+    onDeleteProvider,
+    onAddCustomModel,
+    onTestProvider,
+    onToggleModel,
+    isModelExpanded,
+  } = providerManagement;
   if (activeTab === SETTINGS_TABS.WORKFLOW) {
     return (
       <SettingsSectionStack>
@@ -110,4 +123,45 @@ function SettingsTabContent({
   }
   return null;
 }
+
+SettingsTabContent.propTypes = {
+  shell: PropTypes.shape({
+    isAuthenticated: PropTypes.bool,
+    activeTab: PropTypes.string.isRequired,
+  }).isRequired,
+  workflowGeneration: PropTypes.shape({
+    iterationLimit: PropTypes.number.isRequired,
+    onIterationLimitChange: PropTypes.func.isRequired,
+    defaultModel: PropTypes.string,
+    onDefaultModelChange: PropTypes.func.isRequired,
+    chatAssistantModel: PropTypes.string,
+    onChatAssistantModelChange: PropTypes.func.isRequired,
+  }).isRequired,
+  providersData: PropTypes.shape({
+    list: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+  addProvider: PropTypes.shape({
+    showAddProvider: PropTypes.bool.isRequired,
+    onShowAddProvider: PropTypes.func.isRequired,
+    selectedTemplate: PropTypes.string.isRequired,
+    onSelectedTemplateChange: PropTypes.func.isRequired,
+    onAddProvider: PropTypes.func.isRequired,
+  }).isRequired,
+  providerManagement: PropTypes.shape({
+    showApiKeys: PropTypes.object.isRequired,
+    expandedProviders: PropTypes.object.isRequired,
+    expandedModels: PropTypes.object.isRequired,
+    testingProvider: PropTypes.string,
+    testResults: PropTypes.object.isRequired,
+    onToggleProviderModels: PropTypes.func.isRequired,
+    onToggleApiKeyVisibility: PropTypes.func.isRequired,
+    onUpdateProvider: PropTypes.func.isRequired,
+    onDeleteProvider: PropTypes.func.isRequired,
+    onAddCustomModel: PropTypes.func.isRequired,
+    onTestProvider: PropTypes.func.isRequired,
+    onToggleModel: PropTypes.func.isRequired,
+    isModelExpanded: PropTypes.func.isRequired,
+  }).isRequired,
+};
+
 export { SettingsTabContent };

@@ -145,11 +145,11 @@ jest.mock("../ExecutionInputDialog", () => {
   const { jsx, jsxs } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: ({ isOpen, onClose, onSubmit }) =>
-      isOpen ? (
+    default: ({ dialog, handlers }) =>
+      dialog?.isOpen ? (
         <div data-testid="execution-input-dialog">
-          <button onClick={onClose}>Close</button>
-          <button onClick={() => onSubmit({})}>Submit</button>
+          <button onClick={handlers.onClose}>Close</button>
+          <button onClick={() => handlers.onSubmit({})}>Submit</button>
         </div>
       ) : null,
   };
@@ -252,14 +252,18 @@ describe("WorkflowBuilder Integration Tests", () => {
   const mockOnWorkflowModified = jest.fn();
   const mockOnWorkflowLoaded = jest.fn();
   const defaultProps = {
-    tabId: "tab-1",
-    workflowId: null,
-    tabName: "Untitled Workflow",
-    tabIsUnsaved: false,
-    onExecutionStart: mockOnExecutionStart,
-    onWorkflowSaved: mockOnWorkflowSaved,
-    onWorkflowModified: mockOnWorkflowModified,
-    onWorkflowLoaded: mockOnWorkflowLoaded,
+    tab: {
+      tabId: "tab-1",
+      workflowId: null,
+      tabName: "Untitled Workflow",
+      tabIsUnsaved: false,
+    },
+    callbacks: {
+      onExecutionStart: mockOnExecutionStart,
+      onWorkflowSaved: mockOnWorkflowSaved,
+      onWorkflowModified: mockOnWorkflowModified,
+      onWorkflowLoaded: mockOnWorkflowLoaded,
+    },
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -381,7 +385,10 @@ describe("WorkflowBuilder Integration Tests", () => {
       await act(async () => {
         render(
           <ReactFlowProvider>
-            <WorkflowBuilder {...defaultProps} workflowId="workflow-1" />
+            <WorkflowBuilder
+              {...defaultProps}
+              tab={{ ...defaultProps.tab, workflowId: "workflow-1" }}
+            />
           </ReactFlowProvider>,
         );
       });

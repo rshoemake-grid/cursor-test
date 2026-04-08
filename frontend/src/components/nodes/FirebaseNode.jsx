@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Position } from "@xyflow/react";
 import { Database } from "lucide-react";
 import {
@@ -50,4 +51,11 @@ function FirebaseNode({ data, selected }) {
     </WorkflowNodeCard>
   );
 }
+
+FirebaseNode.propTypes = {
+  data: PropTypes.object,
+  selected: PropTypes.bool,
+  id: PropTypes.string,
+};
+
 export { FirebaseNode as default };

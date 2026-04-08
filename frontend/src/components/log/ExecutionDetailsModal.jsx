@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import {
   X,
   Clock,
@@ -285,4 +286,14 @@ function ExecutionDetailsModal({
     </ExecModalRoot>
   );
 }
+
+ExecutionDetailsModal.propTypes = {
+  execution: PropTypes.object,
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  apiClient: PropTypes.shape({
+    downloadExecutionLogs: PropTypes.func,
+  }),
+};
+
 export { ExecutionDetailsModal as default };

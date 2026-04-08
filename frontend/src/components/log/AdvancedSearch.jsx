@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
 import { Search, X, Filter } from "lucide-react";
 import {
   LogAdvRoot,
@@ -58,4 +59,14 @@ function AdvancedSearch({
     </LogAdvRoot>
   );
 }
+
+AdvancedSearch.propTypes = {
+  value: PropTypes.string.isRequired,
+  onSearch: PropTypes.func.isRequired,
+  onClear: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+  showAdvanced: PropTypes.bool,
+  onToggleAdvanced: PropTypes.func,
+};
+
 export { AdvancedSearch as default };

@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import PropTypes from "prop-types";
 import {
   useInputFieldSync,
   useInputFieldSyncSimple,
@@ -169,4 +170,9 @@ function AWSS3Editor({ node, onConfigUpdate }) {
     </EditorSectionRoot>
   );
 }
+AWSS3Editor.propTypes = {
+  node: PropTypes.object.isRequired,
+  onConfigUpdate: PropTypes.func.isRequired,
+};
+
 export { AWSS3Editor as default };

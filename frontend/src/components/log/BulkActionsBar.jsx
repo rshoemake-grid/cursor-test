@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Trash2, X } from "lucide-react";
 import {
   LogBulkBar,
@@ -36,4 +37,12 @@ function BulkActionsBar({
     </LogBulkBar>
   );
 }
+
+BulkActionsBar.propTypes = {
+  selectedCount: PropTypes.number.isRequired,
+  onDelete: PropTypes.func.isRequired,
+  onClearSelection: PropTypes.func.isRequired,
+  isDeleting: PropTypes.bool,
+};
+
 export { BulkActionsBar as default };

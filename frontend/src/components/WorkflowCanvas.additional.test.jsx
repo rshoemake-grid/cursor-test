@@ -123,9 +123,7 @@ describe("WorkflowCanvas - Additional Coverage", () => {
       target: "node-2",
     },
   ];
-  const mockProps = {
-    nodes: mockNodes,
-    edges: mockEdges,
+  const mockHandlers = {
     onNodesChange: jest.fn(),
     onEdgesChange: jest.fn(),
     onConnect: jest.fn(),
@@ -136,6 +134,14 @@ describe("WorkflowCanvas - Additional Coverage", () => {
     onEdgeContextMenu: jest.fn(),
     onPaneClick: jest.fn(),
   };
+  const mockGraph = {
+    nodes: mockNodes,
+    edges: mockEdges,
+  };
+  const mockProps = {
+    graph: mockGraph,
+    handlers: mockHandlers,
+  };
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -144,16 +150,16 @@ describe("WorkflowCanvas - Additional Coverage", () => {
       const { getByTestId } = render(<WorkflowCanvas {...mockProps} />);
       const reactFlow = getByTestId("react-flow");
       if (reactFlow.getAttribute("onNodesChange")) {
-        expect(mockProps.onNodesChange).toBeDefined();
+        expect(mockHandlers.onNodesChange).toBeDefined();
       }
     });
     it("should call onEdgesChange when edges change", () => {
       render(<WorkflowCanvas {...mockProps} />);
-      expect(mockProps.onEdgesChange).toBeDefined();
+      expect(mockHandlers.onEdgesChange).toBeDefined();
     });
     it("should call onConnect when connection is made", () => {
       render(<WorkflowCanvas {...mockProps} />);
-      expect(mockProps.onConnect).toBeDefined();
+      expect(mockHandlers.onConnect).toBeDefined();
     });
     it("should call onDrop when item is dropped", () => {
       const { getByTestId } = render(<WorkflowCanvas {...mockProps} />);
@@ -162,7 +168,7 @@ describe("WorkflowCanvas - Additional Coverage", () => {
         bubbles: true,
       });
       fireEvent(reactFlow, dropEvent);
-      expect(mockProps.onDrop).toHaveBeenCalled();
+      expect(mockHandlers.onDrop).toHaveBeenCalled();
     });
     it("should call onDragOver when dragging over canvas", () => {
       const { getByTestId } = render(<WorkflowCanvas {...mockProps} />);
@@ -171,31 +177,31 @@ describe("WorkflowCanvas - Additional Coverage", () => {
         bubbles: true,
       });
       fireEvent(reactFlow, dragOverEvent);
-      expect(mockProps.onDragOver).toHaveBeenCalled();
+      expect(mockHandlers.onDragOver).toHaveBeenCalled();
     });
     it("should call onNodeClick when node is clicked", () => {
       const { getByTestId } = render(<WorkflowCanvas {...mockProps} />);
       const node1 = getByTestId("node-node-1");
       fireEvent.click(node1);
-      expect(mockProps.onNodeClick).toHaveBeenCalled();
+      expect(mockHandlers.onNodeClick).toHaveBeenCalled();
     });
     it("should call onNodeContextMenu when node is right-clicked", () => {
       const { getByTestId } = render(<WorkflowCanvas {...mockProps} />);
       const node1 = getByTestId("node-node-1");
       fireEvent.contextMenu(node1);
-      expect(mockProps.onNodeContextMenu).toHaveBeenCalled();
+      expect(mockHandlers.onNodeContextMenu).toHaveBeenCalled();
     });
     it("should call onEdgeContextMenu when edge is right-clicked", () => {
       const { getByTestId } = render(<WorkflowCanvas {...mockProps} />);
       const edge1 = getByTestId("edge-edge-1");
       fireEvent.contextMenu(edge1);
-      expect(mockProps.onEdgeContextMenu).toHaveBeenCalled();
+      expect(mockHandlers.onEdgeContextMenu).toHaveBeenCalled();
     });
     it("should call onPaneClick when pane is clicked", () => {
       const { getByTestId } = render(<WorkflowCanvas {...mockProps} />);
       const reactFlow = getByTestId("react-flow");
       fireEvent.click(reactFlow);
-      expect(mockProps.onPaneClick).toHaveBeenCalled();
+      expect(mockHandlers.onPaneClick).toHaveBeenCalled();
     });
   });
   describe("MiniMap Node Colors", () => {
@@ -221,8 +227,8 @@ describe("WorkflowCanvas - Additional Coverage", () => {
       };
       const { getByTestId } = render(
         <WorkflowCanvas
-          {...mockProps}
-          nodeExecutionStates={nodeExecutionStates}
+          graph={{ ...mockGraph, nodeExecutionStates }}
+          handlers={mockHandlers}
         />,
       );
       const reactFlow = getByTestId("react-flow");
@@ -242,8 +248,8 @@ describe("WorkflowCanvas - Additional Coverage", () => {
       };
       const { getByTestId } = render(
         <WorkflowCanvas
-          {...mockProps}
-          nodeExecutionStates={nodeExecutionStates}
+          graph={{ ...mockGraph, nodeExecutionStates }}
+          handlers={mockHandlers}
         />,
       );
       const reactFlow = getByTestId("react-flow");
@@ -277,9 +283,12 @@ describe("WorkflowCanvas - Additional Coverage", () => {
       };
       const { getByTestId } = render(
         <WorkflowCanvas
-          {...mockProps}
-          nodes={nodesWithData}
-          nodeExecutionStates={nodeExecutionStates}
+          graph={{
+            nodes: nodesWithData,
+            edges: mockEdges,
+            nodeExecutionStates,
+          }}
+          handlers={mockHandlers}
         />,
       );
       const reactFlow = getByTestId("react-flow");
@@ -301,8 +310,8 @@ describe("WorkflowCanvas - Additional Coverage", () => {
       };
       const { getByTestId } = render(
         <WorkflowCanvas
-          {...mockProps}
-          nodeExecutionStates={nodeExecutionStates}
+          graph={{ ...mockGraph, nodeExecutionStates }}
+          handlers={mockHandlers}
         />,
       );
       const reactFlow = getByTestId("react-flow");
@@ -326,8 +335,8 @@ describe("WorkflowCanvas - Additional Coverage", () => {
       };
       const { getByTestId } = render(
         <WorkflowCanvas
-          {...mockProps}
-          nodeExecutionStates={nodeExecutionStates}
+          graph={{ ...mockGraph, nodeExecutionStates }}
+          handlers={mockHandlers}
         />,
       );
       const reactFlow = getByTestId("react-flow");

@@ -1,4 +1,5 @@
 import { memo } from "react";
+import PropTypes from "prop-types";
 import { Clock, Heart, TrendingUp } from "lucide-react";
 import {
   TemplateCardRoot,
@@ -128,4 +129,14 @@ const TemplateCard = memo(function TemplateCard2({
     </TemplateCardRoot>
   );
 });
+
+TemplateCard.propTypes = {
+  item: PropTypes.object.isRequired,
+  isSelected: PropTypes.bool,
+  type: PropTypes.oneOf(["template", "agent", "tool"]),
+  onToggleSelect: PropTypes.func.isRequired,
+  onClick: PropTypes.func.isRequired,
+  footerText: PropTypes.string,
+};
+
 export { TemplateCard };

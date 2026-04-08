@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import {
   TEMPLATE_CATEGORIES as CATEGORY_VALUES,
   formatCategory,
@@ -44,16 +45,14 @@ const SORT_OPTIONS = [
     label: "Highest Rated",
   },
 ];
-function TemplateFilters({
-  category,
-  searchQuery,
-  sortBy,
-  activeTab,
-  onCategoryChange,
-  onSearchChange,
-  onSortChange,
-  onSearch,
-}) {
+function TemplateFilters({ filters, handlers }) {
+  const { category, searchQuery, sortBy, activeTab } = filters;
+  const {
+    onCategoryChange,
+    onSearchChange,
+    onSortChange,
+    onSearch,
+  } = handlers;
   return (
     <TemplateFiltersBar>
       <TemplateFiltersInner>
@@ -115,4 +114,20 @@ function TemplateFilters({
     </TemplateFiltersBar>
   );
 }
+
+TemplateFilters.propTypes = {
+  filters: PropTypes.shape({
+    category: PropTypes.string.isRequired,
+    searchQuery: PropTypes.string.isRequired,
+    sortBy: PropTypes.string.isRequired,
+    activeTab: PropTypes.string.isRequired,
+  }).isRequired,
+  handlers: PropTypes.shape({
+    onCategoryChange: PropTypes.func.isRequired,
+    onSearchChange: PropTypes.func.isRequired,
+    onSortChange: PropTypes.func.isRequired,
+    onSearch: PropTypes.func.isRequired,
+  }).isRequired,
+};
+
 export { TemplateFilters };

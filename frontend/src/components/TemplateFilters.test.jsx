@@ -1,15 +1,21 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { TemplateFilters } from "./TemplateFilters";
 describe("TemplateFilters", () => {
-  const mockProps = {
-    category: "",
-    searchQuery: "",
-    sortBy: "popular",
-    activeTab: "repository",
+  const mockHandlers = {
     onCategoryChange: jest.fn(),
     onSearchChange: jest.fn(),
     onSortChange: jest.fn(),
     onSearch: jest.fn(),
+  };
+  const mockFilters = {
+    category: "",
+    searchQuery: "",
+    sortBy: "popular",
+    activeTab: "repository",
+  };
+  const mockProps = {
+    filters: mockFilters,
+    handlers: mockHandlers,
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -26,17 +32,32 @@ describe("TemplateFilters", () => {
     ).toBeInTheDocument();
   });
   it("should display current category value", () => {
-    render(<TemplateFilters {...mockProps} category="automation" />);
+    render(
+      <TemplateFilters
+        filters={{ ...mockFilters, category: "automation" }}
+        handlers={mockHandlers}
+      />,
+    );
     const categorySelect = screen.getByLabelText(/category/i);
     expect(categorySelect).toHaveValue("automation");
   });
   it("should display current search query", () => {
-    render(<TemplateFilters {...mockProps} searchQuery="test query" />);
+    render(
+      <TemplateFilters
+        filters={{ ...mockFilters, searchQuery: "test query" }}
+        handlers={mockHandlers}
+      />,
+    );
     const searchInput = screen.getByPlaceholderText(/search/i);
     expect(searchInput).toHaveValue("test query");
   });
   it("should display current sort value", () => {
-    render(<TemplateFilters {...mockProps} sortBy="recent" />);
+    render(
+      <TemplateFilters
+        filters={{ ...mockFilters, sortBy: "recent" }}
+        handlers={mockHandlers}
+      />,
+    );
     const sortSelect = screen.getByLabelText(/sort/i);
     expect(sortSelect).toHaveValue("recent");
   });
@@ -48,7 +69,7 @@ describe("TemplateFilters", () => {
         value: "data_analysis",
       },
     });
-    expect(mockProps.onCategoryChange).toHaveBeenCalledWith("data_analysis");
+    expect(mockHandlers.onCategoryChange).toHaveBeenCalledWith("data_analysis");
   });
   it("should call onSearchChange when search input changes", () => {
     render(<TemplateFilters {...mockProps} />);
@@ -58,7 +79,7 @@ describe("TemplateFilters", () => {
         value: "new query",
       },
     });
-    expect(mockProps.onSearchChange).toHaveBeenCalledWith("new query");
+    expect(mockHandlers.onSearchChange).toHaveBeenCalledWith("new query");
   });
   it("should call onSortChange when sort changes", () => {
     render(<TemplateFilters {...mockProps} />);
@@ -68,7 +89,7 @@ describe("TemplateFilters", () => {
         value: "rating",
       },
     });
-    expect(mockProps.onSortChange).toHaveBeenCalledWith("rating");
+    expect(mockHandlers.onSortChange).toHaveBeenCalledWith("rating");
   });
   it("should call onSearch when search button is clicked", () => {
     render(<TemplateFilters {...mockProps} />);
@@ -76,7 +97,7 @@ describe("TemplateFilters", () => {
       name: /search/i,
     });
     fireEvent.click(searchButton);
-    expect(mockProps.onSearch).toHaveBeenCalled();
+    expect(mockHandlers.onSearch).toHaveBeenCalled();
   });
   it("should call onSearch when Enter key is pressed in search input", () => {
     render(<TemplateFilters {...mockProps} />);
@@ -84,22 +105,35 @@ describe("TemplateFilters", () => {
     fireEvent.keyDown(searchInput, {
       key: "Enter",
     });
-    expect(mockProps.onSearch).toHaveBeenCalled();
+    expect(mockHandlers.onSearch).toHaveBeenCalled();
   });
   it("should show correct placeholder for agents tab", () => {
-    render(<TemplateFilters {...mockProps} activeTab="agents" />);
+    render(
+      <TemplateFilters
+        filters={{ ...mockFilters, activeTab: "agents" }}
+        handlers={mockHandlers}
+      />,
+    );
     expect(screen.getByPlaceholderText("Search agents...")).toBeInTheDocument();
   });
   it("should show correct placeholder for workflows-of-workflows tab", () => {
     render(
-      <TemplateFilters {...mockProps} activeTab="workflows-of-workflows" />,
+      <TemplateFilters
+        filters={{ ...mockFilters, activeTab: "workflows-of-workflows" }}
+        handlers={mockHandlers}
+      />,
     );
     expect(
       screen.getByPlaceholderText("Search workflows of workflows..."),
     ).toBeInTheDocument();
   });
   it("should show correct placeholder for repository tab", () => {
-    render(<TemplateFilters {...mockProps} activeTab="repository" />);
+    render(
+      <TemplateFilters
+        filters={{ ...mockFilters, activeTab: "repository" }}
+        handlers={mockHandlers}
+      />,
+    );
     expect(
       screen.getByPlaceholderText("Search workflows..."),
     ).toBeInTheDocument();
@@ -118,19 +152,29 @@ describe("TemplateFilters", () => {
     expect(sortSelect).toHaveValue("popular");
   });
   it("should handle empty search query", () => {
-    render(<TemplateFilters {...mockProps} searchQuery="" />);
+    render(
+      <TemplateFilters
+        filters={{ ...mockFilters, searchQuery: "" }}
+        handlers={mockHandlers}
+      />,
+    );
     const searchInput = screen.getByPlaceholderText(/search/i);
     expect(searchInput).toHaveValue("");
   });
   it("should handle category change to empty string", () => {
-    render(<TemplateFilters {...mockProps} category="automation" />);
+    render(
+      <TemplateFilters
+        filters={{ ...mockFilters, category: "automation" }}
+        handlers={mockHandlers}
+      />,
+    );
     const categorySelect = screen.getByLabelText(/category/i);
     fireEvent.change(categorySelect, {
       target: {
         value: "",
       },
     });
-    expect(mockProps.onCategoryChange).toHaveBeenCalledWith("");
+    expect(mockHandlers.onCategoryChange).toHaveBeenCalledWith("");
   });
   it("should not call onSearch when other keys are pressed", () => {
     render(<TemplateFilters {...mockProps} />);
@@ -138,6 +182,6 @@ describe("TemplateFilters", () => {
     fireEvent.keyDown(searchInput, {
       key: "a",
     });
-    expect(mockProps.onSearch).not.toHaveBeenCalled();
+    expect(mockHandlers.onSearch).not.toHaveBeenCalled();
   });
 });

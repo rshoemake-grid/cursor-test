@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import { api } from "../api/client";
 import { extractApiErrorMessage } from "../hooks/utils/apiUtils";
 import {
@@ -10,19 +11,14 @@ import {
   ArrowLeft,
   Copy,
   Upload,
-  X,
 } from "lucide-react";
 import { showError, showSuccess, showWarning } from "../utils/notifications";
 import { showConfirm } from "../utils/confirm";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import {
-  TEMPLATE_CATEGORIES,
-  TEMPLATE_DIFFICULTIES,
-  formatCategory,
-  formatDifficulty,
-} from "../config/templateConstants";
-import { getDefaultPublishForm, parseTags } from "../utils/publishFormUtils";
+import { parseTags } from "../utils/publishFormUtils";
+import { usePublishForm } from "../hooks/forms";
+import { PublishModal } from "./PublishModal";
 import {
   EmptyStateInlineCenter,
   EmptyStateLead,
@@ -56,19 +52,6 @@ import {
   WorkflowIconAction,
   WorkflowCardMeta,
   WorkflowMetaItem,
-  WorkflowModalOverlay,
-  WorkflowModalForm,
-  WorkflowModalHeader,
-  WorkflowModalTitle,
-  WorkflowModalClose,
-  WorkflowFieldLabel,
-  WorkflowFieldInput,
-  WorkflowFieldSelect,
-  WorkflowModalRow,
-  WorkflowModalCol,
-  WorkflowModalActions,
-  WorkflowModalSecondary,
-  WorkflowModalSubmit,
   WorkflowLoadingCenter,
   WorkflowLoadingText,
 } from "../styles/workflowList.styled";
@@ -80,8 +63,8 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
   const navigate = useNavigate();
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [publishingWorkflowId, setPublishingWorkflowId] = useState(null);
-  const [publishForm, setPublishForm] = useState(getDefaultPublishForm());
   const [isPublishing, setIsPublishing] = useState(false);
+  const publishFormHook = usePublishForm();
   useEffect(() => {
     if (!isAuthenticated) {
       setWorkflows([]);
@@ -201,8 +184,15 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
       showError("Please log in to publish workflows to the marketplace.");
       return;
     }
+    const workflow = workflows.find((w) => w.id === workflowId);
+    if (!workflow) {
+      showError("Workflow not found.");
+      return;
+    }
     setPublishingWorkflowId(workflowId);
-    setPublishForm({
+    publishFormHook.updateForm({
+      name: workflow.name,
+      description: workflow.description || "",
       category: "automation",
       tags: "",
       difficulty: "beginner",
@@ -210,11 +200,12 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
     });
     setShowPublishModal(true);
   };
+  const closePublishModal = () => {
+    setShowPublishModal(false);
+    setPublishingWorkflowId(null);
+  };
   const handlePublishFormChange = (field, value) => {
-    setPublishForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    publishFormHook.updateField(field, value);
   };
   const handlePublish = async (event) => {
     event.preventDefault();
@@ -224,16 +215,16 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
     }
     setIsPublishing(true);
     try {
-      const tagsArray = parseTags(publishForm.tags);
+      const form = publishFormHook.form;
+      const tagsArray = parseTags(form.tags);
       const published = await api.publishWorkflow(publishingWorkflowId, {
-        category: publishForm.category,
+        category: form.category,
         tags: tagsArray,
-        difficulty: publishForm.difficulty,
-        estimated_time: publishForm.estimated_time || void 0,
+        difficulty: form.difficulty,
+        estimated_time: form.estimated_time || void 0,
       });
       showSuccess(`Published "${published.name}" to the marketplace.`);
-      setShowPublishModal(false);
-      setPublishingWorkflowId(null);
+      closePublishModal();
     } catch (error) {
       const detail = extractApiErrorMessage(error, "Unknown error");
       showError(`Failed to publish workflow: ${detail}`);
@@ -491,94 +482,25 @@ Failed IDs: ${result.failed_ids.join(", ")}`);
           })}
         </WorkflowCardGrid>
       </WorkflowListInner>
-      {showPublishModal && (
-        <WorkflowModalOverlay>
-          <WorkflowModalForm onSubmit={handlePublish}>
-            <WorkflowModalHeader>
-              <WorkflowModalTitle>Publish to Marketplace</WorkflowModalTitle>
-              <WorkflowModalClose
-                type="button"
-                onClick={() => {
-                  setShowPublishModal(false);
-                  setPublishingWorkflowId(null);
-                }}
-                aria-label="Close"
-              >
-                <X aria-hidden />
-              </WorkflowModalClose>
-            </WorkflowModalHeader>
-            <div>
-              <WorkflowFieldLabel>Category</WorkflowFieldLabel>
-              <WorkflowFieldSelect
-                value={publishForm.category}
-                onChange={(e) =>
-                  handlePublishFormChange("category", e.target.value)
-                }
-              >
-                {TEMPLATE_CATEGORIES.map((category) => (
-                  <option key={category} value={category}>
-                    {formatCategory(category)}
-                  </option>
-                ))}
-              </WorkflowFieldSelect>
-            </div>
-            <WorkflowModalRow>
-              <WorkflowModalCol>
-                <WorkflowFieldLabel>Difficulty</WorkflowFieldLabel>
-                <WorkflowFieldSelect
-                  value={publishForm.difficulty}
-                  onChange={(e) =>
-                    handlePublishFormChange("difficulty", e.target.value)
-                  }
-                >
-                  {TEMPLATE_DIFFICULTIES.map((diff) => (
-                    <option key={diff} value={diff}>
-                      {formatDifficulty(diff)}
-                    </option>
-                  ))}
-                </WorkflowFieldSelect>
-              </WorkflowModalCol>
-              <WorkflowModalCol>
-                <WorkflowFieldLabel>Estimated Time</WorkflowFieldLabel>
-                <WorkflowFieldInput
-                  type="text"
-                  value={publishForm.estimated_time}
-                  onChange={(e) =>
-                    handlePublishFormChange("estimated_time", e.target.value)
-                  }
-                  placeholder="e.g. 30 minutes"
-                />
-              </WorkflowModalCol>
-            </WorkflowModalRow>
-            <div>
-              <WorkflowFieldLabel>Tags (comma separated)</WorkflowFieldLabel>
-              <WorkflowFieldInput
-                type="text"
-                value={publishForm.tags}
-                onChange={(e) =>
-                  handlePublishFormChange("tags", e.target.value)
-                }
-                placeholder="automation, ai, ..."
-              />
-            </div>
-            <WorkflowModalActions>
-              <WorkflowModalSecondary
-                type="button"
-                onClick={() => {
-                  setShowPublishModal(false);
-                  setPublishingWorkflowId(null);
-                }}
-              >
-                Cancel
-              </WorkflowModalSecondary>
-              <WorkflowModalSubmit type="submit" disabled={isPublishing}>
-                {isPublishing ? "Publishing..." : "Publish"}
-              </WorkflowModalSubmit>
-            </WorkflowModalActions>
-          </WorkflowModalForm>
-        </WorkflowModalOverlay>
-      )}
+      <PublishModal
+        dialog={{
+          isOpen: showPublishModal,
+          isPublishing,
+        }}
+        form={publishFormHook.form}
+        handlers={{
+          onClose: closePublishModal,
+          onFormChange: handlePublishFormChange,
+          onSubmit: handlePublish,
+        }}
+      />
     </WorkflowListScroll>
   );
 }
+
+WorkflowList.propTypes = {
+  onSelectWorkflow: PropTypes.func.isRequired,
+  onBack: PropTypes.func.isRequired,
+};
+
 export { WorkflowList as default };

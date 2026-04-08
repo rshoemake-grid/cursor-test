@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Position } from "@xyflow/react";
 import { Wrench } from "lucide-react";
 import {
@@ -39,4 +40,11 @@ function ToolNode({ data, selected }) {
     </WorkflowNodeCard>
   );
 }
+
+ToolNode.propTypes = {
+  data: PropTypes.object,
+  selected: PropTypes.bool,
+  id: PropTypes.string,
+};
+
 export { ToolNode as default };

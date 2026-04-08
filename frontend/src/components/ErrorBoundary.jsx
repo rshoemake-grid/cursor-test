@@ -1,4 +1,5 @@
 import { Component } from "react";
+import PropTypes from "prop-types";
 import { RefreshCw, Home } from "lucide-react";
 import { logger } from "../utils/logger";
 import {
@@ -109,5 +110,11 @@ class ErrorBoundary extends Component {
     return this.props.children;
   }
 }
+
+ErrorBoundary.propTypes = {
+  children: PropTypes.node,
+  fallback: PropTypes.node,
+  onError: PropTypes.func,
+};
 
 export { ErrorBoundary as default };

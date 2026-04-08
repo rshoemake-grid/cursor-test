@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from "react";
+import PropTypes from "prop-types";
 import { Download } from "lucide-react";
 import { showSuccess } from "../../utils/notifications";
 import {
@@ -301,4 +302,17 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
     </EditorSectionRoot>
   );
 }
+AgentNodeEditor.propTypes = {
+  node: PropTypes.object.isRequired,
+  availableModels: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string,
+      provider: PropTypes.string,
+    }),
+  ).isRequired,
+  onUpdate: PropTypes.func.isRequired,
+  onConfigUpdate: PropTypes.func.isRequired,
+};
+
 export { AgentNodeEditor as default };

@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Position } from "@xyflow/react";
 import { Database } from "lucide-react";
 import {
@@ -53,4 +54,11 @@ function BigQueryNode({ data, selected }) {
     </WorkflowNodeCard>
   );
 }
+
+BigQueryNode.propTypes = {
+  data: PropTypes.object,
+  selected: PropTypes.bool,
+  id: PropTypes.string,
+};
+
 export { BigQueryNode as default };

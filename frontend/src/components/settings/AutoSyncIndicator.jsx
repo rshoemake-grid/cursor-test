@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import {
   AutoSyncSection,
   AutoSyncRow,
@@ -22,4 +23,7 @@ function AutoSyncIndicator() {
     </AutoSyncSection>
   );
 }
+
+AutoSyncIndicator.propTypes = {};
+
 export { AutoSyncIndicator };

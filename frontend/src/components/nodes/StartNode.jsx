@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Position } from "@xyflow/react";
 import { Play } from "lucide-react";
 import {
@@ -23,4 +24,10 @@ function StartNode({ selected }) {
     </WorkflowTerminalNode>
   );
 }
+
+StartNode.propTypes = {
+  selected: PropTypes.bool,
+  id: PropTypes.string,
+};
+
 export { StartNode as default };

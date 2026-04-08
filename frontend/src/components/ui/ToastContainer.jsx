@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import PropTypes from "prop-types";
 import Toast from "./Toast";
 import {
   ToastContainerRoot,
@@ -31,4 +32,17 @@ function ToastContainer({ toasts, onRemoveToast }) {
     </ToastContainerRoot>
   );
 }
+
+ToastContainer.propTypes = {
+  toasts: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      message: PropTypes.node.isRequired,
+      type: PropTypes.string,
+      duration: PropTypes.number,
+    }),
+  ).isRequired,
+  onRemoveToast: PropTypes.func.isRequired,
+};
+
 export { ToastContainer as default };

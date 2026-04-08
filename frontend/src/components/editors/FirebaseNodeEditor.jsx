@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import {
   EditorSectionRoot,
   EditorSectionTitle,
@@ -159,4 +160,9 @@ function FirebaseNodeEditor({ node, onConfigUpdate }) {
     </EditorSectionRoot>
   );
 }
+FirebaseNodeEditor.propTypes = {
+  node: PropTypes.object.isRequired,
+  onConfigUpdate: PropTypes.func.isRequired,
+};
+
 export { FirebaseNodeEditor as default };

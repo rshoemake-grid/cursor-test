@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Position } from "@xyflow/react";
 import { Bot } from "lucide-react";
 import {
@@ -40,4 +41,11 @@ function AgentNode({ data, selected }) {
     </WorkflowNodeCard>
   );
 }
+
+AgentNode.propTypes = {
+  data: PropTypes.object,
+  selected: PropTypes.bool,
+  id: PropTypes.string,
+};
+
 export { AgentNode as default };

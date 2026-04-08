@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import GCPBucketEditor from "./input/GCPBucketEditor";
 import AWSS3Editor from "./input/AWSS3Editor";
 import GCPPubSubEditor from "./input/GCPPubSubEditor";
@@ -57,4 +58,9 @@ function InputNodeEditor({ node, onConfigUpdate }) {
       return null;
   }
 }
+InputNodeEditor.propTypes = {
+  node: PropTypes.object.isRequired,
+  onConfigUpdate: PropTypes.func.isRequired,
+};
+
 export { InputNodeEditor as default };

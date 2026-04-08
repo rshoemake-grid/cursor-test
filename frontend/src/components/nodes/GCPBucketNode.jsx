@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Position } from "@xyflow/react";
 import { Database } from "lucide-react";
 import {
@@ -55,4 +56,11 @@ function GCPBucketNode({ data, selected }) {
     </WorkflowNodeCard>
   );
 }
+
+GCPBucketNode.propTypes = {
+  data: PropTypes.object,
+  selected: PropTypes.bool,
+  id: PropTypes.string,
+};
+
 export { GCPBucketNode as default };

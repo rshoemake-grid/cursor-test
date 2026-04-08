@@ -124,9 +124,10 @@ async def test_workflow_service_list(db_session, sample_workflow_data):
     db_workflow.is_public = True
     await db_session.commit()
     
-    # List workflows (without user_id, should return anonymous + public workflows)
+    # Without user_id, list is empty: saved workflows are not exposed to anonymous
+    # sessions (marketplace templates are a separate surface).
     workflows = await service.list_workflows(user_id=None)
-    assert len(workflows) == 3  # 2 anonymous + 1 public
+    assert len(workflows) == 0
 
 
 @pytest.mark.asyncio

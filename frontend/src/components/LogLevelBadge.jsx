@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { memo } from "react";
+import PropTypes from "prop-types";
 import { getLogLevelTone, isValidLogLevel } from "../utils/logLevel";
 import { LOG_LEVELS } from "../constants/stringLiterals";
 import { colors as c } from "../styles/designTokens";
@@ -52,4 +53,11 @@ const LogLevelBadge = memo(function LogLevelBadge2({
     </LogLevelBadgeRoot>
   );
 });
+
+LogLevelBadge.propTypes = {
+  level: PropTypes.string,
+  showBackground: PropTypes.bool,
+  className: PropTypes.string,
+};
+
 export { LogLevelBadge as default };

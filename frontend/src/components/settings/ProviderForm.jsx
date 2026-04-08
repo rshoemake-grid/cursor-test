@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import {
   Eye,
   EyeOff,
@@ -340,4 +341,22 @@ function ModelList({
     </div>
   );
 }
+
+ProviderForm.propTypes = {
+  provider: PropTypes.object.isRequired,
+  showApiKeys: PropTypes.object.isRequired,
+  expandedProviders: PropTypes.object.isRequired,
+  expandedModels: PropTypes.object.isRequired,
+  testingProvider: PropTypes.string,
+  testResults: PropTypes.object.isRequired,
+  onToggleProviderModels: PropTypes.func.isRequired,
+  onToggleApiKeyVisibility: PropTypes.func.isRequired,
+  onUpdateProvider: PropTypes.func.isRequired,
+  onDeleteProvider: PropTypes.func.isRequired,
+  onAddCustomModel: PropTypes.func.isRequired,
+  onTestProvider: PropTypes.func.isRequired,
+  onToggleModel: PropTypes.func.isRequired,
+  isModelExpanded: PropTypes.func.isRequired,
+};
+
 export { ProviderForm };

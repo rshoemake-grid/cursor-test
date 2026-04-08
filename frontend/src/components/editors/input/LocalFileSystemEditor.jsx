@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import PropTypes from "prop-types";
 import {
   useInputFieldSync,
   useInputFieldSyncSimple,
@@ -129,4 +130,9 @@ function LocalFileSystemEditor({ node, onConfigUpdate }) {
     </EditorSectionRoot>
   );
 }
+LocalFileSystemEditor.propTypes = {
+  node: PropTypes.object.isRequired,
+  onConfigUpdate: PropTypes.func.isRequired,
+};
+
 export { LocalFileSystemEditor as default };

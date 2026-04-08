@@ -4,11 +4,11 @@ jest.mock("../ExecutionInputDialog", () => {
   const { jsx, jsxs } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: ({ isOpen, onClose, onSubmit }) =>
-      isOpen ? (
+    default: ({ dialog, handlers }) =>
+      dialog?.isOpen ? (
         <div data-testid="execution-input-dialog">
-          <button onClick={onClose}>Close</button>
-          <button onClick={() => onSubmit({})}>Submit</button>
+          <button onClick={handlers.onClose}>Close</button>
+          <button onClick={() => handlers.onSubmit({})}>Submit</button>
         </div>
       ) : null,
   };
@@ -53,24 +53,33 @@ describe("WorkflowBuilderDialogs", () => {
     },
   };
   const defaultProps = {
-    showInputs: false,
-    onCloseInputs: jest.fn(),
-    onConfirmExecute: jest.fn(),
-    executionNodes: [],
-    workflowName: "Test Workflow",
-    contextMenu: null,
-    onCloseContextMenu: jest.fn(),
-    onDeleteNode: jest.fn(),
-    onCopy: jest.fn(),
-    onCut: jest.fn(),
-    onPaste: jest.fn(),
-    onAddToAgentNodes: jest.fn(),
-    onSendToMarketplace: jest.fn(),
-    canPaste: false,
-    showMarketplaceDialog: false,
-    onCloseMarketplaceDialog: jest.fn(),
-    marketplaceNode: null,
-    workflowId: null,
+    executionInput: {
+      isOpen: false,
+      onClose: jest.fn(),
+      onSubmit: jest.fn(),
+      nodes: [],
+    },
+    workflow: {
+      name: "Test Workflow",
+    },
+    nodeContextMenu: {
+      state: null,
+      onClose: jest.fn(),
+      onDeleteNode: jest.fn(),
+      onCopy: jest.fn(),
+      onCut: jest.fn(),
+      onPaste: jest.fn(),
+      onAddToAgentNodes: jest.fn(),
+      onAddToToolNodes: jest.fn(),
+      onSendToMarketplace: jest.fn(),
+      canPaste: false,
+    },
+    marketplace: {
+      isOpen: false,
+      onClose: jest.fn(),
+      node: null,
+      workflowId: null,
+    },
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -83,24 +92,48 @@ describe("WorkflowBuilderDialogs", () => {
     expect(screen.queryByTestId("context-menu")).not.toBeInTheDocument();
     expect(screen.queryByTestId("marketplace-dialog")).not.toBeInTheDocument();
   });
-  it("should render execution input dialog when showInputs is true", () => {
-    render(<WorkflowBuilderDialogs {...defaultProps} showInputs={true} />);
+  it("should render execution input dialog when executionInput.isOpen is true", () => {
+    render(
+      <WorkflowBuilderDialogs
+        {...defaultProps}
+        executionInput={{
+          ...defaultProps.executionInput,
+          isOpen: true,
+        }}
+      />,
+    );
     expect(screen.getByTestId("execution-input-dialog")).toBeInTheDocument();
   });
-  it("should call onCloseInputs when execution dialog close is clicked", () => {
-    render(<WorkflowBuilderDialogs {...defaultProps} showInputs={true} />);
+  it("should call executionInput.onClose when execution dialog close is clicked", () => {
+    render(
+      <WorkflowBuilderDialogs
+        {...defaultProps}
+        executionInput={{
+          ...defaultProps.executionInput,
+          isOpen: true,
+        }}
+      />,
+    );
     const closeButton = screen.getByText("Close");
     fireEvent.click(closeButton);
-    expect(defaultProps.onCloseInputs).toHaveBeenCalledTimes(1);
+    expect(defaultProps.executionInput.onClose).toHaveBeenCalledTimes(1);
   });
-  it("should call onConfirmExecute when execution dialog submit is clicked", () => {
-    render(<WorkflowBuilderDialogs {...defaultProps} showInputs={true} />);
+  it("should call executionInput.onSubmit when execution dialog submit is clicked", () => {
+    render(
+      <WorkflowBuilderDialogs
+        {...defaultProps}
+        executionInput={{
+          ...defaultProps.executionInput,
+          isOpen: true,
+        }}
+      />,
+    );
     const submitButton = screen.getByText("Submit");
     fireEvent.click(submitButton);
-    expect(defaultProps.onConfirmExecute).toHaveBeenCalled();
+    expect(defaultProps.executionInput.onSubmit).toHaveBeenCalled();
   });
-  it("should render context menu when contextMenu is provided", () => {
-    const contextMenu = {
+  it("should render context menu when nodeContextMenu.state is provided", () => {
+    const contextMenuState = {
       nodeId: "node-1",
       edgeId: null,
       node: mockNode,
@@ -108,12 +141,18 @@ describe("WorkflowBuilderDialogs", () => {
       y: 200,
     };
     render(
-      <WorkflowBuilderDialogs {...defaultProps} contextMenu={contextMenu} />,
+      <WorkflowBuilderDialogs
+        {...defaultProps}
+        nodeContextMenu={{
+          ...defaultProps.nodeContextMenu,
+          state: contextMenuState,
+        }}
+      />,
     );
     expect(screen.getByTestId("context-menu")).toBeInTheDocument();
   });
-  it("should call onCloseContextMenu when backdrop is clicked", () => {
-    const contextMenu = {
+  it("should call nodeContextMenu.onClose when backdrop is clicked", () => {
+    const contextMenuState = {
       nodeId: "node-1",
       edgeId: null,
       node: mockNode,
@@ -121,16 +160,22 @@ describe("WorkflowBuilderDialogs", () => {
       y: 200,
     };
     const { container } = render(
-      <WorkflowBuilderDialogs {...defaultProps} contextMenu={contextMenu} />,
+      <WorkflowBuilderDialogs
+        {...defaultProps}
+        nodeContextMenu={{
+          ...defaultProps.nodeContextMenu,
+          state: contextMenuState,
+        }}
+      />,
     );
     const backdrop = container.querySelector(".fixed.inset-0");
     if (backdrop) {
       fireEvent.click(backdrop);
-      expect(defaultProps.onCloseContextMenu).toHaveBeenCalledTimes(1);
+      expect(defaultProps.nodeContextMenu.onClose).toHaveBeenCalledTimes(1);
     }
   });
   it("should call onDeleteNode when context menu delete is clicked", () => {
-    const contextMenu = {
+    const contextMenuState = {
       nodeId: "node-1",
       edgeId: null,
       node: mockNode,
@@ -138,24 +183,42 @@ describe("WorkflowBuilderDialogs", () => {
       y: 200,
     };
     render(
-      <WorkflowBuilderDialogs {...defaultProps} contextMenu={contextMenu} />,
+      <WorkflowBuilderDialogs
+        {...defaultProps}
+        nodeContextMenu={{
+          ...defaultProps.nodeContextMenu,
+          state: contextMenuState,
+        }}
+      />,
     );
     const deleteButton = screen.getByText("Delete");
     fireEvent.click(deleteButton);
-    expect(defaultProps.onDeleteNode).toHaveBeenCalledTimes(1);
+    expect(defaultProps.nodeContextMenu.onDeleteNode).toHaveBeenCalledTimes(1);
   });
-  it("should render marketplace dialog when showMarketplaceDialog is true", () => {
+  it("should render marketplace dialog when marketplace.isOpen is true", () => {
     render(
-      <WorkflowBuilderDialogs {...defaultProps} showMarketplaceDialog={true} />,
+      <WorkflowBuilderDialogs
+        {...defaultProps}
+        marketplace={{
+          ...defaultProps.marketplace,
+          isOpen: true,
+        }}
+      />,
     );
     expect(screen.getByTestId("marketplace-dialog")).toBeInTheDocument();
   });
-  it("should call onCloseMarketplaceDialog when marketplace dialog close is clicked", () => {
+  it("should call marketplace.onClose when marketplace dialog close is clicked", () => {
     render(
-      <WorkflowBuilderDialogs {...defaultProps} showMarketplaceDialog={true} />,
+      <WorkflowBuilderDialogs
+        {...defaultProps}
+        marketplace={{
+          ...defaultProps.marketplace,
+          isOpen: true,
+        }}
+      />,
     );
     const closeButton = screen.getByText("Close");
     fireEvent.click(closeButton);
-    expect(defaultProps.onCloseMarketplaceDialog).toHaveBeenCalledTimes(1);
+    expect(defaultProps.marketplace.onClose).toHaveBeenCalledTimes(1);
   });
 });

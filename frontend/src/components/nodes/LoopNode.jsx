@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Position } from "@xyflow/react";
 import { RotateCw } from "lucide-react";
 import {
@@ -44,4 +45,11 @@ function LoopNode({ data, selected }) {
     </WorkflowNodeCard>
   );
 }
+
+LoopNode.propTypes = {
+  data: PropTypes.object,
+  selected: PropTypes.bool,
+  id: PropTypes.string,
+};
+
 export { LoopNode as default };

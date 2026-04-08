@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import PropTypes from "prop-types";
 import { useFormField } from "../../hooks/forms";
 import { useInputTypeHandler } from "../../hooks/forms/useInputTypeHandler";
 import {
@@ -135,4 +136,32 @@ function FormField({
     </FormFieldRoot>
   );
 }
+
+FormField.propTypes = {
+  label: PropTypes.node,
+  id: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.bool, PropTypes.number]),
+  onChange: PropTypes.func.isRequired,
+  type: PropTypes.string,
+  placeholder: PropTypes.string,
+  description: PropTypes.node,
+  options: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        .isRequired,
+      label: PropTypes.node.isRequired,
+    }),
+  ),
+  required: PropTypes.bool,
+  disabled: PropTypes.bool,
+  className: PropTypes.string,
+  nodeData: PropTypes.object,
+  dataPath: PropTypes.string,
+  syncWithNodeData: PropTypes.bool,
+  min: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  max: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  rows: PropTypes.number,
+  "aria-label": PropTypes.string,
+};
+
 export { FormField };

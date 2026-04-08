@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Trash2, Copy, Scissors, Clipboard, Plus, Upload } from "lucide-react";
 import { useReactFlow } from "@xyflow/react";
 import {
@@ -145,4 +146,22 @@ function ContextMenu({
     </CtxMenuRoot>
   );
 }
+
+ContextMenu.propTypes = {
+  nodeId: PropTypes.string,
+  edgeId: PropTypes.string,
+  node: PropTypes.object,
+  x: PropTypes.number.isRequired,
+  y: PropTypes.number.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onDelete: PropTypes.func,
+  onCopy: PropTypes.func,
+  onCut: PropTypes.func,
+  onPaste: PropTypes.func,
+  onAddToAgentNodes: PropTypes.func,
+  onAddToToolNodes: PropTypes.func,
+  onSendToMarketplace: PropTypes.func,
+  canPaste: PropTypes.bool,
+};
+
 export { ContextMenu as default };

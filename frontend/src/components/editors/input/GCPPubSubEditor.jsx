@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import PropTypes from "prop-types";
 import {
   useInputFieldSync,
   useInputFieldSyncSimple,
@@ -155,4 +156,9 @@ function GCPPubSubEditor({ node, onConfigUpdate }) {
     </EditorSectionRoot>
   );
 }
+GCPPubSubEditor.propTypes = {
+  node: PropTypes.object.isRequired,
+  onConfigUpdate: PropTypes.func.isRequired,
+};
+
 export { GCPPubSubEditor as default };

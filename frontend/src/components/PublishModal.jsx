@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { X } from "lucide-react";
 import {
   TEMPLATE_CATEGORIES,
@@ -23,14 +24,9 @@ import {
   PublishModalSubmitBtn,
 } from "../styles/publishModal.styled";
 
-function PublishModal({
-  isOpen,
-  form,
-  isPublishing,
-  onClose,
-  onFormChange,
-  onSubmit,
-}) {
+function PublishModal({ dialog, form, handlers }) {
+  const { isOpen, isPublishing } = dialog;
+  const { onClose, onFormChange, onSubmit } = handlers;
   if (!isOpen) return null;
   return (
     <PublishModalOverlay>
@@ -119,4 +115,18 @@ function PublishModal({
     </PublishModalOverlay>
   );
 }
+
+PublishModal.propTypes = {
+  dialog: PropTypes.shape({
+    isOpen: PropTypes.bool.isRequired,
+    isPublishing: PropTypes.bool.isRequired,
+  }).isRequired,
+  form: PropTypes.object.isRequired,
+  handlers: PropTypes.shape({
+    onClose: PropTypes.func.isRequired,
+    onFormChange: PropTypes.func.isRequired,
+    onSubmit: PropTypes.func.isRequired,
+  }).isRequired,
+};
+
 export { PublishModal };

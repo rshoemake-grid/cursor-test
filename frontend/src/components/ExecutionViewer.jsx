@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import { getExecutionStatusTone } from "../utils/executionStatus";
 import { logger } from "../utils/logger";
@@ -312,4 +313,9 @@ function ExecutionViewer({ executionId }) {
     </ViewerScroll>
   );
 }
+
+ExecutionViewer.propTypes = {
+  executionId: PropTypes.string.isRequired,
+};
+
 export { ExecutionViewer as default };

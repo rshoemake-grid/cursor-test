@@ -24,32 +24,43 @@ describe("SettingsTabContent", () => {
     },
   ];
   const defaultProps = {
-    activeTab: SETTINGS_TABS.LLM,
-    iterationLimit: 10,
-    onIterationLimitChange: jest.fn(),
-    defaultModel: "",
-    onDefaultModelChange: jest.fn(),
-    chatAssistantModel: "",
-    onChatAssistantModelChange: jest.fn(),
-    providers: mockProviders,
-    showAddProvider: false,
-    onShowAddProvider: jest.fn(),
-    selectedTemplate: "openai",
-    onSelectedTemplateChange: jest.fn(),
-    onAddProvider: jest.fn(),
-    showApiKeys: {},
-    expandedProviders: new Set(),
-    expandedModels: {},
-    testingProvider: null,
-    testResults: {},
-    onToggleProviderModels: jest.fn(),
-    onToggleApiKeyVisibility: jest.fn(),
-    onUpdateProvider: jest.fn(),
-    onDeleteProvider: jest.fn(),
-    onAddCustomModel: jest.fn(),
-    onTestProvider: jest.fn(),
-    onToggleModel: jest.fn(),
-    isModelExpanded: jest.fn(() => false),
+    shell: {
+      isAuthenticated: true,
+      activeTab: SETTINGS_TABS.LLM,
+    },
+    workflowGeneration: {
+      iterationLimit: 10,
+      onIterationLimitChange: jest.fn(),
+      defaultModel: "",
+      onDefaultModelChange: jest.fn(),
+      chatAssistantModel: "",
+      onChatAssistantModelChange: jest.fn(),
+    },
+    providersData: {
+      list: mockProviders,
+    },
+    addProvider: {
+      showAddProvider: false,
+      onShowAddProvider: jest.fn(),
+      selectedTemplate: "openai",
+      onSelectedTemplateChange: jest.fn(),
+      onAddProvider: jest.fn(),
+    },
+    providerManagement: {
+      showApiKeys: {},
+      expandedProviders: {},
+      expandedModels: {},
+      testingProvider: null,
+      testResults: {},
+      onToggleProviderModels: jest.fn(),
+      onToggleApiKeyVisibility: jest.fn(),
+      onUpdateProvider: jest.fn(),
+      onDeleteProvider: jest.fn(),
+      onAddCustomModel: jest.fn(),
+      onTestProvider: jest.fn(),
+      onToggleModel: jest.fn(),
+      isModelExpanded: jest.fn(() => false),
+    },
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -59,7 +70,10 @@ describe("SettingsTabContent", () => {
       render(
         <SettingsTabContent
           {...defaultProps}
-          activeTab={SETTINGS_TABS.WORKFLOW}
+          shell={{
+            ...defaultProps.shell,
+            activeTab: SETTINGS_TABS.WORKFLOW,
+          }}
         />,
       );
       expect(screen.getByLabelText("Iteration limit")).toBeInTheDocument();
@@ -70,8 +84,14 @@ describe("SettingsTabContent", () => {
       render(
         <SettingsTabContent
           {...defaultProps}
-          activeTab={SETTINGS_TABS.WORKFLOW}
-          iterationLimit={15}
+          shell={{
+            ...defaultProps.shell,
+            activeTab: SETTINGS_TABS.WORKFLOW,
+          }}
+          workflowGeneration={{
+            ...defaultProps.workflowGeneration,
+            iterationLimit: 15,
+          }}
         />,
       );
       const input = screen.getByLabelText("Iteration limit");
@@ -81,7 +101,10 @@ describe("SettingsTabContent", () => {
       render(
         <SettingsTabContent
           {...defaultProps}
-          activeTab={SETTINGS_TABS.WORKFLOW}
+          shell={{
+            ...defaultProps.shell,
+            activeTab: SETTINGS_TABS.WORKFLOW,
+          }}
         />,
       );
       const input = screen.getByLabelText("Iteration limit");
@@ -90,14 +113,22 @@ describe("SettingsTabContent", () => {
           value: "20",
         },
       });
-      expect(defaultProps.onIterationLimitChange).toHaveBeenCalledWith(20);
+      expect(
+        defaultProps.workflowGeneration.onIterationLimitChange,
+      ).toHaveBeenCalledWith(20);
     });
     it("should display current default model", () => {
       render(
         <SettingsTabContent
           {...defaultProps}
-          activeTab={SETTINGS_TABS.WORKFLOW}
-          defaultModel="gpt-4"
+          shell={{
+            ...defaultProps.shell,
+            activeTab: SETTINGS_TABS.WORKFLOW,
+          }}
+          workflowGeneration={{
+            ...defaultProps.workflowGeneration,
+            defaultModel: "gpt-4",
+          }}
         />,
       );
       const select = screen.getByLabelText("Default Model");
@@ -107,7 +138,10 @@ describe("SettingsTabContent", () => {
       render(
         <SettingsTabContent
           {...defaultProps}
-          activeTab={SETTINGS_TABS.WORKFLOW}
+          shell={{
+            ...defaultProps.shell,
+            activeTab: SETTINGS_TABS.WORKFLOW,
+          }}
         />,
       );
       const select = screen.getByLabelText("Default Model");
@@ -116,14 +150,22 @@ describe("SettingsTabContent", () => {
           value: "gpt-4",
         },
       });
-      expect(defaultProps.onDefaultModelChange).toHaveBeenCalledWith("gpt-4");
+      expect(
+        defaultProps.workflowGeneration.onDefaultModelChange,
+      ).toHaveBeenCalledWith("gpt-4");
     });
     it("should show model confirmation when defaultModel is set", () => {
       render(
         <SettingsTabContent
           {...defaultProps}
-          activeTab={SETTINGS_TABS.WORKFLOW}
-          defaultModel="gpt-4"
+          shell={{
+            ...defaultProps.shell,
+            activeTab: SETTINGS_TABS.WORKFLOW,
+          }}
+          workflowGeneration={{
+            ...defaultProps.workflowGeneration,
+            defaultModel: "gpt-4",
+          }}
         />,
       );
       expect(screen.getByText(/✓ Using: gpt-4/)).toBeInTheDocument();
@@ -133,8 +175,11 @@ describe("SettingsTabContent", () => {
         <MemoryRouter>
           <SettingsTabContent
             {...defaultProps}
-            isAuthenticated={false}
-            activeTab={SETTINGS_TABS.WORKFLOW}
+            shell={{
+              ...defaultProps.shell,
+              isAuthenticated: false,
+              activeTab: SETTINGS_TABS.WORKFLOW,
+            }}
           />
         </MemoryRouter>,
       );
@@ -146,7 +191,10 @@ describe("SettingsTabContent", () => {
   describe("LLM Tab", () => {
     it("should render LLM tab content when activeTab is LLM", () => {
       render(
-        <SettingsTabContent {...defaultProps} activeTab={SETTINGS_TABS.LLM} />,
+        <SettingsTabContent
+          {...defaultProps}
+          shell={{ ...defaultProps.shell, activeTab: SETTINGS_TABS.LLM }}
+        />,
       );
       expect(screen.getByText("Add LLM Provider")).toBeInTheDocument();
     });
@@ -154,8 +202,11 @@ describe("SettingsTabContent", () => {
       render(
         <SettingsTabContent
           {...defaultProps}
-          activeTab={SETTINGS_TABS.LLM}
-          showAddProvider={false}
+          shell={{ ...defaultProps.shell, activeTab: SETTINGS_TABS.LLM }}
+          addProvider={{
+            ...defaultProps.addProvider,
+            showAddProvider: false,
+          }}
         />,
       );
       expect(screen.getByText("Add LLM Provider")).toBeInTheDocument();
@@ -164,20 +215,28 @@ describe("SettingsTabContent", () => {
       render(
         <SettingsTabContent
           {...defaultProps}
-          activeTab={SETTINGS_TABS.LLM}
-          showAddProvider={false}
+          shell={{ ...defaultProps.shell, activeTab: SETTINGS_TABS.LLM }}
+          addProvider={{
+            ...defaultProps.addProvider,
+            showAddProvider: false,
+          }}
         />,
       );
       const button = screen.getByText("Add LLM Provider");
       fireEvent.click(button);
-      expect(defaultProps.onShowAddProvider).toHaveBeenCalledWith(true);
+      expect(defaultProps.addProvider.onShowAddProvider).toHaveBeenCalledWith(
+        true,
+      );
     });
     it("should show add provider form when showAddProvider is true", () => {
       render(
         <SettingsTabContent
           {...defaultProps}
-          activeTab={SETTINGS_TABS.LLM}
-          showAddProvider={true}
+          shell={{ ...defaultProps.shell, activeTab: SETTINGS_TABS.LLM }}
+          addProvider={{
+            ...defaultProps.addProvider,
+            showAddProvider: true,
+          }}
         />,
       );
       expect(screen.getByText("Add New Provider")).toBeInTheDocument();
@@ -187,29 +246,40 @@ describe("SettingsTabContent", () => {
       render(
         <SettingsTabContent
           {...defaultProps}
-          activeTab={SETTINGS_TABS.LLM}
-          showAddProvider={true}
+          shell={{ ...defaultProps.shell, activeTab: SETTINGS_TABS.LLM }}
+          addProvider={{
+            ...defaultProps.addProvider,
+            showAddProvider: true,
+          }}
         />,
       );
       const addButton = screen.getByText("Add Provider");
       fireEvent.click(addButton);
-      expect(defaultProps.onAddProvider).toHaveBeenCalledTimes(1);
+      expect(defaultProps.addProvider.onAddProvider).toHaveBeenCalledTimes(1);
     });
     it("should call onShowAddProvider(false) when cancel button is clicked", () => {
       render(
         <SettingsTabContent
           {...defaultProps}
-          activeTab={SETTINGS_TABS.LLM}
-          showAddProvider={true}
+          shell={{ ...defaultProps.shell, activeTab: SETTINGS_TABS.LLM }}
+          addProvider={{
+            ...defaultProps.addProvider,
+            showAddProvider: true,
+          }}
         />,
       );
       const cancelButton = screen.getByText("Cancel");
       fireEvent.click(cancelButton);
-      expect(defaultProps.onShowAddProvider).toHaveBeenCalledWith(false);
+      expect(defaultProps.addProvider.onShowAddProvider).toHaveBeenCalledWith(
+        false,
+      );
     });
     it("should render provider forms for each provider", () => {
       render(
-        <SettingsTabContent {...defaultProps} activeTab={SETTINGS_TABS.LLM} />,
+        <SettingsTabContent
+          {...defaultProps}
+          shell={{ ...defaultProps.shell, activeTab: SETTINGS_TABS.LLM }}
+        />,
       );
       expect(
         screen.getByTestId("provider-form-provider-1"),
@@ -218,7 +288,10 @@ describe("SettingsTabContent", () => {
     });
     it("should display auto-sync message", () => {
       render(
-        <SettingsTabContent {...defaultProps} activeTab={SETTINGS_TABS.LLM} />,
+        <SettingsTabContent
+          {...defaultProps}
+          shell={{ ...defaultProps.shell, activeTab: SETTINGS_TABS.LLM }}
+        />,
       );
       expect(screen.getByText(/Auto-sync enabled/)).toBeInTheDocument();
     });
@@ -227,8 +300,11 @@ describe("SettingsTabContent", () => {
         <MemoryRouter>
           <SettingsTabContent
             {...defaultProps}
-            isAuthenticated={false}
-            activeTab={SETTINGS_TABS.LLM}
+            shell={{
+              ...defaultProps.shell,
+              isAuthenticated: false,
+              activeTab: SETTINGS_TABS.LLM,
+            }}
           />
         </MemoryRouter>,
       );
@@ -241,7 +317,10 @@ describe("SettingsTabContent", () => {
   });
   it("should return null for unknown tab", () => {
     const { container } = render(
-      <SettingsTabContent {...defaultProps} activeTab="unknown" />,
+      <SettingsTabContent
+        {...defaultProps}
+        shell={{ ...defaultProps.shell, activeTab: "unknown" }}
+      />,
     );
     expect(container.firstChild).toBeNull();
   });

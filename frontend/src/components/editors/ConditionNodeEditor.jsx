@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import {
   CONDITION_TYPES,
   isValidConditionType,
@@ -126,4 +127,9 @@ function ConditionNodeEditor({ node, onConfigUpdate }) {
     </>
   );
 }
+ConditionNodeEditor.propTypes = {
+  node: PropTypes.object.isRequired,
+  onConfigUpdate: PropTypes.func.isRequired,
+};
+
 export { ConditionNodeEditor as default };

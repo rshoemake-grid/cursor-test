@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Search, X } from "lucide-react";
 import {
   SearchBarRoot,
@@ -40,4 +41,13 @@ function SearchBar({
     </SearchBarRoot>
   );
 }
+
+SearchBar.propTypes = {
+  value: PropTypes.string.isRequired,
+  placeholder: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+  onClear: PropTypes.func,
+  className: PropTypes.string,
+};
+
 export { SearchBar as default };

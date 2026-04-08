@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Clock, CheckCircle, Eye } from "lucide-react";
 import ExecutionStatusBadge from "../ExecutionStatusBadge";
 import {
@@ -138,4 +139,13 @@ function ExecutionListItem({
     </LogListItemRoot>
   );
 }
+
+ExecutionListItem.propTypes = {
+  execution: PropTypes.object.isRequired,
+  onExecutionClick: PropTypes.func.isRequired,
+  isSelected: PropTypes.bool,
+  onSelect: PropTypes.func,
+  showCheckbox: PropTypes.bool,
+};
+
 export { ExecutionListItem as default };

@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Plus } from "lucide-react";
 import {
   AddProviderRevealButton,
@@ -63,4 +64,13 @@ function AddProviderForm({
     </SettingsPanelElevated>
   );
 }
+
+AddProviderForm.propTypes = {
+  showAddProvider: PropTypes.bool.isRequired,
+  onShowAddProvider: PropTypes.func.isRequired,
+  selectedTemplate: PropTypes.string.isRequired,
+  onSelectedTemplateChange: PropTypes.func.isRequired,
+  onAddProvider: PropTypes.func.isRequired,
+};
+
 export { AddProviderForm };

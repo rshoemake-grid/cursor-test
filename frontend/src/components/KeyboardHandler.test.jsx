@@ -10,13 +10,17 @@ jest.mock("../hooks/ui", () => ({
 const mockUseKeyboardShortcuts = useKeyboardShortcuts;
 describe("KeyboardHandler", () => {
   const mockProps = {
-    selectedNodeId: "node-1",
-    setSelectedNodeId: jest.fn(),
-    notifyModified: jest.fn(),
-    clipboardNode: null,
-    onCopy: jest.fn(),
-    onCut: jest.fn(),
-    onPaste: jest.fn(),
+    selection: {
+      selectedNodeId: "node-1",
+      setSelectedNodeId: jest.fn(),
+      notifyModified: jest.fn(),
+    },
+    keyboard: {
+      clipboardNode: null,
+      onCopy: jest.fn(),
+      onCut: jest.fn(),
+      onPaste: jest.fn(),
+    },
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -29,13 +33,13 @@ describe("KeyboardHandler", () => {
   it("should call useKeyboardShortcuts with correct props", () => {
     render(<KeyboardHandler {...mockProps} />);
     expect(mockUseKeyboardShortcuts).toHaveBeenCalledWith({
-      selectedNodeId: mockProps.selectedNodeId,
-      setSelectedNodeId: mockProps.setSelectedNodeId,
-      notifyModified: mockProps.notifyModified,
-      clipboardNode: mockProps.clipboardNode,
-      onCopy: mockProps.onCopy,
-      onCut: mockProps.onCut,
-      onPaste: mockProps.onPaste,
+      selectedNodeId: mockProps.selection.selectedNodeId,
+      setSelectedNodeId: mockProps.selection.setSelectedNodeId,
+      notifyModified: mockProps.selection.notifyModified,
+      clipboardNode: mockProps.keyboard.clipboardNode,
+      onCopy: mockProps.keyboard.onCopy,
+      onCut: mockProps.keyboard.onCut,
+      onPaste: mockProps.keyboard.onPaste,
     });
   });
   it("should pass clipboardNode to hook", () => {
@@ -48,7 +52,12 @@ describe("KeyboardHandler", () => {
         y: 0,
       },
     };
-    render(<KeyboardHandler {...mockProps} clipboardNode={clipboardNode} />);
+    render(
+      <KeyboardHandler
+        {...mockProps}
+        keyboard={{ ...mockProps.keyboard, clipboardNode }}
+      />,
+    );
     expect(mockUseKeyboardShortcuts).toHaveBeenCalledWith(
       expect.objectContaining({
         clipboardNode,
@@ -56,7 +65,12 @@ describe("KeyboardHandler", () => {
     );
   });
   it("should handle null selectedNodeId", () => {
-    render(<KeyboardHandler {...mockProps} selectedNodeId={null} />);
+    render(
+      <KeyboardHandler
+        {...mockProps}
+        selection={{ ...mockProps.selection, selectedNodeId: null }}
+      />,
+    );
     expect(mockUseKeyboardShortcuts).toHaveBeenCalledWith(
       expect.objectContaining({
         selectedNodeId: null,

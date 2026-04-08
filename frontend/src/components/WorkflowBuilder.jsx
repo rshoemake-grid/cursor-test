@@ -6,6 +6,8 @@ import {
   forwardRef,
   useImperativeHandle,
 } from "react";
+import PropTypes from "prop-types";
+import { nullableString } from "../utils/propTypes";
 import { useNodesState, useEdgesState, ReactFlowProvider } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useAuth } from "../contexts/AuthContext";
@@ -36,12 +38,15 @@ import { WorkflowBuilderLayout } from "./WorkflowBuilder/WorkflowBuilderLayout";
 import { WorkflowBuilderDialogs } from "./WorkflowBuilder/WorkflowBuilderDialogs";
 const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
   {
-    tabId,
-    workflowId,
-    tabName,
-    tabIsUnsaved,
+    tab,
     storage = defaultAdapters.createLocalStorageAdapter(),
     workflowTabs = [],
+    callbacks = {},
+  },
+  ref,
+) {
+  const { tabId, workflowId, tabName, tabIsUnsaved } = tab;
+  const {
     onExecutionStart,
     onWorkflowSaved,
     onWorkflowModified,
@@ -52,9 +57,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
     onExecutionStatusUpdate,
     onExecutionNodeUpdate,
     onRemoveExecution,
-  },
-  ref,
-) {
+  } = callbacks;
   const [nodes, setNodes, onNodesChangeBase] = useNodesState([]);
   const [edges, setEdges, onEdgesChangeBase] = useEdgesState([]);
   const [nodeExecutionStates] = useState({});
@@ -349,48 +352,66 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
   return (
     <ReactFlowProvider>
       <WorkflowBuilderLayout
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-        onNodeClick={onNodeClick}
-        onNodeContextMenu={onNodeContextMenu}
-        onEdgeContextMenu={onEdgeContextMenu}
-        onPaneClick={onPaneClick}
-        nodeExecutionStates={nodeExecutionStates}
-        reactFlowInstanceRef={reactFlowInstanceRef}
-        selectedNodeId={selectedNodeId}
-        setSelectedNodeId={setSelectedNodeId}
-        selectedNodeIds={selectedNodeIds}
-        notifyModified={notifyModified}
-        clipboardNode={clipboard.clipboardNode}
-        onCopy={clipboard.copy}
-        onCut={clipboard.cut}
-        onPaste={clipboard.paste}
-        activeWorkflowId={localWorkflowId || null}
-        workflowTabId={tabId}
-        executions={executions}
-        activeExecutionId={activeExecutionId}
-        onWorkflowUpdate={handleWorkflowUpdate}
-        getWorkflowChatCanvasSnapshot={getWorkflowChatCanvasSnapshot}
-        workflowChatClearNonce={workflowChatClearNonce}
-        onExecutionLogUpdate={onExecutionLogUpdate}
-        onExecutionStatusUpdate={onExecutionStatusUpdate}
-        onExecutionNodeUpdate={onExecutionNodeUpdate}
-        onRemoveExecution={onRemoveExecution}
-        onSaveWorkflow={saveWorkflow}
+        graph={{
+          nodes,
+          edges,
+          nodeExecutionStates,
+        }}
+        canvasHandlers={{
+          onNodesChange,
+          onEdgesChange,
+          onConnect,
+          onDrop,
+          onDragOver,
+          onNodeClick,
+          onNodeContextMenu,
+          onEdgeContextMenu,
+          onPaneClick,
+        }}
+        selection={{
+          selectedNodeId,
+          setSelectedNodeId,
+          selectedNodeIds,
+          notifyModified,
+        }}
+        keyboard={{
+          clipboardNode: clipboard.clipboardNode,
+          onCopy: clipboard.copy,
+          onCut: clipboard.cut,
+          onPaste: clipboard.paste,
+        }}
+        reactFlow={{
+          instanceRef: reactFlowInstanceRef,
+        }}
+        executionConsole={{
+          activeWorkflowId: localWorkflowId || null,
+          workflowTabId: tabId,
+          executions,
+          activeExecutionId,
+          onWorkflowUpdate: handleWorkflowUpdate,
+          getWorkflowChatCanvasSnapshot,
+          workflowChatClearNonce,
+          onExecutionLogUpdate,
+          onExecutionStatusUpdate,
+          onExecutionNodeUpdate,
+          onRemoveExecution,
+        }}
+        propertyPanel={{
+          onSaveWorkflow: saveWorkflow,
+        }}
       />
       <WorkflowBuilderDialogs
-        showInputs={execution.showInputs}
-        onCloseInputs={() => execution.setShowInputs(false)}
-        onConfirmExecute={handleConfirmExecute}
-        executionNodes={convertNodesForExecutionInput(nodes)}
-        workflowName={localWorkflowName}
-        contextMenu={
-          contextMenuState
+        executionInput={{
+          isOpen: execution.showInputs,
+          onClose: () => execution.setShowInputs(false),
+          onSubmit: handleConfirmExecute,
+          nodes: convertNodesForExecutionInput(nodes),
+        }}
+        workflow={{
+          name: localWorkflowName,
+        }}
+        nodeContextMenu={{
+          state: contextMenuState
             ? {
                 nodeId: contextMenuState.nodeId,
                 edgeId: contextMenuState.edgeId,
@@ -398,40 +419,70 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
                 x: contextMenuState.x,
                 y: contextMenuState.y,
               }
-            : null
-        }
-        onCloseContextMenu={contextMenu.closeContextMenu}
-        onDeleteNode={handleDeleteNode}
-        onCopy={() => {
-          if (contextMenuState?.node) {
-            clipboard.copy(contextMenuState.node);
-          }
+            : null,
+          onClose: contextMenu.closeContextMenu,
+          onDeleteNode: handleDeleteNode,
+          onCopy: () => {
+            if (contextMenuState?.node) {
+              clipboard.copy(contextMenuState.node);
+            }
+          },
+          onCut: () => {
+            if (contextMenuState?.node) {
+              clipboard.cut(contextMenuState.node);
+            }
+          },
+          onPaste: () => clipboard.paste(),
+          onAddToAgentNodes: () => {
+            if (contextMenuState?.node) {
+              handleAddToAgentNodes(contextMenuState.node);
+            }
+          },
+          onAddToToolNodes: () => {
+            if (contextMenuState?.node) {
+              handleAddToToolNodes(contextMenuState.node);
+            }
+          },
+          onSendToMarketplace: handleSendToMarketplace,
+          canPaste: !!clipboard.clipboardNode,
         }}
-        onCut={() => {
-          if (contextMenuState?.node) {
-            clipboard.cut(contextMenuState.node);
-          }
+        marketplace={{
+          isOpen: showMarketplaceDialog,
+          onClose: closeMarketplaceDialog,
+          node: marketplaceNode,
+          workflowId: localWorkflowId,
         }}
-        onPaste={() => clipboard.paste()}
-        onAddToAgentNodes={() => {
-          if (contextMenuState?.node) {
-            handleAddToAgentNodes(contextMenuState.node);
-          }
-        }}
-        onAddToToolNodes={() => {
-          if (contextMenuState?.node) {
-            handleAddToToolNodes(contextMenuState.node);
-          }
-        }}
-        onSendToMarketplace={handleSendToMarketplace}
-        canPaste={!!clipboard.clipboardNode}
-        showMarketplaceDialog={showMarketplaceDialog}
-        onCloseMarketplaceDialog={closeMarketplaceDialog}
-        marketplaceNode={marketplaceNode}
-        workflowId={localWorkflowId}
       />
     </ReactFlowProvider>
   );
 });
+
+WorkflowBuilder.propTypes = {
+  tab: PropTypes.shape({
+    tabId: PropTypes.string.isRequired,
+    workflowId: nullableString,
+    tabName: PropTypes.string,
+    tabIsUnsaved: PropTypes.bool,
+  }).isRequired,
+  storage: PropTypes.shape({
+    getItem: PropTypes.func,
+    setItem: PropTypes.func,
+    removeItem: PropTypes.func,
+  }),
+  workflowTabs: PropTypes.arrayOf(PropTypes.object),
+  callbacks: PropTypes.shape({
+    onExecutionStart: PropTypes.func,
+    onWorkflowSaved: PropTypes.func,
+    onWorkflowModified: PropTypes.func,
+    onWorkflowLoaded: PropTypes.func,
+    onCloseWorkflow: PropTypes.func,
+    onClearExecutions: PropTypes.func,
+    onExecutionLogUpdate: PropTypes.func,
+    onExecutionStatusUpdate: PropTypes.func,
+    onExecutionNodeUpdate: PropTypes.func,
+    onRemoveExecution: PropTypes.func,
+  }),
+};
+
 var stdin_default = WorkflowBuilder;
 export { stdin_default as default };

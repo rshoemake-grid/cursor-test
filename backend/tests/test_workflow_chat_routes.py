@@ -266,9 +266,11 @@ async def test_get_workflow_context(db_session: AsyncSession, test_user: UserDB,
     """Test getting workflow context"""
     from backend.api.workflow_chat_routes import get_workflow_context
     
-    context = await get_workflow_context(db_session, test_workflow.id)
+    context, snapshot = await get_workflow_context(db_session, test_workflow.id)
     assert isinstance(context, str)
     assert "Test Workflow" in context
+    assert snapshot is not None
+    assert snapshot["name"] == "Test Workflow"
 
 
 @pytest.mark.asyncio
@@ -276,8 +278,9 @@ async def test_get_workflow_context_no_workflow(db_session: AsyncSession):
     """Test getting workflow context for non-existent workflow"""
     from backend.api.workflow_chat_routes import get_workflow_context
     
-    context = await get_workflow_context(db_session, None)
+    context, snapshot = await get_workflow_context(db_session, None)
     assert isinstance(context, str)
+    assert snapshot is None
     assert "No workflow" in context or "workflow" in context.lower()
 
 

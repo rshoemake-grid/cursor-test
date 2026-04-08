@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import PropTypes from "prop-types";
 import {
   Bot,
   GitBranch,
@@ -655,4 +656,20 @@ function NodePanel({
     </NodePanelRoot>
   );
 }
+
+NodePanel.propTypes = {
+  storage: PropTypes.shape({
+    getItem: PropTypes.func,
+    setItem: PropTypes.func,
+    removeItem: PropTypes.func,
+  }),
+  logger: PropTypes.shape({
+    debug: PropTypes.func,
+    info: PropTypes.func,
+    warn: PropTypes.func,
+    error: PropTypes.func,
+    log: PropTypes.func,
+  }),
+};
+
 export { NodePanel as default };

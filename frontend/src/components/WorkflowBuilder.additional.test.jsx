@@ -252,19 +252,23 @@ describe("WorkflowBuilder - Additional Coverage", () => {
   const mockOnExecutionNodeUpdate = jest.fn();
   const mockOnRemoveExecution = jest.fn();
   const defaultProps = {
-    tabId: "tab-1",
-    workflowId: null,
-    tabName: "Untitled Workflow",
-    tabIsUnsaved: false,
+    tab: {
+      tabId: "tab-1",
+      workflowId: null,
+      tabName: "Untitled Workflow",
+      tabIsUnsaved: false,
+    },
     workflowTabs: [],
-    onExecutionStart: mockOnExecutionStart,
-    onWorkflowSaved: mockOnWorkflowSaved,
-    onWorkflowModified: mockOnWorkflowModified,
-    onWorkflowLoaded: mockOnWorkflowLoaded,
-    onExecutionLogUpdate: mockOnExecutionLogUpdate,
-    onExecutionStatusUpdate: mockOnExecutionStatusUpdate,
-    onExecutionNodeUpdate: mockOnExecutionNodeUpdate,
-    onRemoveExecution: mockOnRemoveExecution,
+    callbacks: {
+      onExecutionStart: mockOnExecutionStart,
+      onWorkflowSaved: mockOnWorkflowSaved,
+      onWorkflowModified: mockOnWorkflowModified,
+      onWorkflowLoaded: mockOnWorkflowLoaded,
+      onExecutionLogUpdate: mockOnExecutionLogUpdate,
+      onExecutionStatusUpdate: mockOnExecutionStatusUpdate,
+      onExecutionNodeUpdate: mockOnExecutionNodeUpdate,
+      onRemoveExecution: mockOnRemoveExecution,
+    },
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -329,7 +333,10 @@ describe("WorkflowBuilder - Additional Coverage", () => {
       await act(async () => {
         render(
           <ReactFlowProvider>
-            <WorkflowBuilder {...defaultProps} workflowId="workflow-1" />
+            <WorkflowBuilder
+              {...defaultProps}
+              tab={{ ...defaultProps.tab, workflowId: "workflow-1" }}
+            />
           </ReactFlowProvider>,
         );
       });
@@ -341,7 +348,10 @@ describe("WorkflowBuilder - Additional Coverage", () => {
       await act(async () => {
         render(
           <ReactFlowProvider>
-            <WorkflowBuilder {...defaultProps} tabIsUnsaved={true} />
+            <WorkflowBuilder
+              {...defaultProps}
+              tab={{ ...defaultProps.tab, tabIsUnsaved: true }}
+            />
           </ReactFlowProvider>,
         );
       });
@@ -430,7 +440,10 @@ describe("WorkflowBuilder - Additional Coverage", () => {
       await act(async () => {
         render(
           <ReactFlowProvider>
-            <WorkflowBuilder {...defaultProps} workflowId={null} />
+            <WorkflowBuilder
+              {...defaultProps}
+              tab={{ ...defaultProps.tab, workflowId: null }}
+            />
           </ReactFlowProvider>,
         );
       });
@@ -440,7 +453,10 @@ describe("WorkflowBuilder - Additional Coverage", () => {
       await act(async () => {
         render(
           <ReactFlowProvider>
-            <WorkflowBuilder {...defaultProps} tabName="" />
+            <WorkflowBuilder
+              {...defaultProps}
+              tab={{ ...defaultProps.tab, tabName: "" }}
+            />
           </ReactFlowProvider>,
         );
       });
@@ -532,9 +548,12 @@ describe("WorkflowBuilder - Additional Coverage", () => {
     it("should handle missing callbacks gracefully", async () => {
       const propsWithoutCallbacks = {
         ...defaultProps,
-        onExecutionStart: void 0,
-        onWorkflowSaved: void 0,
-        onWorkflowModified: void 0,
+        callbacks: {
+          ...defaultProps.callbacks,
+          onExecutionStart: void 0,
+          onWorkflowSaved: void 0,
+          onWorkflowModified: void 0,
+        },
       };
       await act(async () => {
         render(

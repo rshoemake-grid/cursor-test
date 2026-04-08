@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import {
   SettingsMutedStack,
   SettingsCard,
@@ -111,4 +112,16 @@ function WorkflowSettingsTab({
     </SettingsMutedStack>
   );
 }
+
+WorkflowSettingsTab.propTypes = {
+  readOnly: PropTypes.bool,
+  iterationLimit: PropTypes.number.isRequired,
+  onIterationLimitChange: PropTypes.func.isRequired,
+  defaultModel: PropTypes.string,
+  onDefaultModelChange: PropTypes.func.isRequired,
+  chatAssistantModel: PropTypes.string,
+  onChatAssistantModelChange: PropTypes.func.isRequired,
+  providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+};
+
 export { WorkflowSettingsTab };

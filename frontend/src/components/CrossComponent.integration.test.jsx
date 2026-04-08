@@ -301,10 +301,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -339,10 +341,12 @@ describe("Cross-Component Integration Tests", () => {
         return render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -366,10 +370,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -404,10 +410,12 @@ describe("Cross-Component Integration Tests", () => {
           <BrowserRouter>
             <div>
               <WorkflowBuilder
-                tabId="tab-1"
-                workflowId={null}
-                tabName="Test Workflow"
-                tabIsUnsaved={false}
+                tab={{
+                  tabId: "tab-1",
+                  workflowId: null,
+                  tabName: "Test Workflow",
+                  tabIsUnsaved: false,
+                }}
                 storage={mockStorage}
               />
               <SettingsPage storage={mockStorage} />
@@ -450,10 +458,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -466,10 +476,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -489,10 +501,12 @@ describe("Cross-Component Integration Tests", () => {
         return render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -512,10 +526,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -545,10 +561,12 @@ describe("Cross-Component Integration Tests", () => {
           <BrowserRouter>
             <div>
               <WorkflowBuilder
-                tabId="tab-1"
-                workflowId={null}
-                tabName="Test Workflow"
-                tabIsUnsaved={false}
+                tab={{
+                  tabId: "tab-1",
+                  workflowId: null,
+                  tabName: "Test Workflow",
+                  tabIsUnsaved: false,
+                }}
                 storage={mockStorage}
               />
               <SettingsPage storage={mockStorage} />
@@ -598,10 +616,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -614,10 +634,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -652,10 +674,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -672,10 +696,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -694,10 +720,12 @@ describe("Cross-Component Integration Tests", () => {
             <div>
               <SettingsPage storage={mockStorage} />
               <WorkflowBuilder
-                tabId="tab-1"
-                workflowId={null}
-                tabName="Test Workflow"
-                tabIsUnsaved={false}
+                tab={{
+                  tabId: "tab-1",
+                  workflowId: null,
+                  tabName: "Test Workflow",
+                  tabIsUnsaved: false,
+                }}
                 storage={mockStorage}
               />
             </div>
@@ -718,10 +746,12 @@ describe("Cross-Component Integration Tests", () => {
         return render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -760,10 +790,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -780,10 +812,12 @@ describe("Cross-Component Integration Tests", () => {
         return render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId="workflow-1"
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: "workflow-1",
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -822,10 +856,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -857,10 +893,12 @@ describe("Cross-Component Integration Tests", () => {
           <BrowserRouter>
             <div>
               <WorkflowBuilder
-                tabId="tab-1"
-                workflowId={null}
-                tabName="Test Workflow"
-                tabIsUnsaved={false}
+                tab={{
+                  tabId: "tab-1",
+                  workflowId: null,
+                  tabName: "Test Workflow",
+                  tabIsUnsaved: false,
+                }}
                 storage={mockStorage}
               />
               <SettingsPage storage={mockStorage} />
@@ -903,10 +941,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -933,10 +973,12 @@ describe("Cross-Component Integration Tests", () => {
           <BrowserRouter>
             <div>
               <WorkflowBuilder
-                tabId="tab-1"
-                workflowId={null}
-                tabName="Test Workflow"
-                tabIsUnsaved={false}
+                tab={{
+                  tabId: "tab-1",
+                  workflowId: null,
+                  tabName: "Test Workflow",
+                  tabIsUnsaved: false,
+                }}
                 storage={mockStorage}
               />
               <SettingsPage storage={mockStorage} />
@@ -952,10 +994,12 @@ describe("Cross-Component Integration Tests", () => {
           <BrowserRouter>
             <div>
               <WorkflowBuilder
-                tabId="tab-1"
-                workflowId={null}
-                tabName="Test Workflow"
-                tabIsUnsaved={false}
+                tab={{
+                  tabId: "tab-1",
+                  workflowId: null,
+                  tabName: "Test Workflow",
+                  tabIsUnsaved: false,
+                }}
                 storage={mockStorage}
               />
               <SettingsPage storage={mockStorage} />
@@ -971,10 +1015,12 @@ describe("Cross-Component Integration Tests", () => {
           <BrowserRouter>
             <div>
               <WorkflowBuilder
-                tabId="tab-1"
-                workflowId={null}
-                tabName="Test Workflow"
-                tabIsUnsaved={false}
+                tab={{
+                  tabId: "tab-1",
+                  workflowId: null,
+                  tabName: "Test Workflow",
+                  tabIsUnsaved: false,
+                }}
                 storage={mockStorage}
               />
               <SettingsPage storage={mockStorage} />
@@ -992,10 +1038,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -1028,10 +1076,12 @@ describe("Cross-Component Integration Tests", () => {
         render(
           <BrowserRouter>
             <WorkflowBuilder
-              tabId="tab-1"
-              workflowId={null}
-              tabName="Test Workflow"
-              tabIsUnsaved={false}
+              tab={{
+                tabId: "tab-1",
+                workflowId: null,
+                tabName: "Test Workflow",
+                tabIsUnsaved: false,
+              }}
               storage={mockStorage}
             />
           </BrowserRouter>,
@@ -1049,10 +1099,12 @@ describe("Cross-Component Integration Tests", () => {
           <BrowserRouter>
             <div>
               <WorkflowBuilder
-                tabId="tab-1"
-                workflowId={null}
-                tabName="Test Workflow"
-                tabIsUnsaved={false}
+                tab={{
+                  tabId: "tab-1",
+                  workflowId: null,
+                  tabName: "Test Workflow",
+                  tabIsUnsaved: false,
+                }}
                 storage={mockStorage}
               />
               <SettingsPage storage={mockStorage} />
@@ -1077,10 +1129,12 @@ describe("Cross-Component Integration Tests", () => {
           <BrowserRouter>
             <div>
               <WorkflowBuilder
-                tabId="tab-1"
-                workflowId={null}
-                tabName="Test Workflow"
-                tabIsUnsaved={false}
+                tab={{
+                  tabId: "tab-1",
+                  workflowId: null,
+                  tabName: "Test Workflow",
+                  tabIsUnsaved: false,
+                }}
                 storage={mockStorage}
               />
               <SettingsPage storage={mockStorage} />
@@ -1096,10 +1150,12 @@ describe("Cross-Component Integration Tests", () => {
           <BrowserRouter>
             <div>
               <WorkflowBuilder
-                tabId="tab-1"
-                workflowId={null}
-                tabName="Test Workflow"
-                tabIsUnsaved={false}
+                tab={{
+                  tabId: "tab-1",
+                  workflowId: null,
+                  tabName: "Test Workflow",
+                  tabIsUnsaved: false,
+                }}
                 storage={mockStorage}
               />
               <SettingsPage storage={mockStorage} />
@@ -1115,10 +1171,12 @@ describe("Cross-Component Integration Tests", () => {
           <BrowserRouter>
             <div>
               <WorkflowBuilder
-                tabId="tab-1"
-                workflowId={null}
-                tabName="Test Workflow"
-                tabIsUnsaved={false}
+                tab={{
+                  tabId: "tab-1",
+                  workflowId: null,
+                  tabName: "Test Workflow",
+                  tabIsUnsaved: false,
+                }}
                 storage={mockStorage}
               />
               <SettingsPage storage={mockStorage} />
@@ -1134,10 +1192,12 @@ describe("Cross-Component Integration Tests", () => {
           <BrowserRouter>
             <div>
               <WorkflowBuilder
-                tabId="tab-1"
-                workflowId={null}
-                tabName="Test Workflow"
-                tabIsUnsaved={false}
+                tab={{
+                  tabId: "tab-1",
+                  workflowId: null,
+                  tabName: "Test Workflow",
+                  tabIsUnsaved: false,
+                }}
                 storage={mockStorage}
               />
               <SettingsPage storage={mockStorage} />

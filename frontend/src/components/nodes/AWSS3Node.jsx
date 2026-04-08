@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Position } from "@xyflow/react";
 import { Database } from "lucide-react";
 import {
@@ -55,4 +56,11 @@ function AWSS3Node({ data, selected }) {
     </WorkflowNodeCard>
   );
 }
+
+AWSS3Node.propTypes = {
+  data: PropTypes.object,
+  selected: PropTypes.bool,
+  id: PropTypes.string,
+};
+
 export { AWSS3Node as default };

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { API_CONFIG } from "../config/constants";
@@ -33,6 +34,8 @@ function CheckIcon() {
     </svg>
   );
 }
+
+CheckIcon.propTypes = {};
 
 function ResetPasswordPage({
   httpClient = defaultAdapters.createHttpClient(),
@@ -189,4 +192,10 @@ function ResetPasswordPage({
     </AuthGradientShell>
   );
 }
+
+ResetPasswordPage.propTypes = {
+  httpClient: PropTypes.object,
+  apiBaseUrl: PropTypes.string,
+};
+
 export { ResetPasswordPage as default };

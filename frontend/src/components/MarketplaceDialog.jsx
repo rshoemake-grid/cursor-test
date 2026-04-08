@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { X, Upload, Bot, Workflow, Wrench } from "lucide-react";
 import { showSuccess, showError } from "../utils/notifications";
 import { api } from "../api/client";
@@ -512,4 +513,19 @@ function MarketplaceDialog({
     </MPDOverlay>
   );
 }
+
+MarketplaceDialog.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  node: PropTypes.object,
+  workflowId: PropTypes.string,
+  workflowName: PropTypes.string,
+  storage: PropTypes.shape({
+    getItem: PropTypes.func,
+    setItem: PropTypes.func,
+    removeItem: PropTypes.func,
+  }),
+  httpClient: PropTypes.object,
+};
+
 export { MarketplaceDialog as default };

@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { Save, ArrowLeft } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -53,4 +54,9 @@ function SettingsHeader({ onSyncClick }) {
     </SettingsHeaderBlock>
   );
 }
+
+SettingsHeader.propTypes = {
+  onSyncClick: PropTypes.func.isRequired,
+};
+
 export { SettingsHeader };

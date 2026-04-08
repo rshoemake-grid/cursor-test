@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import PropTypes from "prop-types";
 import {
   useInputFieldSync,
   useInputFieldSyncSimple,
@@ -130,4 +131,9 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
     </EditorSectionRoot>
   );
 }
+GCPBucketEditor.propTypes = {
+  node: PropTypes.object.isRequired,
+  onConfigUpdate: PropTypes.func.isRequired,
+};
+
 export { GCPBucketEditor as default };

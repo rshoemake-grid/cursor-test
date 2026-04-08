@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import {
   EditorSectionRoot,
   EditorSectionTitle,
@@ -153,4 +154,9 @@ function BigQueryNodeEditor({ node, onConfigUpdate }) {
     </EditorSectionRoot>
   );
 }
+BigQueryNodeEditor.propTypes = {
+  node: PropTypes.object.isRequired,
+  onConfigUpdate: PropTypes.func.isRequired,
+};
+
 export { BigQueryNodeEditor as default };

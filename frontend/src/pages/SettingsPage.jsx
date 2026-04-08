@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import PropTypes from "prop-types";
 import { showConfirm } from "../utils/confirm";
 import { useAuth } from "../contexts/AuthContext";
 import { defaultAdapters } from "../types/adapters";
@@ -162,38 +163,47 @@ function SettingsPage({
           <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
           <SettingsMainColumn>
             <SettingsTabContent
-              isAuthenticated={isAuthenticated}
-              activeTab={activeTab}
-              iterationLimit={iterationLimit}
-              onIterationLimitChange={setIterationLimit}
-              defaultModel={defaultModel}
-              onDefaultModelChange={setDefaultModel}
-              chatAssistantModel={chatAssistantModel}
-              onChatAssistantModelChange={setChatAssistantModel}
-              providers={providers}
-              showAddProvider={showAddProvider}
-              onShowAddProvider={setShowAddProvider}
-              selectedTemplate={selectedTemplate}
-              onSelectedTemplateChange={setSelectedTemplate}
-              onAddProvider={handleAddProvider}
-              showApiKeys={showApiKeys}
-              expandedProviders={expandedProviders}
-              expandedModels={expandedModels}
-              testingProvider={testingProvider}
-              testResults={testResults}
-              onToggleProviderModels={toggleProviderModels}
-              onToggleApiKeyVisibility={(id) =>
-                setShowApiKeys((prev) => ({
-                  ...prev,
-                  [id]: !prev[id],
-                }))
-              }
-              onUpdateProvider={updateProvider}
-              onDeleteProvider={handleDeleteProvider}
-              onAddCustomModel={handleAddCustomModel}
-              onTestProvider={handleTestProvider}
-              onToggleModel={toggleModel}
-              isModelExpanded={isModelExpanded}
+              shell={{
+                isAuthenticated,
+                activeTab,
+              }}
+              workflowGeneration={{
+                iterationLimit,
+                onIterationLimitChange: setIterationLimit,
+                defaultModel,
+                onDefaultModelChange: setDefaultModel,
+                chatAssistantModel,
+                onChatAssistantModelChange: setChatAssistantModel,
+              }}
+              providersData={{
+                list: providers,
+              }}
+              addProvider={{
+                showAddProvider,
+                onShowAddProvider: setShowAddProvider,
+                selectedTemplate,
+                onSelectedTemplateChange: setSelectedTemplate,
+                onAddProvider: handleAddProvider,
+              }}
+              providerManagement={{
+                showApiKeys,
+                expandedProviders,
+                expandedModels,
+                testingProvider,
+                testResults,
+                onToggleProviderModels: toggleProviderModels,
+                onToggleApiKeyVisibility: (id) =>
+                  setShowApiKeys((prev) => ({
+                    ...prev,
+                    [id]: !prev[id],
+                  })),
+                onUpdateProvider: updateProvider,
+                onDeleteProvider: handleDeleteProvider,
+                onAddCustomModel: handleAddCustomModel,
+                onTestProvider: handleTestProvider,
+                onToggleModel: toggleModel,
+                isModelExpanded,
+              }}
             />
           </SettingsMainColumn>
         </SettingsPageBody>
@@ -201,4 +211,16 @@ function SettingsPage({
     </SettingsPageShell>
   );
 }
+
+SettingsPage.propTypes = {
+  storage: PropTypes.shape({
+    getItem: PropTypes.func,
+    setItem: PropTypes.func,
+    removeItem: PropTypes.func,
+  }),
+  httpClient: PropTypes.object,
+  apiBaseUrl: PropTypes.string,
+  consoleAdapter: PropTypes.object,
+};
+
 export { SettingsPage as default };

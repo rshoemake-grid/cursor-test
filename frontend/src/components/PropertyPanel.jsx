@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { X, Trash2, Save, Check } from "lucide-react";
 import { useState } from "react";
 import {
@@ -29,6 +30,7 @@ import {
   isExplicitlyFalse,
   safeArray,
 } from "../utils/nullChecks";
+import { nullableString } from "../utils/propTypes";
 import { InputConfiguration } from "./PropertyPanel/InputConfiguration";
 import { useLLMProviders } from "../hooks/providers";
 import { useAuth } from "../contexts/AuthContext";
@@ -54,15 +56,18 @@ import {
   PropertyPanelTextarea,
 } from "../styles/propertyPanel.styled";
 
-function PropertyPanel({
-  selectedNodeId,
-  setSelectedNodeId,
-  selectedNodeIds,
-  nodes: nodesProp,
-  onSave,
-  onSaveWorkflow,
-  storage = defaultAdapters.createLocalStorageAdapter(),
-}) {
+function PropertyPanel({ selection, graph, persistence }) {
+  const {
+    selectedNodeId,
+    setSelectedNodeId,
+    selectedNodeIds = new Set(),
+  } = selection;
+  const { nodes: nodesProp } = graph;
+  const {
+    onSave,
+    onSaveWorkflow = () => {},
+    storage = defaultAdapters.createLocalStorageAdapter(),
+  } = persistence;
   const { isAuthenticated } = useAuth();
   const { availableModels } = useLLMProviders({
     storage,
@@ -301,4 +306,25 @@ function PropertyPanel({
     </PropertyPanelAsideRelative>
   );
 }
+
+PropertyPanel.propTypes = {
+  selection: PropTypes.shape({
+    selectedNodeId: nullableString,
+    setSelectedNodeId: PropTypes.func.isRequired,
+    selectedNodeIds: PropTypes.instanceOf(Set),
+  }).isRequired,
+  graph: PropTypes.shape({
+    nodes: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+  persistence: PropTypes.shape({
+    onSave: PropTypes.func,
+    onSaveWorkflow: PropTypes.func,
+    storage: PropTypes.shape({
+      getItem: PropTypes.func,
+      setItem: PropTypes.func,
+      removeItem: PropTypes.func,
+    }),
+  }).isRequired,
+};
+
 export { PropertyPanel as default };

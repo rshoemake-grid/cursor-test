@@ -57,9 +57,7 @@ describe("WorkflowCanvas", () => {
       target: "node-2",
     },
   ];
-  const mockProps = {
-    nodes: mockNodes,
-    edges: mockEdges,
+  const mockHandlers = {
     onNodesChange: jest.fn(),
     onEdgesChange: jest.fn(),
     onConnect: jest.fn(),
@@ -69,6 +67,14 @@ describe("WorkflowCanvas", () => {
     onNodeContextMenu: jest.fn(),
     onEdgeContextMenu: jest.fn(),
     onPaneClick: jest.fn(),
+  };
+  const mockGraph = {
+    nodes: mockNodes,
+    edges: mockEdges,
+  };
+  const mockProps = {
+    graph: mockGraph,
+    handlers: mockHandlers,
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -112,15 +118,18 @@ describe("WorkflowCanvas", () => {
     };
     const { getByTestId } = render(
       <WorkflowCanvas
-        {...mockProps}
-        nodeExecutionStates={nodeExecutionStates}
+        graph={{ ...mockGraph, nodeExecutionStates }}
+        handlers={mockHandlers}
       />,
     );
     expect(getByTestId("react-flow")).toBeInTheDocument();
   });
   it("should handle empty nodeExecutionStates", () => {
     const { getByTestId } = render(
-      <WorkflowCanvas {...mockProps} nodeExecutionStates={{}} />,
+      <WorkflowCanvas
+        graph={{ ...mockGraph, nodeExecutionStates: {} }}
+        handlers={mockHandlers}
+      />,
     );
     expect(getByTestId("react-flow")).toBeInTheDocument();
   });
@@ -132,21 +141,27 @@ describe("WorkflowCanvas", () => {
     };
     const { getByTestId } = render(
       <WorkflowCanvas
-        {...mockProps}
-        nodeExecutionStates={nodeExecutionStates}
+        graph={{ ...mockGraph, nodeExecutionStates }}
+        handlers={mockHandlers}
       />,
     );
     expect(getByTestId("react-flow")).toBeInTheDocument();
   });
   it("should handle empty nodes array", () => {
     const { getByTestId } = render(
-      <WorkflowCanvas {...mockProps} nodes={[]} />,
+      <WorkflowCanvas
+        graph={{ ...mockGraph, nodes: [] }}
+        handlers={mockHandlers}
+      />,
     );
     expect(getByTestId("react-flow")).toBeInTheDocument();
   });
   it("should handle empty edges array", () => {
     const { getByTestId } = render(
-      <WorkflowCanvas {...mockProps} edges={[]} />,
+      <WorkflowCanvas
+        graph={{ ...mockGraph, edges: [] }}
+        handlers={mockHandlers}
+      />,
     );
     expect(getByTestId("react-flow")).toBeInTheDocument();
   });
@@ -159,8 +174,8 @@ describe("WorkflowCanvas", () => {
     };
     const { getByTestId } = render(
       <WorkflowCanvas
-        {...mockProps}
-        nodeExecutionStates={nodeExecutionStates}
+        graph={{ ...mockGraph, nodeExecutionStates }}
+        handlers={mockHandlers}
       />,
     );
     expect(getByTestId("react-flow")).toBeInTheDocument();
@@ -187,9 +202,12 @@ describe("WorkflowCanvas", () => {
     };
     const { getByTestId } = render(
       <WorkflowCanvas
-        {...mockProps}
-        nodes={nodesWithData}
-        nodeExecutionStates={nodeExecutionStates}
+        graph={{
+          nodes: nodesWithData,
+          edges: mockEdges,
+          nodeExecutionStates,
+        }}
+        handlers={mockHandlers}
       />,
     );
     expect(getByTestId("react-flow")).toBeInTheDocument();

@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Position } from "@xyflow/react";
 import { Flag } from "lucide-react";
 import {
@@ -23,4 +24,10 @@ function EndNode({ selected }) {
     </WorkflowTerminalNode>
   );
 }
+
+EndNode.propTypes = {
+  selected: PropTypes.bool,
+  id: PropTypes.string,
+};
+
 export { EndNode as default };

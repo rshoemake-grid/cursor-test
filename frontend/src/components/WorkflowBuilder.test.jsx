@@ -154,14 +154,18 @@ describe("WorkflowBuilder", () => {
   const mockOnWorkflowModified = jest.fn();
   const mockOnWorkflowLoaded = jest.fn();
   const defaultProps = {
-    tabId: "tab-1",
-    workflowId: null,
-    tabName: "Untitled Workflow",
-    tabIsUnsaved: false,
-    onExecutionStart: mockOnExecutionStart,
-    onWorkflowSaved: mockOnWorkflowSaved,
-    onWorkflowModified: mockOnWorkflowModified,
-    onWorkflowLoaded: mockOnWorkflowLoaded,
+    tab: {
+      tabId: "tab-1",
+      workflowId: null,
+      tabName: "Untitled Workflow",
+      tabIsUnsaved: false,
+    },
+    callbacks: {
+      onExecutionStart: mockOnExecutionStart,
+      onWorkflowSaved: mockOnWorkflowSaved,
+      onWorkflowModified: mockOnWorkflowModified,
+      onWorkflowLoaded: mockOnWorkflowLoaded,
+    },
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -203,7 +207,10 @@ describe("WorkflowBuilder", () => {
     mockApi.getWorkflow.mockResolvedValue(mockWorkflow);
     render(
       <ReactFlowProvider>
-        <WorkflowBuilder {...defaultProps} workflowId="workflow-1" />
+        <WorkflowBuilder
+          {...defaultProps}
+          tab={{ ...defaultProps.tab, workflowId: "workflow-1" }}
+        />
       </ReactFlowProvider>,
     );
     await waitForWithTimeout(() => {

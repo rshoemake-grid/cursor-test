@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+import { nullableString } from "../../utils/propTypes";
 import NodePanel from "../NodePanel";
 import PropertyPanel from "../PropertyPanel";
 import WorkflowCanvas from "../WorkflowCanvas";
@@ -9,93 +11,167 @@ import {
   WorkflowLayoutCenter,
   WorkflowCanvasHost,
 } from "../../styles/workflowBuilderShell.styled";
+
 function WorkflowBuilderLayout({
-  nodes,
-  edges,
-  onNodesChange,
-  onEdgesChange,
-  onConnect,
-  onDrop,
-  onDragOver,
-  onNodeClick,
-  onNodeContextMenu,
-  onEdgeContextMenu,
-  onPaneClick,
-  nodeExecutionStates,
-  selectedNodeId,
-  setSelectedNodeId,
-  notifyModified,
-  clipboardNode,
-  onCopy,
-  onCut,
-  onPaste,
-  reactFlowInstanceRef,
-  selectedNodeIds,
-  activeWorkflowId,
-  workflowTabId,
-  executions,
-  activeExecutionId,
-  onWorkflowUpdate,
-  getWorkflowChatCanvasSnapshot,
-  workflowChatClearNonce,
-  onExecutionLogUpdate,
-  onExecutionStatusUpdate,
-  onExecutionNodeUpdate,
-  onRemoveExecution,
-  onSaveWorkflow,
+  graph,
+  canvasHandlers,
+  selection,
+  keyboard,
+  reactFlow,
+  executionConsole,
+  propertyPanel,
 }) {
+  const { nodes, edges, nodeExecutionStates } = graph;
+  const {
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    onDrop,
+    onDragOver,
+    onNodeClick,
+    onNodeContextMenu,
+    onEdgeContextMenu,
+    onPaneClick,
+  } = canvasHandlers;
+  const {
+    selectedNodeId,
+    setSelectedNodeId,
+    selectedNodeIds,
+    notifyModified,
+  } = selection;
+  const { clipboardNode, onCopy, onCut, onPaste } = keyboard;
+  const { instanceRef } = reactFlow;
+  const {
+    activeWorkflowId,
+    workflowTabId,
+    executions,
+    activeExecutionId,
+    onWorkflowUpdate,
+    getWorkflowChatCanvasSnapshot,
+    workflowChatClearNonce,
+    onExecutionLogUpdate,
+    onExecutionStatusUpdate,
+    onExecutionNodeUpdate,
+    onRemoveExecution,
+  } = executionConsole;
+  const { onSaveWorkflow } = propertyPanel;
   return (
     <WorkflowLayoutRow>
       <NodePanel />
       <WorkflowLayoutCenter>
         <WorkflowCanvasHost>
           <KeyboardHandler
-            selectedNodeId={selectedNodeId}
-            setSelectedNodeId={setSelectedNodeId}
-            notifyModified={notifyModified}
-            clipboardNode={clipboardNode}
-            onCopy={onCopy}
-            onCut={onCut}
-            onPaste={onPaste}
+            selection={{
+              selectedNodeId,
+              setSelectedNodeId,
+              notifyModified,
+            }}
+            keyboard={{
+              clipboardNode,
+              onCopy,
+              onCut,
+              onPaste,
+            }}
           />
-          <ReactFlowInstanceCapture instanceRef={reactFlowInstanceRef} />
+          <ReactFlowInstanceCapture instanceRef={instanceRef} />
           <WorkflowCanvas
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onNodeClick={onNodeClick}
-            onNodeContextMenu={onNodeContextMenu}
-            onEdgeContextMenu={onEdgeContextMenu}
-            onPaneClick={onPaneClick}
-            nodeExecutionStates={nodeExecutionStates}
+            graph={{
+              nodes,
+              edges,
+              nodeExecutionStates,
+            }}
+            handlers={{
+              onNodesChange,
+              onEdgesChange,
+              onConnect,
+              onDrop,
+              onDragOver,
+              onNodeClick,
+              onNodeContextMenu,
+              onEdgeContextMenu,
+              onPaneClick,
+            }}
           />
         </WorkflowCanvasHost>
         <ExecutionConsole
-          activeWorkflowId={activeWorkflowId}
-          workflowTabId={workflowTabId}
-          executions={executions}
-          activeExecutionId={activeExecutionId}
-          onWorkflowUpdate={onWorkflowUpdate}
-          getWorkflowChatCanvasSnapshot={getWorkflowChatCanvasSnapshot}
-          workflowChatClearNonce={workflowChatClearNonce}
-          onExecutionLogUpdate={onExecutionLogUpdate}
-          onExecutionStatusUpdate={onExecutionStatusUpdate}
-          onExecutionNodeUpdate={onExecutionNodeUpdate}
-          onRemoveExecution={onRemoveExecution}
+          workflowContext={{
+            activeWorkflowId,
+            workflowTabId,
+          }}
+          executionsState={{
+            executions,
+            activeExecutionId,
+          }}
+          chatBridge={{
+            onWorkflowUpdate,
+            getWorkflowChatCanvasSnapshot,
+            workflowChatClearNonce,
+          }}
+          executionCallbacks={{
+            onExecutionLogUpdate,
+            onExecutionStatusUpdate,
+            onExecutionNodeUpdate,
+            onRemoveExecution,
+          }}
         />
       </WorkflowLayoutCenter>
       <PropertyPanel
-        selectedNodeId={selectedNodeId}
-        setSelectedNodeId={setSelectedNodeId}
-        selectedNodeIds={selectedNodeIds}
-        nodes={nodes}
-        onSaveWorkflow={onSaveWorkflow}
+        selection={selection}
+        graph={{ nodes }}
+        persistence={propertyPanel}
       />
     </WorkflowLayoutRow>
   );
 }
+
+WorkflowBuilderLayout.propTypes = {
+  graph: PropTypes.shape({
+    nodes: PropTypes.arrayOf(PropTypes.object).isRequired,
+    edges: PropTypes.arrayOf(PropTypes.object).isRequired,
+    nodeExecutionStates: PropTypes.object,
+  }).isRequired,
+  canvasHandlers: PropTypes.shape({
+    onNodesChange: PropTypes.func.isRequired,
+    onEdgesChange: PropTypes.func.isRequired,
+    onConnect: PropTypes.func.isRequired,
+    onDrop: PropTypes.func.isRequired,
+    onDragOver: PropTypes.func.isRequired,
+    onNodeClick: PropTypes.func.isRequired,
+    onNodeContextMenu: PropTypes.func.isRequired,
+    onEdgeContextMenu: PropTypes.func.isRequired,
+    onPaneClick: PropTypes.func.isRequired,
+  }).isRequired,
+  selection: PropTypes.shape({
+    selectedNodeId: nullableString,
+    setSelectedNodeId: PropTypes.func.isRequired,
+    selectedNodeIds: PropTypes.instanceOf(Set),
+    notifyModified: PropTypes.func.isRequired,
+  }).isRequired,
+  keyboard: PropTypes.shape({
+    clipboardNode: PropTypes.object,
+    onCopy: PropTypes.func.isRequired,
+    onCut: PropTypes.func.isRequired,
+    onPaste: PropTypes.func.isRequired,
+  }).isRequired,
+  reactFlow: PropTypes.shape({
+    instanceRef: PropTypes.shape({ current: PropTypes.any }),
+  }).isRequired,
+  executionConsole: PropTypes.shape({
+    activeWorkflowId: nullableString,
+    workflowTabId: nullableString,
+    executions: PropTypes.arrayOf(PropTypes.object),
+    activeExecutionId: nullableString,
+    onWorkflowUpdate: PropTypes.func.isRequired,
+    getWorkflowChatCanvasSnapshot: PropTypes.func,
+    workflowChatClearNonce: PropTypes.number,
+    onExecutionLogUpdate: PropTypes.func,
+    onExecutionStatusUpdate: PropTypes.func,
+    onExecutionNodeUpdate: PropTypes.func,
+    onRemoveExecution: PropTypes.func,
+  }).isRequired,
+  propertyPanel: PropTypes.shape({
+    onSaveWorkflow: PropTypes.func.isRequired,
+  }).isRequired,
+};
+
 export { WorkflowBuilderLayout };

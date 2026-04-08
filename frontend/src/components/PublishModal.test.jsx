@@ -14,19 +14,30 @@ describe("PublishModal", () => {
     estimated_time: "30 minutes",
     tags: "test, automation",
   };
-  const mockProps = {
-    isOpen: true,
-    form: mockForm,
-    isPublishing: false,
+  const mockHandlers = {
     onClose: jest.fn(),
     onFormChange: jest.fn(),
     onSubmit: jest.fn(),
+  };
+  const mockDialog = {
+    isOpen: true,
+    isPublishing: false,
+  };
+  const mockProps = {
+    dialog: mockDialog,
+    form: mockForm,
+    handlers: mockHandlers,
   };
   beforeEach(() => {
     jest.clearAllMocks();
   });
   it("should not render when isOpen is false", () => {
-    render(<PublishModal {...mockProps} isOpen={false} />);
+    render(
+      <PublishModal
+        {...mockProps}
+        dialog={{ ...mockDialog, isOpen: false }}
+      />,
+    );
     expect(
       screen.queryByText("Publish to Marketplace"),
     ).not.toBeInTheDocument();
@@ -57,7 +68,7 @@ describe("PublishModal", () => {
         value: "New Name",
       },
     });
-    expect(mockProps.onFormChange).toHaveBeenCalledWith("name", "New Name");
+    expect(mockHandlers.onFormChange).toHaveBeenCalledWith("name", "New Name");
   });
   it("should call onFormChange when description changes", () => {
     render(<PublishModal {...mockProps} />);
@@ -67,7 +78,7 @@ describe("PublishModal", () => {
         value: "New description",
       },
     });
-    expect(mockProps.onFormChange).toHaveBeenCalledWith(
+    expect(mockHandlers.onFormChange).toHaveBeenCalledWith(
       "description",
       "New description",
     );
@@ -81,7 +92,7 @@ describe("PublishModal", () => {
         value: "data_analysis",
       },
     });
-    expect(mockProps.onFormChange).toHaveBeenCalledWith(
+    expect(mockHandlers.onFormChange).toHaveBeenCalledWith(
       "category",
       "data_analysis",
     );
@@ -96,7 +107,7 @@ describe("PublishModal", () => {
         value: "intermediate",
       },
     });
-    expect(mockProps.onFormChange).toHaveBeenCalledWith(
+    expect(mockHandlers.onFormChange).toHaveBeenCalledWith(
       "difficulty",
       "intermediate",
     );
@@ -109,7 +120,7 @@ describe("PublishModal", () => {
         value: "1 hour",
       },
     });
-    expect(mockProps.onFormChange).toHaveBeenCalledWith(
+    expect(mockHandlers.onFormChange).toHaveBeenCalledWith(
       "estimated_time",
       "1 hour",
     );
@@ -122,7 +133,7 @@ describe("PublishModal", () => {
         value: "new, tags",
       },
     });
-    expect(mockProps.onFormChange).toHaveBeenCalledWith("tags", "new, tags");
+    expect(mockHandlers.onFormChange).toHaveBeenCalledWith("tags", "new, tags");
   });
   it("should call onClose when close button is clicked", () => {
     render(<PublishModal {...mockProps} />);
@@ -130,7 +141,7 @@ describe("PublishModal", () => {
     const closeButton = closeButtons.find((btn) => btn.querySelector("svg"));
     if (closeButton) {
       fireEvent.click(closeButton);
-      expect(mockProps.onClose).toHaveBeenCalled();
+      expect(mockHandlers.onClose).toHaveBeenCalled();
     }
   });
   it("should call onClose when cancel button is clicked", () => {
@@ -139,22 +150,22 @@ describe("PublishModal", () => {
       name: /cancel/i,
     });
     fireEvent.click(cancelButton);
-    expect(mockProps.onClose).toHaveBeenCalled();
+    expect(mockHandlers.onClose).toHaveBeenCalled();
   });
   it("should call onSubmit when form is submitted", async () => {
-    mockProps.onSubmit.mockResolvedValue(void 0);
+    mockHandlers.onSubmit.mockResolvedValue(void 0);
     render(<PublishModal {...mockProps} />);
     const submitButton = screen.getByRole("button", {
       name: /publish/i,
     });
     fireEvent.click(submitButton);
     await waitForWithTimeout(() => {
-      expect(mockProps.onSubmit).toHaveBeenCalled();
+      expect(mockHandlers.onSubmit).toHaveBeenCalled();
     }, 2e3);
   });
   it("should prevent default form submission", async () => {
     const preventDefaultSpy = jest.fn();
-    mockProps.onSubmit.mockImplementation((e) => {
+    mockHandlers.onSubmit.mockImplementation((e) => {
       e.preventDefault();
       preventDefaultSpy();
     });
@@ -163,23 +174,38 @@ describe("PublishModal", () => {
     if (form) {
       fireEvent.submit(form);
       await waitForWithTimeout(() => {
-        expect(mockProps.onSubmit).toHaveBeenCalled();
+        expect(mockHandlers.onSubmit).toHaveBeenCalled();
       }, 2e3);
     }
   });
   it("should disable submit button when isPublishing is true", () => {
-    render(<PublishModal {...mockProps} isPublishing={true} />);
+    render(
+      <PublishModal
+        {...mockProps}
+        dialog={{ ...mockDialog, isPublishing: true }}
+      />,
+    );
     const submitButton = screen.getByRole("button", {
       name: /publishing/i,
     });
     expect(submitButton).toBeDisabled();
   });
   it('should show "Publishing..." text when isPublishing is true', () => {
-    render(<PublishModal {...mockProps} isPublishing={true} />);
+    render(
+      <PublishModal
+        {...mockProps}
+        dialog={{ ...mockDialog, isPublishing: true }}
+      />,
+    );
     expect(screen.getByText("Publishing...")).toBeInTheDocument();
   });
   it('should show "Publish" text when isPublishing is false', () => {
-    render(<PublishModal {...mockProps} isPublishing={false} />);
+    render(
+      <PublishModal
+        {...mockProps}
+        dialog={{ ...mockDialog, isPublishing: false }}
+      />,
+    );
     expect(screen.getByText("Publish")).toBeInTheDocument();
   });
   it("should render all category options", () => {

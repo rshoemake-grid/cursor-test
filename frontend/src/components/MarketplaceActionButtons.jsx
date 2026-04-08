@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Download, Trash2 } from "lucide-react";
 import {
   MpActionBtnPrimary,
@@ -45,4 +46,15 @@ function MarketplaceActionButtons({
     </>
   );
 }
+
+MarketplaceActionButtons.propTypes = {
+  selectedCount: PropTypes.number.isRequired,
+  hasOfficial: PropTypes.bool,
+  onLoad: PropTypes.func,
+  onDelete: PropTypes.func,
+  onUse: PropTypes.func,
+  type: PropTypes.oneOf(["workflow", "tool", "agent"]).isRequired,
+  showDelete: PropTypes.bool,
+};
+
 export { MarketplaceActionButtons };

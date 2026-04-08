@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import PropTypes from "prop-types";
 import { X } from "lucide-react";
 import {
   LogFieldLabel,
@@ -217,4 +218,17 @@ function AdvancedFiltersPanel({
     </LogAdvPanelRoot>
   );
 }
+
+AdvancedFiltersPanel.propTypes = {
+  filters: PropTypes.object.isRequired,
+  onFiltersChange: PropTypes.func.isRequired,
+  onClose: PropTypes.func,
+  availableWorkflows: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string,
+    }),
+  ),
+};
+
 export { AdvancedFiltersPanel as default };

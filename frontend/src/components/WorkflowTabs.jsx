@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import PropTypes from "prop-types";
 import { createNewTab } from "../hooks/utils/tabUtils";
 import { Plus } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
@@ -180,32 +181,42 @@ function WorkflowTabs({
     <WorkflowTabsRoot>
       <TabBar
         tabs={tabs}
-        activeTabId={activeTabId}
-        editingTabId={editingTabId}
-        editingName={editingName}
-        editingInputRef={editingInputRef}
-        setEditingName={setEditingName}
-        onTabClick={setActiveTabId}
-        onTabDoubleClick={startEditingTabName}
-        onCloseTab={handleCloseTab}
-        onInputBlur={handleInputBlur}
-        onInputKeyDown={handleInputKeyDown}
-        onNewWorkflow={handleNewWorkflow}
-        onSave={() => void builderRef.current?.saveWorkflow()}
-        onClearWorkflow={() => void builderRef.current?.clearWorkflow?.()}
-        onExecute={() => builderRef.current?.executeWorkflow()}
-        onPublish={openPublishModal}
-        onExport={() => builderRef.current?.exportWorkflow()}
+        tabState={{
+          activeTabId,
+          editingTabId,
+          editingName,
+        }}
+        tabActions={{
+          setActiveTabId,
+          setEditingName,
+          startEditingTabName,
+          handleCloseTab,
+        }}
+        inputProps={{
+          editingInputRef,
+          onBlur: handleInputBlur,
+          onKeyDown: handleInputKeyDown,
+        }}
+        workflowActions={{
+          onNew: handleNewWorkflow,
+          onSave: () => void builderRef.current?.saveWorkflow(),
+          onClear: () => void builderRef.current?.clearWorkflow?.(),
+          onExecute: () => builderRef.current?.executeWorkflow(),
+          onPublish: openPublishModal,
+          onExport: () => builderRef.current?.exportWorkflow(),
+        }}
       />
       {activeTab && (
         <WorkflowBuilderMain>
           <WorkflowBuilder
             key={activeTab.id}
             ref={builderRef}
-            tabId={activeTab.id}
-            workflowId={activeTab.workflowId}
-            tabName={activeTab.name}
-            tabIsUnsaved={activeTab.isUnsaved}
+            tab={{
+              tabId: activeTab.id,
+              workflowId: activeTab.workflowId,
+              tabName: activeTab.name,
+              tabIsUnsaved: activeTab.isUnsaved,
+            }}
             workflowTabs={tabs
               .filter((tab) => tab.workflowId !== null)
               .map((tab) => ({
@@ -214,20 +225,20 @@ function WorkflowTabs({
                 executions: tab.executions,
                 activeExecutionId: tab.activeExecutionId,
               }))}
-            onExecutionStart={handleExecutionStart}
-            onWorkflowSaved={(workflowId, name) =>
-              handleWorkflowSaved(activeTab.id, workflowId, name)
-            }
-            onWorkflowModified={() => handleWorkflowModified(activeTab.id)}
-            onWorkflowLoaded={(workflowId, name) =>
-              handleLoadWorkflow(activeTab.id, workflowId, name)
-            }
-            onCloseWorkflow={handleCloseWorkflow}
-            onClearExecutions={handleClearExecutions}
-            onExecutionLogUpdate={handleExecutionLogUpdate}
-            onExecutionStatusUpdate={handleExecutionStatusUpdate}
-            onExecutionNodeUpdate={handleExecutionNodeUpdate}
-            onRemoveExecution={handleRemoveExecution}
+            callbacks={{
+              onExecutionStart: handleExecutionStart,
+              onWorkflowSaved: (workflowId, name) =>
+                handleWorkflowSaved(activeTab.id, workflowId, name),
+              onWorkflowModified: () => handleWorkflowModified(activeTab.id),
+              onWorkflowLoaded: (workflowId, name) =>
+                handleLoadWorkflow(activeTab.id, workflowId, name),
+              onCloseWorkflow: handleCloseWorkflow,
+              onClearExecutions: handleClearExecutions,
+              onExecutionLogUpdate: handleExecutionLogUpdate,
+              onExecutionStatusUpdate: handleExecutionStatusUpdate,
+              onExecutionNodeUpdate: handleExecutionNodeUpdate,
+              onRemoveExecution: handleRemoveExecution,
+            }}
           />
         </WorkflowBuilderMain>
       )}
@@ -245,14 +256,32 @@ function WorkflowTabs({
         </WorkflowEmptyMain>
       )}
       <PublishModal
-        isOpen={showPublishModal}
+        dialog={{
+          isOpen: showPublishModal,
+          isPublishing,
+        }}
         form={publishForm}
-        isPublishing={isPublishing}
-        onClose={closePublishModal}
-        onFormChange={handlePublishFormChange}
-        onSubmit={handlePublish}
+        handlers={{
+          onClose: closePublishModal,
+          onFormChange: handlePublishFormChange,
+          onSubmit: handlePublish,
+        }}
       />
     </WorkflowTabsRoot>
   );
 }
+
+WorkflowTabs.propTypes = {
+  initialWorkflowId: PropTypes.string,
+  workflowLoadKey: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onExecutionStart: PropTypes.func,
+  storage: PropTypes.shape({
+    getItem: PropTypes.func,
+    setItem: PropTypes.func,
+    removeItem: PropTypes.func,
+  }),
+  httpClient: PropTypes.object,
+  apiBaseUrl: PropTypes.string,
+};
+
 export { WorkflowTabs as default };

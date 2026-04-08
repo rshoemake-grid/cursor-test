@@ -1,4 +1,5 @@
 import { memo } from "react";
+import PropTypes from "prop-types";
 import { TemplateCard } from "./TemplateCard";
 import {
   EmptyStateCentered,
@@ -43,4 +44,15 @@ const TemplateGrid = memo(function TemplateGrid2({
     </TemplateGridLayout>
   );
 });
+
+TemplateGrid.propTypes = {
+  items: PropTypes.arrayOf(PropTypes.object).isRequired,
+  selectedIds: PropTypes.object,
+  type: PropTypes.oneOf(["template", "agent", "tool"]),
+  onToggleSelect: PropTypes.func.isRequired,
+  onCardClick: PropTypes.func.isRequired,
+  emptyMessage: PropTypes.string,
+  footerText: PropTypes.string,
+};
+
 export { TemplateGrid };

@@ -1,4 +1,5 @@
 import { useMemo, memo } from "react";
+import PropTypes from "prop-types";
 import styled from "styled-components";
 import {
   ReactFlow,
@@ -25,20 +26,19 @@ const StyledMiniMap = styled(MiniMap)`
     0 4px 6px -4px rgb(0 0 0 / 0.1);
 `;
 
-const WorkflowCanvas = memo(function WorkflowCanvas2({
-  nodes,
-  edges,
-  onNodesChange,
-  onEdgesChange,
-  onConnect,
-  onDrop,
-  onDragOver,
-  onNodeClick,
-  onNodeContextMenu,
-  onEdgeContextMenu,
-  onPaneClick,
-  nodeExecutionStates = {},
-}) {
+const WorkflowCanvas = memo(function WorkflowCanvas2({ graph, handlers }) {
+  const { nodes, edges, nodeExecutionStates = {} } = graph;
+  const {
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    onDrop,
+    onDragOver,
+    onNodeClick,
+    onNodeContextMenu,
+    onEdgeContextMenu,
+    onPaneClick,
+  } = handlers;
   const nodesWithExecutionState = useMemo(() => {
     return nodes.map((node) => {
       const nodeExecutionState = nodeExecutionStates[node.id];
@@ -116,5 +116,25 @@ const WorkflowCanvas = memo(function WorkflowCanvas2({
     </WorkflowCanvasAbsolute>
   );
 });
+
+WorkflowCanvas.propTypes = {
+  graph: PropTypes.shape({
+    nodes: PropTypes.arrayOf(PropTypes.object).isRequired,
+    edges: PropTypes.arrayOf(PropTypes.object).isRequired,
+    nodeExecutionStates: PropTypes.object,
+  }).isRequired,
+  handlers: PropTypes.shape({
+    onNodesChange: PropTypes.func.isRequired,
+    onEdgesChange: PropTypes.func.isRequired,
+    onConnect: PropTypes.func.isRequired,
+    onDrop: PropTypes.func.isRequired,
+    onDragOver: PropTypes.func.isRequired,
+    onNodeClick: PropTypes.func.isRequired,
+    onNodeContextMenu: PropTypes.func.isRequired,
+    onEdgeContextMenu: PropTypes.func.isRequired,
+    onPaneClick: PropTypes.func.isRequired,
+  }).isRequired,
+};
+
 var stdin_default = WorkflowCanvas;
 export { stdin_default as default };

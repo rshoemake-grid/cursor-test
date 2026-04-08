@@ -67,6 +67,41 @@ describe("ExecutionConsole", () => {
       },
     ],
   };
+  function ec(p = {}) {
+    const {
+      activeWorkflowId = "workflow-1",
+      workflowTabId = null,
+      executions = [],
+      activeExecutionId = null,
+      onWorkflowUpdate,
+      getWorkflowChatCanvasSnapshot = null,
+      workflowChatClearNonce = 0,
+      onExecutionLogUpdate = mockOnExecutionLogUpdate,
+      onExecutionStatusUpdate = mockOnExecutionStatusUpdate,
+      onExecutionNodeUpdate = mockOnExecutionNodeUpdate,
+      onRemoveExecution = mockOnRemoveExecution,
+      documentAdapter,
+    } = p;
+    const props = {
+      workflowContext: { activeWorkflowId, workflowTabId },
+      executionsState: { executions, activeExecutionId },
+      chatBridge: {
+        onWorkflowUpdate,
+        getWorkflowChatCanvasSnapshot,
+        workflowChatClearNonce,
+      },
+      executionCallbacks: {
+        onExecutionLogUpdate,
+        onExecutionStatusUpdate,
+        onExecutionNodeUpdate,
+        onRemoveExecution,
+      },
+    };
+    if (documentAdapter !== undefined) {
+      props.environment = { documentAdapter };
+    }
+    return props;
+  }
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseWebSocket.mockImplementation(() => ({}));
@@ -74,32 +109,23 @@ describe("ExecutionConsole", () => {
   it("should render collapsed console", () => {
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[]}
-        activeExecutionId={null}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [], activeExecutionId: null })}
+      />,    );
     expect(screen.getByText("Chat")).toBeInTheDocument();
   });
   it("should render with executions", () => {
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[mockExecution]}
-        activeExecutionId={null}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: null })}
+      />,    );
     expect(screen.getByText("Chat")).toBeInTheDocument();
     expect(screen.getByText("exec-123")).toBeInTheDocument();
   });
   it("should expand when toggle button is clicked", async () => {
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[]}
-        activeExecutionId={null}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [], activeExecutionId: null })}
+      />,    );
     const buttons = screen.getAllByRole("button");
     const toggleButton = buttons.find((btn) => btn.querySelector("svg"));
     if (toggleButton) {
@@ -112,11 +138,8 @@ describe("ExecutionConsole", () => {
   it("should switch to chat tab", async () => {
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[mockExecution]}
-        activeExecutionId={null}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: null })}
+      />,    );
     const buttons = screen.getAllByRole("button");
     const toggleButton = buttons.find((btn) => btn.querySelector("svg"));
     if (toggleButton) {
@@ -134,11 +157,8 @@ describe("ExecutionConsole", () => {
   it("should switch to execution tab", async () => {
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[mockExecution]}
-        activeExecutionId={null}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: null })}
+      />,    );
     const buttons = screen.getAllByRole("button");
     const toggleButton = buttons.find((btn) => btn.querySelector("svg"));
     if (toggleButton) {
@@ -156,11 +176,8 @@ describe("ExecutionConsole", () => {
   it("should display execution logs", async () => {
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[mockExecution]}
-        activeExecutionId="exec-123"
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123" })}
+      />,    );
     await waitForWithTimeout(() => {
       expect(screen.getByText("Test log message")).toBeInTheDocument();
     });
@@ -172,11 +189,8 @@ describe("ExecutionConsole", () => {
     };
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[execWithoutLogs]}
-        activeExecutionId="exec-123"
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [execWithoutLogs], activeExecutionId: "exec-123" })}
+      />,    );
     await waitForWithTimeout(() => {
       expect(screen.getByText(/No logs yet/)).toBeInTheDocument();
     });
@@ -184,24 +198,15 @@ describe("ExecutionConsole", () => {
   it("should handle null activeWorkflowId", () => {
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId={null}
-        executions={[]}
-        activeExecutionId={null}
-      />,
-    );
+        {...ec({ activeWorkflowId: null, executions: [], activeExecutionId: null })}
+      />,    );
     expect(screen.getByText("Chat")).toBeInTheDocument();
   });
   it("should call useWebSocket with correct parameters", () => {
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[mockExecution]}
-        activeExecutionId="exec-123"
-        onExecutionLogUpdate={mockOnExecutionLogUpdate}
-        onExecutionStatusUpdate={mockOnExecutionStatusUpdate}
-        onExecutionNodeUpdate={mockOnExecutionNodeUpdate}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionLogUpdate: mockOnExecutionLogUpdate, onExecutionStatusUpdate: mockOnExecutionStatusUpdate, onExecutionNodeUpdate: mockOnExecutionNodeUpdate })}
+      />,    );
     expect(mockUseWebSocket).toHaveBeenCalledWith(
       expect.objectContaining({
         executionId: "exec-123",
@@ -222,12 +227,8 @@ describe("ExecutionConsole", () => {
     });
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[mockExecution]}
-        activeExecutionId="exec-123"
-        onExecutionLogUpdate={mockOnExecutionLogUpdate}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionLogUpdate: mockOnExecutionLogUpdate })}
+      />,    );
     const testLog = {
       level: "INFO",
       message: "WebSocket log",
@@ -248,12 +249,8 @@ describe("ExecutionConsole", () => {
     });
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[mockExecution]}
-        activeExecutionId="exec-123"
-        onExecutionStatusUpdate={mockOnExecutionStatusUpdate}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionStatusUpdate: mockOnExecutionStatusUpdate })}
+      />,    );
     onStatusCallback("completed");
     expect(mockOnExecutionStatusUpdate).toHaveBeenCalledWith(
       "workflow-1",
@@ -270,12 +267,8 @@ describe("ExecutionConsole", () => {
     });
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[mockExecution]}
-        activeExecutionId="exec-123"
-        onExecutionNodeUpdate={mockOnExecutionNodeUpdate}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionNodeUpdate: mockOnExecutionNodeUpdate })}
+      />,    );
     onNodeUpdateCallback("node-1", {
       status: "completed",
     });
@@ -297,12 +290,8 @@ describe("ExecutionConsole", () => {
     });
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[mockExecution]}
-        activeExecutionId="exec-123"
-        onExecutionStatusUpdate={mockOnExecutionStatusUpdate}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionStatusUpdate: mockOnExecutionStatusUpdate })}
+      />,    );
     onErrorCallback({
       message: "WebSocket error",
     });
@@ -317,12 +306,8 @@ describe("ExecutionConsole", () => {
   it.skip("should switch to chat when closing active execution tab", async () => {
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[mockExecution]}
-        activeExecutionId="exec-123"
-        onRemoveExecution={mockOnRemoveExecution}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onRemoveExecution: mockOnRemoveExecution })}
+      />,    );
     const buttons = screen.getAllByRole("button");
     const toggleButton = buttons.find((btn) => btn.querySelector("svg"));
     if (toggleButton) {
@@ -345,19 +330,13 @@ describe("ExecutionConsole", () => {
   it.skip("should auto-switch to new execution tab when activeExecutionId changes", async () => {
     const { rerender } = renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[mockExecution]}
-        activeExecutionId={null}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: null })}
+      />,    );
     rerender(
       <AuthProvider>
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId="exec-123"
-        />
-      </AuthProvider>,
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123" })}
+        />      </AuthProvider>,
     );
     await waitForWithTimeout(() => {
       expect(screen.getByText(/Execution exec-123/)).toBeInTheDocument();
@@ -366,11 +345,8 @@ describe("ExecutionConsole", () => {
   it.skip("should handle resizing", async () => {
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[]}
-        activeExecutionId={null}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [], activeExecutionId: null })}
+      />,    );
     const buttons = screen.getAllByRole("button");
     const toggleButton = buttons.find((btn) => btn.querySelector("svg"));
     if (toggleButton) {
@@ -397,22 +373,16 @@ describe("ExecutionConsole", () => {
     };
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[completedExecution]}
-        activeExecutionId={null}
-      />,
-    );
+        {...ec({ activeWorkflowId: "workflow-1", executions: [completedExecution], activeExecutionId: null })}
+      />,    );
     const statusBadge = screen.getByTestId("execution-status-badge");
     expect(statusBadge).toBeInTheDocument();
   });
   it("should handle null activeWorkflowId", () => {
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId={null}
-        executions={[]}
-        activeExecutionId={null}
-      />,
-    );
+        {...ec({ activeWorkflowId: null, executions: [], activeExecutionId: null })}
+      />,    );
     expect(screen.getByText("Chat")).toBeInTheDocument();
   });
   it("should not call callbacks when activeWorkflowId is null", () => {
@@ -423,12 +393,8 @@ describe("ExecutionConsole", () => {
     });
     renderWithAuth(
       <ExecutionConsole
-        activeWorkflowId={null}
-        executions={[]}
-        activeExecutionId="exec-123"
-        onExecutionLogUpdate={mockOnExecutionLogUpdate}
-      />,
-    );
+        {...ec({ activeWorkflowId: null, executions: [], activeExecutionId: "exec-123", onExecutionLogUpdate: mockOnExecutionLogUpdate })}
+      />,    );
     onLogCallback({
       level: "INFO",
       message: "Test",

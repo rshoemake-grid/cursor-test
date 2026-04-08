@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { MpTabButton, MpTabIconWrap } from "../../styles/marketplaceComponents.styled";
 
 function resolveIconSize(iconSize) {
@@ -24,4 +25,13 @@ function MarketplaceTabButton({
     </MpTabButton>
   );
 }
+
+MarketplaceTabButton.propTypes = {
+  label: PropTypes.string.isRequired,
+  icon: PropTypes.elementType.isRequired,
+  isActive: PropTypes.bool.isRequired,
+  onClick: PropTypes.func.isRequired,
+  iconSize: PropTypes.string,
+};
+
 export { MarketplaceTabButton };

@@ -1,22 +1,22 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 const waitForWithTimeout = async (callback, timeout = 2e3) => {
-  const wasUsingFakeTimers = typeof jest.getRealSystemTime === "function";
-  if (wasUsingFakeTimers) {
+  let fakeTimersActive = false;
+  try {
     jest.advanceTimersByTime(0);
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      return await waitFor(callback, {
-        timeout,
-      });
-    } finally {
-      jest.useFakeTimers();
-    }
-  } else {
-    return await waitFor(callback, {
-      timeout,
-    });
+    fakeTimersActive = true;
+  } catch {
+    fakeTimersActive = false;
+  }
+  if (!fakeTimersActive) {
+    return await waitFor(callback, { timeout });
+  }
+  jest.runOnlyPendingTimers();
+  jest.useRealTimers();
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    return await waitFor(callback, { timeout });
+  } finally {
+    jest.useFakeTimers();
   }
 };
 import { ReactFlowProvider } from "@xyflow/react";
@@ -173,6 +173,35 @@ describe("PropertyPanel", () => {
   const mockSetNodes = jest.fn();
   const mockDeleteElements = jest.fn();
   const mockGetNodes = jest.fn(() => []);
+  function pp(p = {}) {
+    const {
+      selectedNodeId = null,
+      setSelectedNodeId = mockSetSelectedNodeId,
+      selectedNodeIds,
+      nodes,
+      onSave,
+      onSaveWorkflow,
+      storage,
+    } = p;
+    const selection = {
+      selectedNodeId,
+      setSelectedNodeId,
+      ...(selectedNodeIds !== undefined ? { selectedNodeIds } : {}),
+    };
+    const graph = {
+      nodes: nodes ?? [],
+    };
+    const persistence = {
+      ...(onSave !== undefined ? { onSave } : {}),
+      ...(onSaveWorkflow !== undefined ? { onSaveWorkflow } : {}),
+      ...(storage !== undefined ? { storage } : {}),
+    };
+    return {
+      selection,
+      graph,
+      persistence,
+    };
+  }
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
@@ -188,11 +217,13 @@ describe("PropertyPanel", () => {
     });
     mockShowError.mockClear();
   });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
   it("should render PropertyPanel", () => {
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId={null}
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: null, setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     expect(screen.queryByText(/Properties/)).not.toBeInTheDocument();
@@ -210,8 +241,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -228,8 +258,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -246,8 +275,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     expect(screen.getByTestId("condition-node-editor")).toBeInTheDocument();
@@ -264,8 +292,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     expect(screen.getByTestId("loop-node-editor")).toBeInTheDocument();
@@ -283,8 +310,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     await waitForWithTimeout(() => {
@@ -303,8 +329,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     const deleteButtons = screen.queryAllByTitle(/Delete/);
@@ -338,9 +363,7 @@ describe("PropertyPanel", () => {
     const selectedNodeIds = new Set(["node-1", "node-2"]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
-        selectedNodeIds={selectedNodeIds}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, selectedNodeIds: selectedNodeIds })}
       />,
     );
     expect(screen.getByText(/Multiple nodes selected/)).toBeInTheDocument();
@@ -357,8 +380,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     const closeButtons = screen.queryAllByTitle(/Close/);
@@ -382,9 +404,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
-        onSaveWorkflow={mockOnSaveWorkflow}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSaveWorkflow: mockOnSaveWorkflow })}
       />,
     );
     const saveButtons = screen.queryAllByTitle(/Save workflow|Save/);
@@ -409,8 +429,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -428,8 +447,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -454,8 +472,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue(mockNodes);
     const { rerender } = renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -463,10 +480,8 @@ describe("PropertyPanel", () => {
       <AuthProvider>
         <ReactFlowProvider>
           <PropertyPanel
-            selectedNodeId="node-2"
-            setSelectedNodeId={mockSetSelectedNodeId}
-          />
-        </ReactFlowProvider>
+            {...pp({ selectedNodeId: "node-2", setSelectedNodeId: mockSetSelectedNodeId })}
+          />        </ReactFlowProvider>
       </AuthProvider>,
     );
     expect(screen.getByTestId("condition-node-editor")).toBeInTheDocument();
@@ -483,9 +498,7 @@ describe("PropertyPanel", () => {
     ];
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
-        nodes={mockNodes}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, nodes: mockNodes })}
       />,
     );
     expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -502,8 +515,7 @@ describe("PropertyPanel", () => {
     mockShowConfirm.mockResolvedValue(false);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     const deleteButton = screen.queryAllByTitle(/Delete/)[0];
@@ -527,9 +539,7 @@ describe("PropertyPanel", () => {
       .mockRejectedValue(new Error("Save failed"));
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
-        onSaveWorkflow={mockOnSaveWorkflow}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSaveWorkflow: mockOnSaveWorkflow })}
       />,
     );
     const saveButton = screen.getByTitle(/Save changes/);
@@ -552,9 +562,7 @@ describe("PropertyPanel", () => {
     const mockOnSaveWorkflow = jest.fn().mockRejectedValue("String error");
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
-        onSaveWorkflow={mockOnSaveWorkflow}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSaveWorkflow: mockOnSaveWorkflow })}
       />,
     );
     const saveButton = screen.getByTitle(/Save changes/);
@@ -586,9 +594,7 @@ describe("PropertyPanel", () => {
     const selectedNodeIds = new Set(["node-1", "node-2"]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
-        selectedNodeIds={selectedNodeIds}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, selectedNodeIds: selectedNodeIds })}
       />,
     );
     expect(screen.getByText(/Multiple nodes selected/)).toBeInTheDocument();
@@ -608,9 +614,7 @@ describe("PropertyPanel", () => {
     ];
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
-        nodes={mockNodes}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, nodes: mockNodes })}
       />,
     );
     expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -624,8 +628,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     const deleteButton = screen.queryAllByTitle(/Delete/)[0];
@@ -648,8 +651,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     const closeButton = screen.getByTitle(/Close properties panel/);
@@ -669,9 +671,7 @@ describe("PropertyPanel", () => {
     const mockOnSave = jest.fn().mockResolvedValue(void 0);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
-        onSave={mockOnSave}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSave: mockOnSave })}
       />,
     );
     const saveButton = screen.getByTitle(/Save changes/);
@@ -710,8 +710,7 @@ describe("PropertyPanel", () => {
     mockGetNodes.mockReturnValue([mockNode]);
     renderWithProvider(
       <PropertyPanel
-        selectedNodeId="node-1"
-        setSelectedNodeId={mockSetSelectedNodeId}
+        {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
       />,
     );
     expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -749,9 +748,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          storage={mockStorage}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, storage: mockStorage })}
         />,
       );
       await waitForWithTimeout(() => {
@@ -778,9 +775,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          storage={mockStorage}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, storage: mockStorage })}
         />,
       );
       await waitForWithTimeout(() => {
@@ -799,9 +794,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          storage={null}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, storage: null })}
         />,
       );
       await waitForWithTimeout(() => {
@@ -821,8 +814,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       const { rerender } = renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -830,10 +822,8 @@ describe("PropertyPanel", () => {
         <AuthProvider>
           <ReactFlowProvider>
             <PropertyPanel
-              selectedNodeId={null}
-              setSelectedNodeId={mockSetSelectedNodeId}
-            />
-          </ReactFlowProvider>
+              {...pp({ selectedNodeId: null, setSelectedNodeId: mockSetSelectedNodeId })}
+            />          </ReactFlowProvider>
         </AuthProvider>,
       );
       expect(screen.queryByTestId("agent-node-editor")).not.toBeInTheDocument();
@@ -842,8 +832,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="non-existent-node"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "non-existent-node", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.queryByTestId("agent-node-editor")).not.toBeInTheDocument();
@@ -851,9 +840,7 @@ describe("PropertyPanel", () => {
     it("should handle nodes prop with empty array", () => {
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          nodes={[]}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, nodes: [] })}
         />,
       );
       expect(screen.queryByTestId("agent-node-editor")).not.toBeInTheDocument();
@@ -862,8 +849,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.queryByTestId("agent-node-editor")).not.toBeInTheDocument();
@@ -879,9 +865,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          selectedNodeIds={void 0}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, selectedNodeIds: void 0 })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -897,9 +881,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          selectedNodeIds={new Set()}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, selectedNodeIds: new Set() })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -916,9 +898,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          onSave={void 0}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSave: void 0 })}
         />,
       );
       const saveButton = screen.queryByTitle(/Save changes/);
@@ -941,9 +921,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          onSaveWorkflow={void 0}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSaveWorkflow: void 0 })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -960,8 +938,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -978,8 +955,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1001,8 +977,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1024,8 +999,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1044,9 +1018,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          onSaveWorkflow={mockOnSaveWorkflow}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSaveWorkflow: mockOnSaveWorkflow })}
         />,
       );
       const saveButton = screen.queryByTitle(/Save workflow/);
@@ -1071,9 +1043,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          onSaveWorkflow={mockOnSaveWorkflow}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSaveWorkflow: mockOnSaveWorkflow })}
         />,
       );
       const saveButton = screen.queryByTitle(/Save workflow/);
@@ -1125,9 +1095,7 @@ describe("PropertyPanel", () => {
       };
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          storage={mockStorage}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, storage: mockStorage })}
         />,
       );
       await waitForWithTimeout(() => {
@@ -1172,9 +1140,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          storage={mockStorage}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, storage: mockStorage })}
         />,
       );
       await waitForWithTimeout(() => {
@@ -1201,9 +1167,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          storage={mockStorage}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, storage: mockStorage })}
         />,
       );
       await waitForWithTimeout(() => {
@@ -1229,9 +1193,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          storage={mockStorage}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, storage: mockStorage })}
         />,
       );
       await waitForWithTimeout(() => {
@@ -1249,9 +1211,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          storage={null}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, storage: null })}
         />,
       );
       await waitForWithTimeout(() => {
@@ -1270,8 +1230,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("loop-node-editor")).toBeInTheDocument();
@@ -1292,8 +1251,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -1315,8 +1273,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -1337,8 +1294,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -1358,8 +1314,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -1373,8 +1328,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1392,8 +1346,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1410,8 +1363,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1429,8 +1381,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1449,8 +1400,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("condition-node-editor")).toBeInTheDocument();
@@ -1468,9 +1418,7 @@ describe("PropertyPanel", () => {
       };
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          nodes={[mockNode]}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, nodes: [mockNode] })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1486,9 +1434,7 @@ describe("PropertyPanel", () => {
       };
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          nodes={[mockNode]}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, nodes: [mockNode] })}
         />,
       );
       expect(mockGetNodes).toHaveBeenCalled();
@@ -1511,8 +1457,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode1, mockNode2]);
       const { rerender } = renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       await waitForWithTimeout(() => {
@@ -1522,10 +1467,8 @@ describe("PropertyPanel", () => {
         <AuthProvider>
           <ReactFlowProvider>
             <PropertyPanel
-              selectedNodeId="node-2"
-              setSelectedNodeId={mockSetSelectedNodeId}
-            />
-          </ReactFlowProvider>
+              {...pp({ selectedNodeId: "node-2", setSelectedNodeId: mockSetSelectedNodeId })}
+            />          </ReactFlowProvider>
         </AuthProvider>,
       );
       await waitForWithTimeout(() => {
@@ -1543,8 +1486,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1565,8 +1507,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       const { rerender } = renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1574,10 +1515,8 @@ describe("PropertyPanel", () => {
         <AuthProvider>
           <ReactFlowProvider>
             <PropertyPanel
-              selectedNodeId={null}
-              setSelectedNodeId={mockSetSelectedNodeId}
-            />
-          </ReactFlowProvider>
+              {...pp({ selectedNodeId: null, setSelectedNodeId: mockSetSelectedNodeId })}
+            />          </ReactFlowProvider>
         </AuthProvider>,
       );
       expect(screen.queryByTestId("agent-node-editor")).not.toBeInTheDocument();
@@ -1591,8 +1530,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1610,8 +1548,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1628,8 +1565,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1647,8 +1583,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1667,8 +1602,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1689,8 +1623,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("condition-node-editor")).toBeInTheDocument();
@@ -1710,8 +1643,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("loop-node-editor")).toBeInTheDocument();
@@ -1729,8 +1661,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1748,8 +1679,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1765,8 +1695,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const closeButton = screen.queryByTitle(/Close properties panel/);
@@ -1786,8 +1715,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1818,9 +1746,7 @@ describe("PropertyPanel", () => {
       const selectedNodeIds = new Set(["node-1", "node-2"]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          selectedNodeIds={selectedNodeIds}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, selectedNodeIds: selectedNodeIds })}
         />,
       );
       expect(screen.getByText(/Multiple nodes selected/)).toBeInTheDocument();
@@ -1837,8 +1763,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1855,8 +1780,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1872,8 +1796,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1893,8 +1816,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -1914,8 +1836,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -1924,8 +1845,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="non-existent-node"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "non-existent-node", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.queryByTestId("agent-node-editor")).not.toBeInTheDocument();
@@ -1943,9 +1863,7 @@ describe("PropertyPanel", () => {
       };
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          nodes={[mockNode]}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, nodes: [mockNode] })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -1980,8 +1898,7 @@ describe("PropertyPanel", () => {
       });
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2000,8 +1917,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const addInputButton = screen.queryByLabelText(
@@ -2029,8 +1945,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const addInputButton = screen.queryByLabelText(
@@ -2072,8 +1987,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const addInputButton = screen.queryByLabelText(
@@ -2110,8 +2024,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2128,8 +2041,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2157,8 +2069,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2181,8 +2092,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2201,8 +2111,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2220,8 +2129,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2240,8 +2148,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -2260,8 +2167,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -2280,8 +2186,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -2300,8 +2205,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const nameInputs = screen.queryAllByLabelText(/^Name$/);
@@ -2328,8 +2232,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const descriptionInputs = screen.queryAllByLabelText(
@@ -2357,8 +2260,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const nameInputs = screen.queryAllByLabelText(/^Name$/);
@@ -2384,8 +2286,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const nameInputs = screen.queryAllByLabelText(/^Name$/);
@@ -2412,8 +2313,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const descriptionInputs = screen.queryAllByLabelText(/Node description/);
@@ -2444,10 +2344,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          onSaveWorkflow={mockOnSaveWorkflow}
-          onSave={mockOnSave}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSaveWorkflow: mockOnSaveWorkflow, onSave: mockOnSave })}
         />,
       );
       const saveButton = screen.queryByTitle(/Save changes|Save/);
@@ -2493,9 +2390,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          onSave={mockOnSave}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSave: mockOnSave })}
         />,
       );
       const saveButton = screen.queryByTitle(/Save changes|Save/);
@@ -2523,9 +2418,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          onSaveWorkflow={mockOnSaveWorkflow}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSaveWorkflow: mockOnSaveWorkflow })}
         />,
       );
       const saveButton = screen.queryByTitle(/Save changes|Save/);
@@ -2551,9 +2444,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          onSaveWorkflow={mockOnSaveWorkflow}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSaveWorkflow: mockOnSaveWorkflow })}
         />,
       );
       const saveButton = screen.queryByTitle(/Save changes|Save/);
@@ -2569,8 +2460,7 @@ describe("PropertyPanel", () => {
     it("should handle handleSave when selectedNode is null", async () => {
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId={null}
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: null, setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.queryByTitle(/Save changes|Save/)).not.toBeInTheDocument();
@@ -2580,8 +2470,7 @@ describe("PropertyPanel", () => {
     it("should handle handleUpdate when selectedNode is null", () => {
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId={null}
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: null, setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.queryByTestId("agent-node-editor")).not.toBeInTheDocument();
@@ -2598,8 +2487,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2609,8 +2497,7 @@ describe("PropertyPanel", () => {
     it("should handle handleConfigUpdate when selectedNode is null", () => {
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId={null}
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: null, setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.queryByTestId("agent-node-editor")).not.toBeInTheDocument();
@@ -2627,8 +2514,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2638,8 +2524,7 @@ describe("PropertyPanel", () => {
     it("should handle handleAddInput when selectedNode is null", () => {
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId={null}
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: null, setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.queryByTestId("agent-node-editor")).not.toBeInTheDocument();
@@ -2656,8 +2541,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2674,8 +2558,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2685,8 +2568,7 @@ describe("PropertyPanel", () => {
     it("should handle handleRemoveInput when selectedNode is null", () => {
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId={null}
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: null, setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.queryByTestId("agent-node-editor")).not.toBeInTheDocument();
@@ -2703,8 +2585,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2714,8 +2595,7 @@ describe("PropertyPanel", () => {
     it("should handle handleUpdateInput when selectedNode is null", () => {
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId={null}
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: null, setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.queryByTestId("agent-node-editor")).not.toBeInTheDocument();
@@ -2732,8 +2612,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -2758,8 +2637,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const sourceNodeInputs = screen.queryAllByPlaceholderText(
@@ -2793,8 +2671,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const sourceFieldInputs = screen.queryAllByPlaceholderText(/output/);
@@ -2826,8 +2703,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const removeButtons = screen.queryAllByLabelText(/Remove input/);
@@ -2850,8 +2726,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("database-node-editor")).toBeInTheDocument();
@@ -2867,8 +2742,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("firebase-node-editor")).toBeInTheDocument();
@@ -2884,8 +2758,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("bigquery-node-editor")).toBeInTheDocument();
@@ -2901,8 +2774,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -2918,8 +2790,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -2935,8 +2806,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("input-node-editor")).toBeInTheDocument();
@@ -2952,8 +2822,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const addInputButton = screen.queryByLabelText(/Add input to node/);
@@ -2970,8 +2839,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const addInputButton = screen.queryByLabelText(/Add input to node/);
@@ -2990,8 +2858,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -3010,8 +2877,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       expect(screen.getByTestId("agent-node-editor")).toBeInTheDocument();
@@ -3030,8 +2896,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const nameInput =
@@ -3060,8 +2925,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId })}
         />,
       );
       const descriptionInput =
@@ -3099,9 +2963,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          onSaveWorkflow={mockOnSaveWorkflow}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSaveWorkflow: mockOnSaveWorkflow })}
         />,
       );
       const saveButton = screen.getByTitle(/Save changes/);
@@ -3123,9 +2985,7 @@ describe("PropertyPanel", () => {
       mockGetNodes.mockReturnValue([mockNode]);
       renderWithProvider(
         <PropertyPanel
-          selectedNodeId="node-1"
-          setSelectedNodeId={mockSetSelectedNodeId}
-          onSaveWorkflow={mockOnSaveWorkflow}
+          {...pp({ selectedNodeId: "node-1", setSelectedNodeId: mockSetSelectedNodeId, onSaveWorkflow: mockOnSaveWorkflow })}
         />,
       );
       const saveButton = screen.getByTitle(/Save changes/);
@@ -3152,8 +3012,6 @@ describe("PropertyPanel", () => {
         );
       } catch {
         expect(mockOnSaveWorkflow).toHaveBeenCalled();
-      } finally {
-        jest.useFakeTimers();
       }
     });
   });

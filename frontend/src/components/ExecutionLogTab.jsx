@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Clock, CheckCircle, XCircle, Play, AlertCircle } from "lucide-react";
 import ExecutionStatusBadge from "./ExecutionStatusBadge";
 import {
@@ -266,4 +267,10 @@ function ExecutionLogTab({ executions, onExecutionClick }) {
     </ExecLogInner>
   );
 }
+
+ExecutionLogTab.propTypes = {
+  executions: PropTypes.arrayOf(PropTypes.object).isRequired,
+  onExecutionClick: PropTypes.func.isRequired,
+};
+
 export { ExecutionLogTab as default };

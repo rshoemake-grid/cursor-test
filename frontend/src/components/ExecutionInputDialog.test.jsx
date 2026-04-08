@@ -21,10 +21,9 @@ describe("ExecutionInputDialog", () => {
   it("should not render when isOpen is false", () => {
     render(
       <ExecutionInputDialog
-        isOpen={false}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={mockNodes}
+        dialog={{ isOpen: false }}
+        graph={{ nodes: mockNodes }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.queryByText("Execute Workflow")).not.toBeInTheDocument();
@@ -32,10 +31,9 @@ describe("ExecutionInputDialog", () => {
   it("should render when isOpen is true", () => {
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={mockNodes}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: mockNodes }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.getByText("Execute Workflow")).toBeInTheDocument();
@@ -43,11 +41,9 @@ describe("ExecutionInputDialog", () => {
   it("should display workflow name when provided", () => {
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={mockNodes}
-        workflowName="Test Workflow"
+        dialog={{ isOpen: true, workflowName: "Test Workflow" }}
+        graph={{ nodes: mockNodes }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.getByText("Execute: Test Workflow")).toBeInTheDocument();
@@ -55,10 +51,9 @@ describe("ExecutionInputDialog", () => {
   it("should show message when no input nodes", () => {
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={mockNodes}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: mockNodes }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(
@@ -91,10 +86,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.getByText("Input 1")).toBeInTheDocument();
@@ -125,10 +119,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const inputs = screen.getAllByRole("textbox");
@@ -164,10 +157,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const label = screen.getByText("Count");
@@ -205,10 +197,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const textarea = screen.getByRole("textbox");
@@ -244,10 +235,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const input = screen.getByDisplayValue("default");
@@ -278,10 +268,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.getByText("*")).toBeInTheDocument();
@@ -311,10 +300,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.getByText("This is a description")).toBeInTheDocument();
@@ -322,10 +310,9 @@ describe("ExecutionInputDialog", () => {
   it("should call onClose when close button is clicked", () => {
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={mockNodes}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: mockNodes }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const closeButton = screen.getByLabelText("Close dialog");
@@ -335,10 +322,9 @@ describe("ExecutionInputDialog", () => {
   it("should call onClose when cancel button is clicked", () => {
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={mockNodes}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: mockNodes }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const cancelButton = screen.getByText("Cancel");
@@ -369,10 +355,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const inputs = screen.getAllByRole("textbox");
@@ -392,10 +377,9 @@ describe("ExecutionInputDialog", () => {
   it("should call onSubmit with empty inputs when no inputs provided", () => {
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={mockNodes}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: mockNodes }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const submitButton = screen.getByText("Execute");
@@ -446,10 +430,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.getByText("Start Node 1")).toBeInTheDocument();
@@ -482,10 +465,9 @@ describe("ExecutionInputDialog", () => {
     ];
     const { rerender } = render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const input = screen.getByDisplayValue("default");
@@ -497,18 +479,16 @@ describe("ExecutionInputDialog", () => {
     expect(input.value).toBe("changed value");
     rerender(
       <ExecutionInputDialog
-        isOpen={false}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: false }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     rerender(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const inputAfterReopen = screen.getByDisplayValue("default");
@@ -538,10 +518,9 @@ describe("ExecutionInputDialog", () => {
     ];
     const { container } = render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithTextarea}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithTextarea }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const textarea = container.querySelector("textarea");
@@ -573,10 +552,9 @@ describe("ExecutionInputDialog", () => {
     ];
     const { container } = render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithNumber}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithNumber }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const numberInput = container.querySelector('input[type="number"]');
@@ -618,10 +596,9 @@ describe("ExecutionInputDialog", () => {
     ];
     const { container } = render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithRequired}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithRequired }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.getByText("*")).toBeInTheDocument();
@@ -654,10 +631,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithDescription}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithDescription }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.getByText("This is a description")).toBeInTheDocument();
@@ -685,10 +661,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithoutName}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithoutName }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.getByText("Inputs")).toBeInTheDocument();
@@ -716,10 +691,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithoutLabel}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithoutLabel }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.getByText("input1")).toBeInTheDocument();
@@ -749,10 +723,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithPlaceholder}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithPlaceholder }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const input = screen.getByPlaceholderText("Enter value");
@@ -776,10 +749,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithEmptyInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithEmptyInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.getByText("Execute")).toBeInTheDocument();
@@ -799,10 +771,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithoutConfig}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithoutConfig }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(
@@ -825,10 +796,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithoutInputsProperty}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithoutInputsProperty }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     expect(screen.getByText("Execute")).toBeInTheDocument();
@@ -857,10 +827,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const inputs = screen.getAllByRole("textbox");
@@ -892,10 +861,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const inputs = screen.getAllByRole("textbox");
@@ -927,10 +895,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const numberInput = document.querySelector('input[type="number"]');
@@ -962,10 +929,9 @@ describe("ExecutionInputDialog", () => {
     ];
     render(
       <ExecutionInputDialog
-        isOpen={true}
-        onClose={mockOnClose}
-        onSubmit={mockOnSubmit}
-        nodes={nodesWithInputs}
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
     const inputs = screen.getAllByRole("textbox");

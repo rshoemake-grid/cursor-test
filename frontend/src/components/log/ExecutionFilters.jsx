@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Filter } from "lucide-react";
 import SearchBar from "../ui/SearchBar";
 import {
@@ -166,4 +167,16 @@ function ExecutionFilters({
     </LogFiltersCard>
   );
 }
+
+ExecutionFilters.propTypes = {
+  filters: PropTypes.object.isRequired,
+  onFiltersChange: PropTypes.func.isRequired,
+  availableWorkflows: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string,
+    }),
+  ),
+};
+
 export { ExecutionFilters as default };

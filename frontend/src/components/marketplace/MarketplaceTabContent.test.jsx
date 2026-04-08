@@ -66,36 +66,49 @@ describe("MarketplaceTabContent", () => {
     },
   ];
   const defaultProps = {
-    loading: false,
-    activeTab: "agents",
-    isAgentsTab: false,
-    isRepositoryWorkflowsSubTab: false,
-    isRepositoryAgentsSubTab: false,
-    agents: mockAgents,
-    templates: mockTemplates,
-    repositoryAgents: mockRepositoryAgents,
-    workflowsOfWorkflows: mockWorkflowsOfWorkflows,
-    agentSelection: {
-      selectedIds: new Set(),
-      toggle: jest.fn(),
+    viewState: {
+      loading: false,
+      activeTab: "agents",
+      isAgentsTab: false,
+      isRepositoryWorkflowsSubTab: false,
+      isRepositoryAgentsSubTab: false,
     },
-    templateSelection: {
-      selectedIds: new Set(),
-      toggle: jest.fn(),
+    catalog: {
+      agents: mockAgents,
+      templates: mockTemplates,
+      repositoryAgents: mockRepositoryAgents,
+      workflowsOfWorkflows: mockWorkflowsOfWorkflows,
     },
-    repositoryAgentSelection: {
-      selectedIds: new Set(),
-      toggle: jest.fn(),
+    selections: {
+      agentSelection: {
+        selectedIds: new Set(),
+        toggle: jest.fn(),
+      },
+      templateSelection: {
+        selectedIds: new Set(),
+        toggle: jest.fn(),
+      },
+      repositoryAgentSelection: {
+        selectedIds: new Set(),
+        toggle: jest.fn(),
+      },
     },
-    handleAgentCardClick: jest.fn(),
-    handleCardClick: jest.fn(),
-    handleRepositoryAgentCardClick: jest.fn(),
+    cardHandlers: {
+      handleAgentCardClick: jest.fn(),
+      handleCardClick: jest.fn(),
+      handleRepositoryAgentCardClick: jest.fn(),
+    },
   };
   beforeEach(() => {
     jest.clearAllMocks();
   });
   it("should show loading state", () => {
-    render(<MarketplaceTabContent {...defaultProps} loading={true} />);
+    render(
+      <MarketplaceTabContent
+        {...defaultProps}
+        viewState={{ ...defaultProps.viewState, loading: true }}
+      />,
+    );
     expect(screen.getByText(/Loading/)).toBeInTheDocument();
     expect(screen.queryByTestId("template-grid")).not.toBeInTheDocument();
   });
@@ -103,8 +116,11 @@ describe("MarketplaceTabContent", () => {
     render(
       <MarketplaceTabContent
         {...defaultProps}
-        isAgentsTab={true}
-        activeTab="agents"
+        viewState={{
+          ...defaultProps.viewState,
+          isAgentsTab: true,
+          activeTab: "agents",
+        }}
       />,
     );
     expect(TemplateGrid).toHaveBeenCalledWith(
@@ -121,8 +137,11 @@ describe("MarketplaceTabContent", () => {
     render(
       <MarketplaceTabContent
         {...defaultProps}
-        isRepositoryWorkflowsSubTab={true}
-        activeTab="repository"
+        viewState={{
+          ...defaultProps.viewState,
+          isRepositoryWorkflowsSubTab: true,
+          activeTab: "repository",
+        }}
       />,
     );
     expect(TemplateGrid).toHaveBeenCalledWith(
@@ -139,8 +158,11 @@ describe("MarketplaceTabContent", () => {
     render(
       <MarketplaceTabContent
         {...defaultProps}
-        isRepositoryAgentsSubTab={true}
-        activeTab="repository"
+        viewState={{
+          ...defaultProps.viewState,
+          isRepositoryAgentsSubTab: true,
+          activeTab: "repository",
+        }}
       />,
     );
     expect(TemplateGrid).toHaveBeenCalledWith(
@@ -157,7 +179,10 @@ describe("MarketplaceTabContent", () => {
     render(
       <MarketplaceTabContent
         {...defaultProps}
-        activeTab="workflows-of-workflows"
+        viewState={{
+          ...defaultProps.viewState,
+          activeTab: "workflows-of-workflows",
+        }}
       />,
     );
     expect(TemplateGrid).toHaveBeenCalledWith(
@@ -174,8 +199,11 @@ describe("MarketplaceTabContent", () => {
     render(
       <MarketplaceTabContent
         {...defaultProps}
-        isRepositoryWorkflowsSubTab={true}
-        templates={null}
+        viewState={{
+          ...defaultProps.viewState,
+          isRepositoryWorkflowsSubTab: true,
+        }}
+        catalog={{ ...defaultProps.catalog, templates: null }}
       />,
     );
     expect(TemplateGrid).toHaveBeenCalledWith(
@@ -190,10 +218,13 @@ describe("MarketplaceTabContent", () => {
     render(
       <MarketplaceTabContent
         {...defaultProps}
-        isAgentsTab={true}
-        agentSelection={{
-          selectedIds: new Set(["agent-1"]),
-          toggle: mockToggle,
+        viewState={{ ...defaultProps.viewState, isAgentsTab: true }}
+        selections={{
+          ...defaultProps.selections,
+          agentSelection: {
+            selectedIds: new Set(["agent-1"]),
+            toggle: mockToggle,
+          },
         }}
       />,
     );
@@ -210,8 +241,11 @@ describe("MarketplaceTabContent", () => {
     render(
       <MarketplaceTabContent
         {...defaultProps}
-        isAgentsTab={true}
-        handleAgentCardClick={mockHandleClick}
+        viewState={{ ...defaultProps.viewState, isAgentsTab: true }}
+        cardHandlers={{
+          ...defaultProps.cardHandlers,
+          handleAgentCardClick: mockHandleClick,
+        }}
       />,
     );
     expect(TemplateGrid).toHaveBeenCalledWith(
@@ -225,8 +259,11 @@ describe("MarketplaceTabContent", () => {
     render(
       <MarketplaceTabContent
         {...defaultProps}
-        loading={true}
-        activeTab="repository"
+        viewState={{
+          ...defaultProps.viewState,
+          loading: true,
+          activeTab: "repository",
+        }}
       />,
     );
     expect(screen.getByText("Loading repository...")).toBeInTheDocument();

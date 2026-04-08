@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { X } from "lucide-react";
 import {
   ModalBackdrop,
@@ -22,13 +23,10 @@ import {
   EditorTextarea,
   EditorHint,
 } from "../styles/editorForm.styled";
-function ExecutionInputDialog({
-  isOpen,
-  onClose,
-  onSubmit,
-  nodes,
-  workflowName,
-}) {
+function ExecutionInputDialog({ dialog, graph, handlers }) {
+  const { isOpen, workflowName } = dialog;
+  const { nodes } = graph;
+  const { onClose, onSubmit } = handlers;
   const [inputs, setInputs] = useState({});
   useEffect(() => {
     if (isOpen) {
@@ -169,4 +167,19 @@ function ExecutionInputDialog({
     </ModalBackdrop>
   );
 }
+
+ExecutionInputDialog.propTypes = {
+  dialog: PropTypes.shape({
+    isOpen: PropTypes.bool.isRequired,
+    workflowName: PropTypes.string,
+  }).isRequired,
+  graph: PropTypes.shape({
+    nodes: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+  handlers: PropTypes.shape({
+    onClose: PropTypes.func.isRequired,
+    onSubmit: PropTypes.func.isRequired,
+  }).isRequired,
+};
+
 export { ExecutionInputDialog as default };

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { API_CONFIG } from "../config/constants";
@@ -37,6 +38,8 @@ function CheckIcon() {
     </svg>
   );
 }
+
+CheckIcon.propTypes = {};
 
 function ForgotPasswordPage({
   httpClient = defaultAdapters.createHttpClient(),
@@ -160,4 +163,10 @@ function ForgotPasswordPage({
     </AuthGradientShell>
   );
 }
+
+ForgotPasswordPage.propTypes = {
+  httpClient: PropTypes.object,
+  apiBaseUrl: PropTypes.string,
+};
+
 export { ForgotPasswordPage as default };

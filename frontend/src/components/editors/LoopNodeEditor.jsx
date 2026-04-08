@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import {
   EditorFieldGroup,
   EditorLabel,
@@ -63,4 +64,10 @@ function LoopNodeEditor({ node, onUpdate, onConfigUpdate }) {
     </>
   );
 }
+LoopNodeEditor.propTypes = {
+  node: PropTypes.object.isRequired,
+  onUpdate: PropTypes.func.isRequired,
+  onConfigUpdate: PropTypes.func.isRequired,
+};
+
 export { LoopNodeEditor as default };

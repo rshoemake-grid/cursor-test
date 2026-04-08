@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import PropTypes from "prop-types";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Bot, Workflow, Wrench } from "lucide-react";
@@ -297,55 +298,78 @@ function MarketplacePage({
             </TabStrip>
           )}
           <TemplateFilters
-            category={category}
-            searchQuery={searchQuery}
-            sortBy={sortBy}
-            activeTab={activeTab}
-            onCategoryChange={setCategory}
-            onSearchChange={setSearchQuery}
-            onSortChange={(sortBy2) => setSortBy(sortBy2)}
-            onSearch={() => {
-              if (isRepositoryTab) {
-                if (isRepositoryWorkflowsSubTab) {
-                  fetchTemplates();
+            filters={{
+              category,
+              searchQuery,
+              sortBy,
+              activeTab,
+            }}
+            handlers={{
+              onCategoryChange: setCategory,
+              onSearchChange: setSearchQuery,
+              onSortChange: (sortBy2) => setSortBy(sortBy2),
+              onSearch: () => {
+                if (isRepositoryTab) {
+                  if (isRepositoryWorkflowsSubTab) {
+                    fetchTemplates();
+                  } else {
+                    fetchRepositoryAgents();
+                  }
+                } else if (isWorkflowsOfWorkflowsTab) {
+                  fetchWorkflowsOfWorkflows();
+                } else if (isToolsTab) {
+                  fetchTools();
                 } else {
-                  fetchRepositoryAgents();
+                  fetchAgents();
                 }
-              } else if (isWorkflowsOfWorkflowsTab) {
-                fetchWorkflowsOfWorkflows();
-              } else if (isToolsTab) {
-                fetchTools();
-              } else {
-                fetchAgents();
-              }
+              },
             }}
           />
         </PageHeaderInner>
       </PageHeaderBand>
       <PageMainScroll onClick={handleContentClick}>
         <MarketplaceTabContent
-          loading={loading}
-          activeTab={activeTab}
-          isAgentsTab={isAgentsTab}
-          isToolsTab={isToolsTab}
-          isRepositoryWorkflowsSubTab={isRepositoryWorkflowsSubTab}
-          isRepositoryAgentsSubTab={isRepositoryAgentsSubTab}
-          agents={agents}
-          tools={tools}
-          templates={templates}
-          repositoryAgents={repositoryAgents}
-          workflowsOfWorkflows={workflowsOfWorkflows}
-          agentSelection={agentSelection}
-          toolSelection={toolSelection}
-          templateSelection={templateSelection}
-          repositoryAgentSelection={repositoryAgentSelection}
-          handleAgentCardClick={handleAgentCardClick}
-          handleToolCardClick={handleToolCardClick}
-          handleCardClick={handleCardClick}
-          handleRepositoryAgentCardClick={handleRepositoryAgentCardClick}
+          viewState={{
+            loading,
+            activeTab,
+            isAgentsTab,
+            isToolsTab,
+            isRepositoryWorkflowsSubTab,
+            isRepositoryAgentsSubTab,
+          }}
+          catalog={{
+            agents,
+            tools,
+            templates,
+            repositoryAgents,
+            workflowsOfWorkflows,
+          }}
+          selections={{
+            agentSelection,
+            toolSelection,
+            templateSelection,
+            repositoryAgentSelection,
+          }}
+          cardHandlers={{
+            handleAgentCardClick,
+            handleToolCardClick,
+            handleCardClick,
+            handleRepositoryAgentCardClick,
+          }}
         />
       </PageMainScroll>
     </PageShellColumn>
   );
 }
+
+MarketplacePage.propTypes = {
+  storage: PropTypes.shape({
+    getItem: PropTypes.func,
+    setItem: PropTypes.func,
+    removeItem: PropTypes.func,
+  }),
+  httpClient: PropTypes.object,
+  apiBaseUrl: PropTypes.string,
+};
+
 export { MarketplacePage as default };

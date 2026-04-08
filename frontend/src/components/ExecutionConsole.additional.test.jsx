@@ -75,6 +75,41 @@ describe("ExecutionConsole - Additional Coverage", () => {
   const mockOnExecutionStatusUpdate = jest.fn();
   const mockOnExecutionNodeUpdate = jest.fn();
   const mockOnRemoveExecution = jest.fn();
+  function ec(p = {}) {
+    const {
+      activeWorkflowId = "workflow-1",
+      workflowTabId = null,
+      executions = [],
+      activeExecutionId = null,
+      onWorkflowUpdate,
+      getWorkflowChatCanvasSnapshot = null,
+      workflowChatClearNonce = 0,
+      onExecutionLogUpdate = mockOnExecutionLogUpdate,
+      onExecutionStatusUpdate = mockOnExecutionStatusUpdate,
+      onExecutionNodeUpdate = mockOnExecutionNodeUpdate,
+      onRemoveExecution = mockOnRemoveExecution,
+      documentAdapter,
+    } = p;
+    const props = {
+      workflowContext: { activeWorkflowId, workflowTabId },
+      executionsState: { executions, activeExecutionId },
+      chatBridge: {
+        onWorkflowUpdate,
+        getWorkflowChatCanvasSnapshot,
+        workflowChatClearNonce,
+      },
+      executionCallbacks: {
+        onExecutionLogUpdate,
+        onExecutionStatusUpdate,
+        onExecutionNodeUpdate,
+        onRemoveExecution,
+      },
+    };
+    if (documentAdapter !== undefined) {
+      props.environment = { documentAdapter };
+    }
+    return props;
+  }
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseWebSocket.mockImplementation(() => ({}));
@@ -83,11 +118,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
     it("should switch between chat and execution tabs", async () => {
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId={null}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: null })}
+        />,      );
       await waitForWithTimeout(() => {
         const buttons2 = screen.getAllByRole("button");
         expect(buttons2.length).toBeGreaterThan(0);
@@ -128,11 +160,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
     it("should render chat tab by default", () => {
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[]}
-          activeExecutionId={null}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [], activeExecutionId: null })}
+        />,      );
       expect(screen.getByText("Chat")).toBeInTheDocument();
     });
     it("should render execution tabs for each execution", () => {
@@ -148,11 +177,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
       ];
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={executions}
-          activeExecutionId={null}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: executions, activeExecutionId: null })}
+        />,      );
       expect(screen.getByText("Chat")).toBeInTheDocument();
     });
   });
@@ -160,11 +186,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
     it("should expand console when expand button is clicked", () => {
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[]}
-          activeExecutionId={null}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [], activeExecutionId: null })}
+        />,      );
       const expandButtons = screen.queryAllByRole("button");
       const expandButton = expandButtons.find(
         (btn) => btn.querySelector("svg"),
@@ -177,11 +200,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
     it("should collapse console when collapse button is clicked", () => {
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[]}
-          activeExecutionId={null}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [], activeExecutionId: null })}
+        />,      );
       const expandButtons = screen.queryAllByRole("button");
       const expandButton = expandButtons.find((btn) =>
         btn.querySelector("svg"),
@@ -194,11 +214,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
     it("should auto-expand when execution starts", () => {
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId="exec-123"
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123" })}
+        />,      );
     });
   });
   describe("WebSocket Integration", () => {
@@ -210,12 +227,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
       });
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId="exec-123"
-          onExecutionStatusUpdate={mockOnExecutionStatusUpdate}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionStatusUpdate: mockOnExecutionStatusUpdate })}
+        />,      );
       await waitForWithTimeout(() => {
         expect(mockUseWebSocket).toHaveBeenCalled();
       });
@@ -256,11 +269,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
     it("should set up WebSocket with correct execution ID", () => {
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId="exec-123"
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123" })}
+        />,      );
       expect(mockUseWebSocket).toHaveBeenCalledWith(
         expect.objectContaining({
           executionId: "exec-123",
@@ -275,12 +285,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
       });
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId="exec-123"
-          onExecutionLogUpdate={mockOnExecutionLogUpdate}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionLogUpdate: mockOnExecutionLogUpdate })}
+        />,      );
       await waitForWithTimeout(() => {
         expect(mockUseWebSocket).toHaveBeenCalled();
       });
@@ -333,12 +339,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
       });
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId="exec-123"
-          onExecutionNodeUpdate={mockOnExecutionNodeUpdate}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionNodeUpdate: mockOnExecutionNodeUpdate })}
+        />,      );
       await waitForWithTimeout(() => {
         expect(mockUseWebSocket).toHaveBeenCalled();
       });
@@ -376,12 +378,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
       });
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId="exec-123"
-          onExecutionStatusUpdate={mockOnExecutionStatusUpdate}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionStatusUpdate: mockOnExecutionStatusUpdate })}
+        />,      );
       await waitForWithTimeout(() => {
         expect(mockUseWebSocket).toHaveBeenCalled();
       });
@@ -432,12 +430,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
       });
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId="exec-123"
-          onExecutionStatusUpdate={mockOnExecutionStatusUpdate}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionStatusUpdate: mockOnExecutionStatusUpdate })}
+        />,      );
       await waitForWithTimeout(() => {
         expect(mockOnExecutionStatusUpdate).toHaveBeenCalledWith(
           "workflow-1",
@@ -451,12 +445,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
     it("should close execution tab when close button is clicked", () => {
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId={null}
-          onRemoveExecution={mockOnRemoveExecution}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: null, onRemoveExecution: mockOnRemoveExecution })}
+        />,      );
       const closeButtons = screen.queryAllByTitle(/Close execution tab/);
       if (closeButtons.length > 0) {
         fireEvent.click(closeButtons[0]);
@@ -469,12 +459,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
     it("should switch to chat tab when closing active execution tab", () => {
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId="exec-123"
-          onRemoveExecution={mockOnRemoveExecution}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onRemoveExecution: mockOnRemoveExecution })}
+        />,      );
       const closeButtons = screen.queryAllByTitle(/Close execution tab/);
       if (closeButtons.length > 0) {
         fireEvent.click(closeButtons[0]);
@@ -493,12 +479,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
       ];
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={executions}
-          activeExecutionId="exec-1"
-          onRemoveExecution={mockOnRemoveExecution}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: executions, activeExecutionId: "exec-1", onRemoveExecution: mockOnRemoveExecution })}
+        />,      );
       const closeButtons = screen.queryAllByTitle(/Close execution tab/);
       if (closeButtons.length > 1) {
         fireEvent.click(closeButtons[1]);
@@ -516,12 +498,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
       };
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[]}
-          activeExecutionId={null}
-          documentAdapter={mockDocumentAdapter}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [], activeExecutionId: null, documentAdapter: mockDocumentAdapter })}
+        />,      );
       const resizeHandles = screen.queryAllByRole("button");
       const resizeHandle = resizeHandles.find((btn) =>
         btn.className.includes("cursor-ns-resize"),
@@ -542,12 +520,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
       };
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[]}
-          activeExecutionId={null}
-          documentAdapter={mockDocumentAdapter}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [], activeExecutionId: null, documentAdapter: mockDocumentAdapter })}
+        />,      );
     });
     it("should constrain height to maximum", () => {
       const mockDocumentAdapter = {
@@ -559,12 +533,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
       };
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[]}
-          activeExecutionId={null}
-          documentAdapter={mockDocumentAdapter}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [], activeExecutionId: null, documentAdapter: mockDocumentAdapter })}
+        />,      );
     });
   });
   describe("Execution Status Indicators", () => {
@@ -575,11 +545,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
       };
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[runningExecution]}
-          activeExecutionId={null}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [runningExecution], activeExecutionId: null })}
+        />,      );
     });
     it("should show completed indicator for completed execution", () => {
       const completedExecution = {
@@ -588,11 +555,8 @@ describe("ExecutionConsole - Additional Coverage", () => {
       };
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[completedExecution]}
-          activeExecutionId={null}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [completedExecution], activeExecutionId: null })}
+        />,      );
     });
     it("should show failed indicator for failed execution", () => {
       const failedExecution = {
@@ -601,48 +565,33 @@ describe("ExecutionConsole - Additional Coverage", () => {
       };
       renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[failedExecution]}
-          activeExecutionId={null}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [failedExecution], activeExecutionId: null })}
+        />,      );
     });
   });
   describe("Active Execution Switching", () => {
     it("should switch to new execution tab when activeExecutionId changes", () => {
       const { rerender } = renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId={null}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: null })}
+        />,      );
       rerender(
         <AuthProvider>
           <ExecutionConsole
-            activeWorkflowId="workflow-1"
-            executions={[mockExecution]}
-            activeExecutionId="exec-123"
-          />
-        </AuthProvider>,
+            {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123" })}
+          />        </AuthProvider>,
       );
     });
     it("should auto-expand when switching to execution", () => {
       const { rerender } = renderWithAuth(
         <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId={null}
-        />,
-      );
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: null })}
+        />,      );
       rerender(
         <AuthProvider>
           <ExecutionConsole
-            activeWorkflowId="workflow-1"
-            executions={[mockExecution]}
-            activeExecutionId="exec-123"
-          />
-        </AuthProvider>,
+            {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123" })}
+          />        </AuthProvider>,
       );
     });
   });

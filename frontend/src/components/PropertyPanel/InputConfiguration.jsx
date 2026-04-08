@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Plus, Trash2 } from "lucide-react";
 import { coalesceString } from "../../utils/nullCoalescing";
 import { isNonEmptyArray, isNotEmpty } from "../../utils/nullChecks";
@@ -207,4 +208,14 @@ function InputConfiguration({
     </EditorSectionRoot>
   );
 }
+
+InputConfiguration.propTypes = {
+  inputs: PropTypes.arrayOf(PropTypes.object),
+  showAddInput: PropTypes.bool.isRequired,
+  onAddInput: PropTypes.func.isRequired,
+  onRemoveInput: PropTypes.func.isRequired,
+  onUpdateInput: PropTypes.func.isRequired,
+  onShowAddInput: PropTypes.func.isRequired,
+};
+
 export { InputConfiguration };

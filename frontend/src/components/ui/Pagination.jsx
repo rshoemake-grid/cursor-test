@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   PaginationRoot,
@@ -141,4 +142,15 @@ function Pagination({
     </PaginationRoot>
   );
 }
+
+Pagination.propTypes = {
+  currentPage: PropTypes.number.isRequired,
+  totalPages: PropTypes.number.isRequired,
+  totalItems: PropTypes.number.isRequired,
+  itemsPerPage: PropTypes.number.isRequired,
+  onPageChange: PropTypes.func.isRequired,
+  onItemsPerPageChange: PropTypes.func,
+  className: PropTypes.string,
+};
+
 export { Pagination as default };

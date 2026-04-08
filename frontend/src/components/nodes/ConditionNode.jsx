@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { Position } from "@xyflow/react";
 import { GitBranch } from "lucide-react";
 import {
@@ -69,4 +70,11 @@ function ConditionNode({ data, selected }) {
     </WorkflowNodeCard>
   );
 }
+
+ConditionNode.propTypes = {
+  data: PropTypes.object,
+  selected: PropTypes.bool,
+  id: PropTypes.string,
+};
+
 export { ConditionNode as default };

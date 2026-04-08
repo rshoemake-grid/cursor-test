@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import {
   EditorSectionRoot,
   EditorSectionTitle,
@@ -86,4 +87,10 @@ function ToolNodeEditor({ node, onUpdate, onConfigUpdate: _onConfigUpdate }) {
     </EditorSectionRoot>
   );
 }
+ToolNodeEditor.propTypes = {
+  node: PropTypes.object.isRequired,
+  onUpdate: PropTypes.func.isRequired,
+  onConfigUpdate: PropTypes.func,
+};
+
 export { BUILTIN_TOOLS, ToolNodeEditor as default };

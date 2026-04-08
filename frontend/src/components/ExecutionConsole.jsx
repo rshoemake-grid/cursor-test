@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
+import PropTypes from "prop-types";
 import { ChevronDown, ChevronUp, MessageSquare, Play, X } from "lucide-react";
 import WorkflowChat from "./WorkflowChat";
 import { useWebSocket } from "../hooks/execution";
@@ -6,6 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import ExecutionStatusBadge from "./ExecutionStatusBadge";
 import LogLevelBadge from "./LogLevelBadge";
 import { logger } from "../utils/logger";
+import { nullableString } from "../utils/propTypes";
 import { getLogLevelTone } from "../utils/logLevel";
 import { defaultAdapters } from "../types/adapters";
 import { coalesceString } from "../utils/nullCoalescing";
@@ -35,19 +37,28 @@ import {
   ConsoleLogNodeRef,
 } from "../styles/executionConsole.styled";
 function ExecutionConsole({
-  activeWorkflowId,
-  workflowTabId = null,
-  executions = [],
-  activeExecutionId = null,
-  onWorkflowUpdate,
-  getWorkflowChatCanvasSnapshot = null,
-  workflowChatClearNonce = 0,
-  onExecutionLogUpdate,
-  onExecutionStatusUpdate,
-  onExecutionNodeUpdate,
-  onRemoveExecution,
-  documentAdapter = defaultAdapters.createDocumentAdapter(),
+  workflowContext,
+  executionsState,
+  chatBridge,
+  executionCallbacks,
+  environment = {},
 }) {
+  const { activeWorkflowId, workflowTabId = null } = workflowContext;
+  const { executions = [], activeExecutionId = null } = executionsState;
+  const {
+    onWorkflowUpdate,
+    getWorkflowChatCanvasSnapshot = null,
+    workflowChatClearNonce = 0,
+  } = chatBridge;
+  const {
+    onExecutionLogUpdate,
+    onExecutionStatusUpdate,
+    onExecutionNodeUpdate,
+    onRemoveExecution,
+  } = executionCallbacks;
+  const {
+    documentAdapter = defaultAdapters.createDocumentAdapter(),
+  } = environment;
   const { token: authToken } = useAuth();
   const authTokenRef = useRef(authToken);
   authTokenRef.current = authToken;
@@ -458,4 +469,30 @@ function ExecutionConsole({
     </ConsoleRoot>
   );
 }
+
+ExecutionConsole.propTypes = {
+  workflowContext: PropTypes.shape({
+    activeWorkflowId: nullableString,
+    workflowTabId: nullableString,
+  }).isRequired,
+  executionsState: PropTypes.shape({
+    executions: PropTypes.arrayOf(PropTypes.object),
+    activeExecutionId: nullableString,
+  }).isRequired,
+  chatBridge: PropTypes.shape({
+    onWorkflowUpdate: PropTypes.func,
+    getWorkflowChatCanvasSnapshot: PropTypes.func,
+    workflowChatClearNonce: PropTypes.number,
+  }).isRequired,
+  executionCallbacks: PropTypes.shape({
+    onExecutionLogUpdate: PropTypes.func,
+    onExecutionStatusUpdate: PropTypes.func,
+    onExecutionNodeUpdate: PropTypes.func,
+    onRemoveExecution: PropTypes.func,
+  }).isRequired,
+  environment: PropTypes.shape({
+    documentAdapter: PropTypes.object,
+  }),
+};
+
 export { ExecutionConsole as default };

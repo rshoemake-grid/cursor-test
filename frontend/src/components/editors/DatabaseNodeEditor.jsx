@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import {
   EditorSectionRoot,
   EditorSectionTitle,
@@ -183,4 +184,9 @@ function DatabaseNodeEditor({ node, onConfigUpdate }) {
     </EditorSectionRoot>
   );
 }
+DatabaseNodeEditor.propTypes = {
+  node: PropTypes.object.isRequired,
+  onConfigUpdate: PropTypes.func.isRequired,
+};
+
 export { DatabaseNodeEditor as default };
