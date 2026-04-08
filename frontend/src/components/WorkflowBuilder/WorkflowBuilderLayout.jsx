@@ -33,12 +33,7 @@ function WorkflowBuilderLayout({
     onEdgeContextMenu,
     onPaneClick,
   } = canvasHandlers;
-  const {
-    selectedNodeId,
-    setSelectedNodeId,
-    selectedNodeIds,
-    notifyModified,
-  } = selection;
+  const { selectedNodeId, setSelectedNodeId, notifyModified } = selection;
   const { clipboardNode, onCopy, onCut, onPaste } = keyboard;
   const { instanceRef } = reactFlow;
   const {
@@ -54,7 +49,6 @@ function WorkflowBuilderLayout({
     onExecutionNodeUpdate,
     onRemoveExecution,
   } = executionConsole;
-  const { onSaveWorkflow } = propertyPanel;
   return (
     <WorkflowLayoutRow>
       <NodePanel />

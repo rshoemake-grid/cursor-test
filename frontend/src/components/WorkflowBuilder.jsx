@@ -37,14 +37,14 @@ import { convertNodesForExecutionInput } from "../utils/nodeConversion";
 import { WorkflowBuilderLayout } from "./WorkflowBuilder/WorkflowBuilderLayout";
 import { WorkflowBuilderDialogs } from "./WorkflowBuilder/WorkflowBuilderDialogs";
 const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
-  {
-    tab,
-    storage = defaultAdapters.createLocalStorageAdapter(),
-    workflowTabs = [],
-    callbacks = {},
-  },
+  { tab, storage: storageProp, workflowTabs = [], callbacks = {} },
   ref,
 ) {
+  const defaultStorageRef = useRef(null);
+  if (defaultStorageRef.current === null) {
+    defaultStorageRef.current = defaultAdapters.createLocalStorageAdapter();
+  }
+  const storage = storageProp ?? defaultStorageRef.current;
   const { tabId, workflowId, tabName, tabIsUnsaved } = tab;
   const {
     onExecutionStart,
@@ -111,7 +111,10 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
     notifyModified,
     nodeExecutionStates,
   });
-  const tabDraftsRef = useRef(loadDraftsFromStorage());
+  const tabDraftsRef = useRef(null);
+  if (tabDraftsRef.current === null) {
+    tabDraftsRef.current = loadDraftsFromStorage({ storage, logger });
+  }
   const saveDraftsToStorageRef = useRef(() => {});
   const marketplaceIntegration = useMarketplaceIntegration({
     tabId,
@@ -128,6 +131,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
     },
   });
   const draftManagement = useDraftManagement({
+    tabDraftsRef,
     tabId,
     workflowId,
     nodes,
@@ -143,6 +147,8 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
     setLocalWorkflowDescription,
     normalizeNodeForStorage,
     isAddingAgentsRef: marketplaceIntegration.isAddingAgentsRef,
+    storage,
+    logger,
   });
   useEffect(() => {
     saveDraftsToStorageRef.current = draftManagement.saveDraftsToStorage;

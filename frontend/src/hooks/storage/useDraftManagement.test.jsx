@@ -214,6 +214,49 @@ describe("useDraftManagement", () => {
     );
     expect(mockSetNodes).not.toHaveBeenCalled();
   });
+  it("persists previous tab draft when tabId changes", () => {
+    let stored = {};
+    mockGetLocalStorageItem.mockImplementation(() => stored);
+    mockSetLocalStorageItem.mockImplementation((key, val) => {
+      if (key === "workflowBuilderDrafts" && val && typeof val === "object") {
+        stored = { ...val };
+      }
+    });
+    const baseProps = {
+      workflowId: null,
+      nodes: mockNodes,
+      edges: mockEdges,
+      localWorkflowId: null,
+      localWorkflowName: "Tab One",
+      localWorkflowDescription: "",
+      tabIsUnsaved: true,
+      setNodes: mockSetNodes,
+      setEdges: mockSetEdges,
+      setLocalWorkflowId: mockSetLocalWorkflowId,
+      setLocalWorkflowName: mockSetLocalWorkflowName,
+      setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+      normalizeNodeForStorage: mockNormalizeNodeForStorage,
+    };
+    const { rerender } = renderHook((p) => useDraftManagement(p), {
+      initialProps: { ...baseProps, tabId: "tab-1" },
+    });
+    rerender({
+      ...baseProps,
+      tabId: "tab-2",
+      nodes: [],
+      edges: [],
+      localWorkflowName: "Untitled Workflow",
+      tabIsUnsaved: false,
+    });
+    expect(stored["tab-1"]).toEqual(
+      expect.objectContaining({
+        nodes: mockNodes,
+        edges: mockEdges,
+        workflowName: "Tab One",
+        isUnsaved: true,
+      }),
+    );
+  });
   it("should normalize nodes before saving", () => {
     const normalizedNode = { ...mockNodes[0], data: { normalized: true } };
     mockNormalizeNodeForStorage.mockReturnValue(normalizedNode);

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { getLocalStorageItem, setLocalStorageItem } from "./useLocalStorage";
 import { logger as defaultLogger } from "../../utils/logger";
 const DRAFT_STORAGE_KEY = "workflowBuilderDrafts";
@@ -10,6 +10,7 @@ const saveDraftsToStorage = (drafts, options) => {
   setLocalStorageItem(DRAFT_STORAGE_KEY, drafts, options);
 };
 function useDraftManagement({
+  tabDraftsRef: externalDraftsRef,
   tabId,
   workflowId,
   nodes,
@@ -28,50 +29,102 @@ function useDraftManagement({
   storage,
   logger = defaultLogger,
 }) {
-  const storageOptions = { storage, logger };
-  const tabDraftsRef = useRef(loadDraftsFromStorage(storageOptions));
-  useEffect(() => {
-    if (isAddingAgentsRef?.current) {
-      logger.debug(
-        "[useDraftManagement] Skipping draft load - adding agents in progress",
-      );
-      return;
-    }
-    const draft = tabDraftsRef.current[tabId];
-    const matchesCurrentWorkflow =
-      draft &&
-      ((!workflowId && !draft.workflowId) ||
-        (workflowId && draft.workflowId === workflowId));
-    if (matchesCurrentWorkflow) {
-      logger.debug(
-        "[useDraftManagement] Loading draft nodes:",
-        draft.nodes.length,
-      );
-      setNodes(draft.nodes.map(normalizeNodeForStorage));
-      setEdges(draft.edges);
-      setLocalWorkflowId(draft.workflowId);
-      setLocalWorkflowName(draft.workflowName);
-      setLocalWorkflowDescription(draft.workflowDescription);
-    } else if (!workflowId) {
-      setNodes([]);
-      setEdges([]);
-      setLocalWorkflowId(null);
-      setLocalWorkflowName("Untitled Workflow");
-      setLocalWorkflowDescription("");
-    }
-  }, [
-    tabId,
-    workflowId,
-    isAddingAgentsRef,
+  const storageOptions = useMemo(
+    () => ({ storage, logger }),
+    [storage, logger],
+  );
+  const internalDraftsRef = useRef(null);
+  if (!externalDraftsRef && internalDraftsRef.current === null) {
+    internalDraftsRef.current = loadDraftsFromStorage(storageOptions);
+  }
+  const draftsRef = externalDraftsRef ?? internalDraftsRef;
+
+  const storageOptionsRef = useRef(storageOptions);
+  storageOptionsRef.current = storageOptions;
+
+  const hydrateDraftRef = useRef({});
+  hydrateDraftRef.current = {
     normalizeNodeForStorage,
     setNodes,
     setEdges,
     setLocalWorkflowId,
     setLocalWorkflowName,
     setLocalWorkflowDescription,
-  ]);
+    isAddingAgentsRef,
+    draftsRef,
+    logger,
+  };
+
+  const hydratedRef = useRef(false);
+  useLayoutEffect(() => {
+    hydratedRef.current = false;
+    const so = storageOptionsRef.current;
+    const {
+      normalizeNodeForStorage: norm,
+      setNodes: setN,
+      setEdges: setE,
+      setLocalWorkflowId: setLWId,
+      setLocalWorkflowName: setLWName,
+      setLocalWorkflowDescription: setLWDesc,
+      isAddingAgentsRef: addingRef,
+      draftsRef: dRef,
+      logger: log,
+    } = hydrateDraftRef.current;
+
+    if (addingRef?.current) {
+      log.debug(
+        "[useDraftManagement] Skipping draft load - adding agents in progress",
+      );
+      hydratedRef.current = true;
+      return;
+    }
+    dRef.current = loadDraftsFromStorage(so);
+    const draft = dRef.current[tabId];
+    const matchesCurrentWorkflow =
+      draft &&
+      ((!workflowId && !draft.workflowId) ||
+        (workflowId && draft.workflowId === workflowId));
+    if (matchesCurrentWorkflow) {
+      log.debug(
+        "[useDraftManagement] Loading draft nodes:",
+        draft.nodes.length,
+      );
+      setN(draft.nodes.map(norm));
+      setE(draft.edges);
+      setLWId(draft.workflowId);
+      setLWName(draft.workflowName);
+      setLWDesc(draft.workflowDescription);
+    } else if (!workflowId) {
+      setN([]);
+      setE([]);
+      setLWId(null);
+      setLWName("Untitled Workflow");
+      setLWDesc("");
+    }
+    hydratedRef.current = true;
+  }, [tabId, workflowId]);
+
   useEffect(() => {
-    tabDraftsRef.current[tabId] = {
+    const tid = tabId;
+    return () => {
+      const entry = draftsRef.current[tid];
+      if (!entry) {
+        return;
+      }
+      const so = storageOptionsRef.current;
+      const merged = loadDraftsFromStorage(so);
+      merged[tid] = entry;
+      saveDraftsToStorage(merged, so);
+      draftsRef.current = merged;
+    };
+  }, [tabId, draftsRef]);
+
+  useEffect(() => {
+    if (!hydratedRef.current) {
+      return;
+    }
+    const so = storageOptionsRef.current;
+    draftsRef.current[tabId] = {
       nodes: nodes.map(normalizeNodeForStorage),
       edges,
       workflowId: localWorkflowId,
@@ -79,7 +132,7 @@ function useDraftManagement({
       workflowDescription: localWorkflowDescription,
       isUnsaved: tabIsUnsaved,
     };
-    saveDraftsToStorage(tabDraftsRef.current, storageOptions);
+    saveDraftsToStorage(draftsRef.current, so);
   }, [
     tabId,
     nodes,
@@ -89,10 +142,10 @@ function useDraftManagement({
     localWorkflowDescription,
     tabIsUnsaved,
     normalizeNodeForStorage,
-    storageOptions,
+    draftsRef,
   ]);
   return {
-    tabDraftsRef,
+    tabDraftsRef: draftsRef,
     saveDraftsToStorage,
   };
 }
