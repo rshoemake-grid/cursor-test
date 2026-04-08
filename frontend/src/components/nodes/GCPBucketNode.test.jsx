@@ -23,41 +23,23 @@ describe("GCPBucketNode", () => {
     );
     expect(screen.getByText("GCP Bucket")).toBeInTheDocument();
   });
-  it("should render bucket name", () => {
+  it("should not show input_config details on the card", () => {
     const nodeData = {
       label: "My Bucket",
       input_config: {
+        project_id: "my-gcp-project",
         bucket_name: "my-bucket",
-      },
-    };
-    renderWithProvider(
-      <GCPBucketNode data={nodeData} selected={false} id="node-1" />,
-    );
-    expect(screen.getByText(/Bucket: my-bucket/)).toBeInTheDocument();
-  });
-  it("should render object path", () => {
-    const nodeData = {
-      label: "My Bucket",
-      input_config: {
         object_path: "path/to/file.txt",
-      },
-    };
-    renderWithProvider(
-      <GCPBucketNode data={nodeData} selected={false} id="node-1" />,
-    );
-    expect(screen.getByText(/File: file.txt/)).toBeInTheDocument();
-  });
-  it("should render mode", () => {
-    const nodeData = {
-      label: "My Bucket",
-      input_config: {
         mode: "write",
       },
     };
     renderWithProvider(
       <GCPBucketNode data={nodeData} selected={false} id="node-1" />,
     );
-    expect(screen.getByText(/Mode: Write/)).toBeInTheDocument();
+    expect(screen.queryByText(/Project:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Bucket:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/File:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Mode:/)).not.toBeInTheDocument();
   });
   it("should show selected state", () => {
     const nodeData = {

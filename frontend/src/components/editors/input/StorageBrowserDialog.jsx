@@ -28,8 +28,8 @@ import {
  * Shared modal to browse storage: GCS/S3 key prefixes or server local directories.
  *
  * @param {Object} props
- * @param {'keyPrefix'|'localDirectory'} props.variant
- * @param {function(string): Promise<{prefixes: string[], objects: Array, canGoUp?: boolean}>} props.fetchPage
+ * @param {'keyPrefix'|'localDirectory'|'bucketList'} props.variant
+ * @param {function(string=): Promise<{prefixes: string[], objects: Array, canGoUp?: boolean}>} props.fetchPage
  */
 function StorageBrowserDialog({
   isOpen,
@@ -44,6 +44,7 @@ function StorageBrowserDialog({
   onSelectFile,
   selectButtonLabel = "Use selected file",
   emptyFolderMessage = "This folder is empty.",
+  listPathLabel = "All accessible buckets",
 }) {
   const [location, setLocation] = useState(initialLocation || "");
   const [prefixes, setPrefixes] = useState([]);
@@ -57,11 +58,11 @@ function StorageBrowserDialog({
     if (!isOpen) {
       return undefined;
     }
-    setLocation(initialLocation || "");
+    setLocation(variant === "bucketList" ? "" : initialLocation || "");
     setSelectedName(null);
     setError("");
     return undefined;
-  }, [isOpen, initialLocation]);
+  }, [isOpen, initialLocation, variant]);
 
   const load = useCallback(async () => {
     if (prereqError) {
@@ -74,21 +75,29 @@ function StorageBrowserDialog({
     setLoading(true);
     setError("");
     try {
-      const loc =
-        variant === "localDirectory"
-          ? (location || "").replace(/\/+$/, "")
-          : location;
-      const data = await fetchPage(loc);
-      setPrefixes(data.prefixes || []);
-      setObjects(data.objects || []);
-      if (variant === "localDirectory") {
-        setCanGoUp(Boolean(data.canGoUp));
-        if (data.currentDirectory != null && data.currentDirectory !== "") {
-          const canon = String(data.currentDirectory).replace(/\/+$/, "");
-          setLocation((prev) => (prev === canon ? prev : canon));
-        }
+      let data;
+      if (variant === "bucketList") {
+        data = await fetchPage();
+        setPrefixes([]);
+        setObjects(data.objects || []);
+        setCanGoUp(false);
       } else {
-        setCanGoUp(Boolean(loc));
+        const loc =
+          variant === "localDirectory"
+            ? (location || "").replace(/\/+$/, "")
+            : location;
+        data = await fetchPage(loc);
+        setPrefixes(data.prefixes || []);
+        setObjects(data.objects || []);
+        if (variant === "localDirectory") {
+          setCanGoUp(Boolean(data.canGoUp));
+          if (data.currentDirectory != null && data.currentDirectory !== "") {
+            const canon = String(data.currentDirectory).replace(/\/+$/, "");
+            setLocation((prev) => (prev === canon ? prev : canon));
+          }
+        } else {
+          setCanGoUp(Boolean(loc));
+        }
       }
     } catch (e) {
       const status = e.response?.status;
@@ -114,6 +123,9 @@ function StorageBrowserDialog({
   }, [isOpen, load]);
 
   const goUp = useCallback(() => {
+    if (variant === "bucketList") {
+      return;
+    }
     if (variant === "localDirectory") {
       const cur = (location || "").replace(/\/+$/, "");
       setLocation(parentLocalDirectory(cur));
@@ -124,11 +136,13 @@ function StorageBrowserDialog({
   }, [variant, location]);
 
   const pathToolbarLabel =
-    variant === "localDirectory"
-      ? location
-        ? location.replace(/\/+$/, "") || "/"
-        : "(server base directory)"
-      : location || "/";
+    variant === "bucketList"
+      ? listPathLabel
+      : variant === "localDirectory"
+        ? location
+          ? location.replace(/\/+$/, "") || "/"
+          : "(server base directory)"
+        : location || "/";
 
   const handleSelectFile = useCallback((fullName) => {
     setSelectedName(fullName);
@@ -191,7 +205,7 @@ function StorageBrowserDialog({
         <StoragePickerToolbar>
           <StoragePickerToolbarBtn
             type="button"
-            disabled={!canGoUp || loading}
+            disabled={variant === "bucketList" || !canGoUp || loading}
             onClick={goUp}
             aria-label="Parent folder"
           >
@@ -224,7 +238,11 @@ function StorageBrowserDialog({
           <StoragePickerMessage>Loading…</StoragePickerMessage>
         ) : null}
         {!loading && !error ? (
-          <StoragePickerList aria-label="Folder contents">
+          <StoragePickerList
+            aria-label={
+              variant === "bucketList" ? "Bucket list" : "Folder contents"
+            }
+          >
             {prefixes.map((p) => (
               <StoragePickerRow
                 key={`pre-${p}`}
@@ -309,13 +327,15 @@ StorageBrowserDialog.propTypes = {
   title: PropTypes.string.isRequired,
   resourceSubtitle: PropTypes.string,
   titleId: PropTypes.string,
-  variant: PropTypes.oneOf(["keyPrefix", "localDirectory"]).isRequired,
+  variant: PropTypes.oneOf(["keyPrefix", "localDirectory", "bucketList"])
+    .isRequired,
   initialLocation: PropTypes.string,
   prereqError: PropTypes.string,
   fetchPage: PropTypes.func.isRequired,
   onSelectFile: PropTypes.func.isRequired,
   selectButtonLabel: PropTypes.string,
   emptyFolderMessage: PropTypes.string,
+  listPathLabel: PropTypes.string,
 };
 
 export { StorageBrowserDialog as default };

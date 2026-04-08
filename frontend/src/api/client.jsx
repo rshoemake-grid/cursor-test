@@ -292,9 +292,29 @@ function createApiClient(options) {
         await http.post(storageEndpoints.gcpListObjects(), body),
       );
     },
+    async listGcpBuckets(body) {
+      return extractData(
+        await http.post(storageEndpoints.gcpListBuckets(), body),
+      );
+    },
+    async listGcpProjects(body) {
+      return extractData(
+        await http.post(storageEndpoints.gcpListProjects(), body),
+      );
+    },
     async listS3BucketObjects(body) {
       return extractData(
         await http.post(storageEndpoints.awsListObjects(), body),
+      );
+    },
+    async listS3Buckets(body) {
+      return extractData(
+        await http.post(storageEndpoints.awsListBuckets(), body),
+      );
+    },
+    async listAwsRegions(body) {
+      return extractData(
+        await http.post(storageEndpoints.awsListRegions(), body),
       );
     },
     async listLocalDirectory(body) {

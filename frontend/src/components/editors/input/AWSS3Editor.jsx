@@ -24,7 +24,11 @@ import {
   EditorHint,
   EditorSecondaryFullButton,
 } from "../../../styles/editorForm.styled";
-import { S3BucketObjectPickerDialog } from "./storageObjectPickers";
+import {
+  AwsRegionListPickerDialog,
+  S3BucketListPickerDialog,
+  S3BucketObjectPickerDialog,
+} from "./storageObjectPickers";
 
 function AWSS3Editor({ node, onConfigUpdate }) {
   const inputConfig = node.data.input_config || {};
@@ -64,10 +68,36 @@ function AWSS3Editor({ node, onConfigUpdate }) {
   );
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerSession, setPickerSession] = useState(0);
+  const [bucketPickerOpen, setBucketPickerOpen] = useState(false);
+  const [bucketPickerSession, setBucketPickerSession] = useState(0);
+  const [regionPickerOpen, setRegionPickerOpen] = useState(false);
+  const [regionPickerSession, setRegionPickerSession] = useState(0);
   const openObjectPicker = useCallback(() => {
     setPickerSession((s) => s + 1);
     setPickerOpen(true);
   }, []);
+  const openBucketPicker = useCallback(() => {
+    setBucketPickerSession((s) => s + 1);
+    setBucketPickerOpen(true);
+  }, []);
+  const openRegionPicker = useCallback(() => {
+    setRegionPickerSession((s) => s + 1);
+    setRegionPickerOpen(true);
+  }, []);
+  const handlePickedRegion = useCallback(
+    (r) => {
+      setRegionValue(r);
+      onConfigUpdate(CONFIG_FIELD, "region", r);
+    },
+    [onConfigUpdate, setRegionValue],
+  );
+  const handlePickedBucket = useCallback(
+    (name) => {
+      setBucketNameValue(name);
+      onConfigUpdate(CONFIG_FIELD, "bucket_name", name);
+    },
+    [onConfigUpdate, setBucketNameValue],
+  );
   const handlePickedKey = useCallback(
     (key) => {
       setObjectKeyValue(key);
@@ -100,20 +130,46 @@ function AWSS3Editor({ node, onConfigUpdate }) {
       </EditorFieldGroup>
       <EditorFieldGroup>
         <EditorLabel htmlFor="aws-bucket-name">Bucket Name</EditorLabel>
-        <EditorInput
-          id="aws-bucket-name"
-          ref={bucketNameRef}
-          type="text"
-          value={bucketNameValue}
-          onChange={createTextInputHandler(
-            setBucketNameValue,
-            onConfigUpdate,
-            CONFIG_FIELD,
-            "bucket_name",
-          )}
-          placeholder="my-bucket-name"
-          aria-label="AWS S3 bucket name"
-        />
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            alignItems: "stretch",
+          }}
+        >
+          <EditorInput
+            id="aws-bucket-name"
+            ref={bucketNameRef}
+            type="text"
+            value={bucketNameValue}
+            onChange={createTextInputHandler(
+              setBucketNameValue,
+              onConfigUpdate,
+              CONFIG_FIELD,
+              "bucket_name",
+            )}
+            placeholder="my-bucket-name"
+            aria-label="AWS S3 bucket name"
+            style={{ flex: 1, minWidth: 0 }}
+          />
+          <EditorSecondaryFullButton
+            type="button"
+            onClick={openBucketPicker}
+            aria-label="Browse AWS S3 buckets"
+            style={{
+              width: "auto",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+              alignSelf: "stretch",
+            }}
+          >
+            Browse…
+          </EditorSecondaryFullButton>
+        </div>
+        <EditorHint>
+          Browse lists buckets for your AWS account (access keys below when set, or the default
+          credential chain on the server).
+        </EditorHint>
       </EditorFieldGroup>
       <EditorFieldGroup $mt="sm">
         <EditorLabel htmlFor="aws-object-key">Object Key</EditorLabel>
@@ -158,6 +214,17 @@ function AWSS3Editor({ node, onConfigUpdate }) {
           default AWS credential chain on the server).
         </EditorHint>
       </EditorFieldGroup>
+      {bucketPickerOpen ? (
+        <S3BucketListPickerDialog
+          key={bucketPickerSession}
+          isOpen={bucketPickerOpen}
+          onClose={() => setBucketPickerOpen(false)}
+          accessKeyId={accessKeyIdValue}
+          secretAccessKey={secretKeyValue}
+          region={regionValue}
+          onSelectBucket={handlePickedBucket}
+        />
+      ) : null}
       {pickerOpen ? (
         <S3BucketObjectPickerDialog
           key={pickerSession}
@@ -169,6 +236,16 @@ function AWSS3Editor({ node, onConfigUpdate }) {
           secretAccessKey={secretKeyValue}
           region={regionValue}
           onSelectObject={handlePickedKey}
+        />
+      ) : null}
+      {regionPickerOpen ? (
+        <AwsRegionListPickerDialog
+          key={regionPickerSession}
+          isOpen={regionPickerOpen}
+          onClose={() => setRegionPickerOpen(false)}
+          accessKeyId={accessKeyIdValue}
+          secretAccessKey={secretKeyValue}
+          onSelectRegion={handlePickedRegion}
         />
       ) : null}
       <EditorFieldGroup $mt="sm">
@@ -207,20 +284,46 @@ function AWSS3Editor({ node, onConfigUpdate }) {
       </EditorFieldGroup>
       <EditorFieldGroup $mt="sm">
         <EditorLabel htmlFor="aws-region">AWS Region</EditorLabel>
-        <EditorInput
-          id="aws-region"
-          ref={regionRef}
-          type="text"
-          value={regionValue}
-          onChange={createTextInputHandler(
-            setRegionValue,
-            onConfigUpdate,
-            CONFIG_FIELD,
-            "region",
-          )}
-          placeholder={INPUT_REGION.DEFAULT}
-          aria-label="AWS region"
-        />
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            alignItems: "stretch",
+          }}
+        >
+          <EditorInput
+            id="aws-region"
+            ref={regionRef}
+            type="text"
+            value={regionValue}
+            onChange={createTextInputHandler(
+              setRegionValue,
+              onConfigUpdate,
+              CONFIG_FIELD,
+              "region",
+            )}
+            placeholder={INPUT_REGION.DEFAULT}
+            aria-label="AWS region"
+            style={{ flex: 1, minWidth: 0 }}
+          />
+          <EditorSecondaryFullButton
+            type="button"
+            onClick={openRegionPicker}
+            aria-label="Browse AWS regions"
+            style={{
+              width: "auto",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+              alignSelf: "stretch",
+            }}
+          >
+            Browse…
+          </EditorSecondaryFullButton>
+        </div>
+        <EditorHint>
+          Region for S3 and EC2 calls. Browse uses EC2 DescribeRegions (keys below when set, or
+          default AWS credentials on the server).
+        </EditorHint>
       </EditorFieldGroup>
     </EditorSectionRoot>
   );

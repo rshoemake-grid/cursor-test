@@ -63,6 +63,26 @@ def _parse_gcp_credentials(credentials_json: Optional[str]):
         raise ValueError("Invalid JSON credentials for GCP")
 
 
+def _gcp_project_id_from_config(config: Dict[str, Any]) -> Optional[str]:
+    raw = config.get("project_id")
+    if raw is None:
+        return None
+    s = str(raw).strip()
+    return s or None
+
+
+def _gcp_storage_client_kwargs(config: Dict[str, Any]) -> Dict[str, Any]:
+    """Build kwargs for google.cloud.storage.Client from workflow / explorer config."""
+    credentials = _parse_gcp_credentials(config.get("credentials"))
+    pid = _gcp_project_id_from_config(config)
+    kwargs: Dict[str, Any] = {}
+    if credentials is not None:
+        kwargs["credentials"] = credentials
+    if pid is not None:
+        kwargs["project"] = pid
+    return kwargs
+
+
 class InputSourceHandler:
     """Base class for input source handlers"""
     
@@ -91,15 +111,9 @@ class GCPBucketHandler(InputSourceHandler):
         
         if not bucket_name:
             raise ValueError("bucket_name is required for GCP Bucket input")
-        
-        credentials = _parse_gcp_credentials(credentials_json)
 
         def _storage_client():
-            return (
-                storage.Client(credentials=credentials)
-                if credentials
-                else storage.Client()
-            )
+            return storage.Client(**_gcp_storage_client_kwargs(config))
 
         client = gcp_client_with_adc_retry(credentials_json, _storage_client)
 
@@ -139,14 +153,8 @@ class GCPBucketHandler(InputSourceHandler):
         if not object_path:
             raise ValueError("object_path is required for GCP Bucket write")
 
-        credentials = _parse_gcp_credentials(credentials_json)
-
         def _storage_client():
-            return (
-                storage.Client(credentials=credentials)
-                if credentials
-                else storage.Client()
-            )
+            return storage.Client(**_gcp_storage_client_kwargs(config))
 
         client = gcp_client_with_adc_retry(credentials_json, _storage_client)
 
@@ -184,14 +192,8 @@ class GCPBucketHandler(InputSourceHandler):
         if not bucket_name:
             raise ValueError("bucket_name is required for GCP Bucket listing")
 
-        credentials = _parse_gcp_credentials(credentials_json)
-
         def _storage_client():
-            return (
-                storage.Client(credentials=credentials)
-                if credentials
-                else storage.Client()
-            )
+            return storage.Client(**_gcp_storage_client_kwargs(config))
 
         client = gcp_client_with_adc_retry(credentials_json, _storage_client)
         bucket = client.bucket(bucket_name)
@@ -222,6 +224,110 @@ class GCPBucketHandler(InputSourceHandler):
             )
         prefixes_out = sorted(getattr(blobs_iter, "prefixes", set()) or [])
         return prefixes_out, objects_out
+
+    @staticmethod
+    def list_buckets(
+        config: Dict[str, Any],
+        max_results: int = 1000,
+    ) -> List[Dict[str, Any]]:
+        """
+        List GCS bucket names visible to the client (picker UI).
+        ``config`` may include optional ``credentials`` JSON; otherwise uses ADC.
+        """
+        if not GCP_AVAILABLE:
+            raise ImportError(
+                "google-cloud-storage not installed. Install with: pip install google-cloud-storage"
+            )
+
+        credentials_json = config.get("credentials")
+
+        def _storage_client():
+            return storage.Client(**_gcp_storage_client_kwargs(config))
+
+        client = gcp_client_with_adc_retry(credentials_json, _storage_client)
+        out: List[Dict[str, Any]] = []
+        for i, bucket in enumerate(client.list_buckets()):
+            if i >= max_results:
+                break
+            name = bucket.name
+            out.append(
+                {
+                    "name": name,
+                    "display_name": name,
+                    "size": None,
+                    "updated": None,
+                }
+            )
+        return out
+
+    @staticmethod
+    def list_projects(
+        config: Dict[str, Any],
+        max_results: int = 500,
+    ) -> List[Dict[str, Any]]:
+        """
+        List GCP project IDs the caller can see (Cloud Resource Manager API).
+        Requires cloudplatformprojects.readonly (or broader) on the credentials / ADC.
+        """
+        try:
+            import google.auth
+            from google.auth.transport.requests import AuthorizedSession
+        except ImportError as e:
+            raise ImportError(
+                "google-auth is required to list GCP projects (included with google-cloud-storage)."
+            ) from e
+
+        credentials_json = config.get("credentials")
+        credentials = _parse_gcp_credentials(credentials_json)
+        scopes = ("https://www.googleapis.com/auth/cloudplatformprojects.readonly",)
+        if credentials:
+            scoped = credentials.with_scopes(scopes)
+        else:
+            scoped, _ = google.auth.default(scopes=scopes)
+
+        session = AuthorizedSession(scoped)
+        url = "https://cloudresourcemanager.googleapis.com/v1/projects"
+        out: List[Dict[str, Any]] = []
+        page_token: Optional[str] = None
+        while len(out) < max_results:
+            params: Dict[str, Any] = {}
+            if page_token:
+                params["pageToken"] = page_token
+            try:
+                resp = session.get(url, params=params, timeout=120)
+                resp.raise_for_status()
+            except Exception as e:
+                raise ValueError(
+                    "Could not list GCP projects. Ensure credentials have "
+                    "resourcemanager.projects.list (e.g. Browser or Project Viewer). "
+                    f"Detail: {e!s}"
+                ) from e
+            payload = resp.json()
+            for p in payload.get("projects") or []:
+                if p.get("lifecycleState") != "ACTIVE":
+                    continue
+                pid = p.get("projectId") or ""
+                if not pid:
+                    continue
+                pname = (p.get("name") or "").strip()
+                num = p.get("projectNumber")
+                display_name = pid if not pname or pname == pid else f"{pid} — {pname}"
+                if num:
+                    display_name = f"{display_name} [{num}]"
+                out.append(
+                    {
+                        "name": pid,
+                        "display_name": display_name,
+                        "size": None,
+                        "updated": p.get("createTime"),
+                    }
+                )
+                if len(out) >= max_results:
+                    break
+            page_token = payload.get("nextPageToken")
+            if not page_token:
+                break
+        return out
 
 
 class AWSS3Handler(InputSourceHandler):
@@ -394,6 +500,86 @@ class AWSS3Handler(InputSourceHandler):
                 )
 
         return sorted(prefixes_set), objects_out
+
+    @staticmethod
+    def list_buckets(
+        config: Dict[str, Any],
+        max_results: int = 1000,
+    ) -> List[Dict[str, Any]]:
+        """List S3 bucket names for the account (picker UI)."""
+        if not AWS_AVAILABLE:
+            raise ImportError("boto3 not installed. Install with: pip install boto3")
+
+        access_key_id = config.get("access_key_id")
+        secret_access_key = config.get("secret_access_key")
+        region = config.get("region", "us-east-1")
+
+        if access_key_id and secret_access_key:
+            s3_client = boto3.client(
+                "s3",
+                aws_access_key_id=access_key_id,
+                aws_secret_access_key=secret_access_key,
+                region_name=region,
+            )
+        else:
+            s3_client = boto3.client("s3", region_name=region)
+
+        response = s3_client.list_buckets()
+        raw = response.get("Buckets") or []
+        out: List[Dict[str, Any]] = []
+        for b in raw[:max_results]:
+            name = b.get("Name") or ""
+            if not name:
+                continue
+            updated_iso = None
+            try:
+                cd = b.get("CreationDate")
+                if cd is not None and hasattr(cd, "isoformat"):
+                    updated_iso = cd.isoformat()
+            except Exception:
+                pass
+            out.append(
+                {
+                    "name": name,
+                    "display_name": name,
+                    "size": None,
+                    "updated": updated_iso,
+                }
+            )
+        return out
+
+    @staticmethod
+    def list_regions(config: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """List AWS region codes enabled for this account (EC2 DescribeRegions, us-east-1 endpoint)."""
+        if not AWS_AVAILABLE:
+            raise ImportError("boto3 not installed. Install with: pip install boto3")
+
+        access_key_id = config.get("access_key_id")
+        secret_access_key = config.get("secret_access_key")
+        client_kw: Dict[str, Any] = {"region_name": "us-east-1"}
+        if access_key_id and secret_access_key:
+            client_kw["aws_access_key_id"] = access_key_id
+            client_kw["aws_secret_access_key"] = secret_access_key
+        ec2 = boto3.client("ec2", **client_kw)
+        try:
+            resp = ec2.describe_regions(AllRegions=False)
+        except Exception as e:
+            raise ValueError(f"Could not list AWS regions: {e!s}") from e
+        rows: List[Dict[str, Any]] = []
+        for r in resp.get("Regions") or []:
+            rn = r.get("RegionName") or ""
+            if not rn:
+                continue
+            rows.append(
+                {
+                    "name": rn,
+                    "display_name": rn,
+                    "size": None,
+                    "updated": None,
+                }
+            )
+        rows.sort(key=lambda x: x["name"])
+        return rows
 
 
 class GCPPubSubHandler(InputSourceHandler):

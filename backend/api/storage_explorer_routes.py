@@ -30,6 +30,7 @@ class StorageObjectInfo(BaseModel):
 class GcpListObjectsRequest(BaseModel):
     bucket_name: str = Field(..., min_length=1)
     credentials: Optional[str] = None
+    project_id: Optional[str] = None
     prefix: str = ""
     delimiter: Optional[str] = "/"
     max_results: int = Field(default=2000, ge=1, le=10000)
@@ -71,6 +72,35 @@ class LocalListDirectoryResponse(BaseModel):
     can_go_up: bool
 
 
+class GcpListBucketsRequest(BaseModel):
+    credentials: Optional[str] = None
+    project_id: Optional[str] = None
+    max_results: int = Field(default=1000, ge=1, le=10000)
+
+
+class GcpListProjectsRequest(BaseModel):
+    credentials: Optional[str] = None
+    max_results: int = Field(default=500, ge=1, le=2000)
+
+
+class AwsListRegionsRequest(BaseModel):
+    access_key_id: Optional[str] = None
+    secret_access_key: Optional[str] = None
+
+
+class AwsListBucketsRequest(BaseModel):
+    access_key_id: Optional[str] = None
+    secret_access_key: Optional[str] = None
+    region: str = "us-east-1"
+    max_results: int = Field(default=1000, ge=1, le=10000)
+
+
+class ListBucketsResponse(BaseModel):
+    """Flat list of buckets (same item shape as object rows for shared pickers)."""
+
+    objects: List[StorageObjectInfo]
+
+
 @router.post("/gcp/list-objects", response_model=GcpListObjectsResponse)
 async def gcp_list_objects(
     body: GcpListObjectsRequest,
@@ -83,6 +113,7 @@ async def gcp_list_objects(
     config = {
         "bucket_name": body.bucket_name.strip(),
         "credentials": body.credentials,
+        "project_id": body.project_id.strip() if body.project_id else None,
     }
     try:
         prefixes, objects = GCPBucketHandler.list_objects(
@@ -109,6 +140,55 @@ async def gcp_list_objects(
         bucket_name=config["bucket_name"],
         prefix=body.prefix,
     )
+
+
+@router.post("/gcp/list-buckets", response_model=ListBucketsResponse)
+async def gcp_list_buckets(
+    body: GcpListBucketsRequest,
+    _user: UserDB = Depends(get_current_active_user),
+) -> ListBucketsResponse:
+    """List GCS buckets for the authenticated credentials / ADC."""
+    config: dict = {
+        "credentials": body.credentials,
+        "project_id": body.project_id.strip() if body.project_id else None,
+    }
+    try:
+        rows = GCPBucketHandler.list_buckets(config, max_results=body.max_results)
+    except ImportError as e:
+        logger.warning("GCP list-buckets: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("GCP list-buckets failed")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not list buckets: {e!s}",
+        ) from e
+    return ListBucketsResponse(objects=[StorageObjectInfo(**o) for o in rows])
+
+
+@router.post("/gcp/list-projects", response_model=ListBucketsResponse)
+async def gcp_list_projects(
+    body: GcpListProjectsRequest,
+    _user: UserDB = Depends(get_current_active_user),
+) -> ListBucketsResponse:
+    """List GCP projects the caller can access (Resource Manager)."""
+    config: dict = {"credentials": body.credentials}
+    try:
+        rows = GCPBucketHandler.list_projects(config, max_results=body.max_results)
+    except ImportError as e:
+        logger.warning("GCP list-projects: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("GCP list-projects failed")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not list projects: {e!s}",
+        ) from e
+    return ListBucketsResponse(objects=[StorageObjectInfo(**o) for o in rows])
 
 
 @router.post("/aws/list-objects", response_model=AwsListObjectsResponse)
@@ -148,6 +228,59 @@ async def aws_list_objects(
         bucket_name=config["bucket_name"],
         prefix=body.prefix,
     )
+
+
+@router.post("/aws/list-buckets", response_model=ListBucketsResponse)
+async def aws_list_buckets(
+    body: AwsListBucketsRequest,
+    _user: UserDB = Depends(get_current_active_user),
+) -> ListBucketsResponse:
+    """List S3 buckets for the configured or default AWS credential chain."""
+    config = {
+        "access_key_id": body.access_key_id,
+        "secret_access_key": body.secret_access_key,
+        "region": body.region or "us-east-1",
+    }
+    try:
+        rows = AWSS3Handler.list_buckets(config, max_results=body.max_results)
+    except ImportError as e:
+        logger.warning("AWS list-buckets: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("AWS list-buckets failed")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not list buckets: {e!s}",
+        ) from e
+    return ListBucketsResponse(objects=[StorageObjectInfo(**o) for o in rows])
+
+
+@router.post("/aws/list-regions", response_model=ListBucketsResponse)
+async def aws_list_regions(
+    body: AwsListRegionsRequest,
+    _user: UserDB = Depends(get_current_active_user),
+) -> ListBucketsResponse:
+    """List AWS regions enabled for this account (EC2 DescribeRegions)."""
+    config = {
+        "access_key_id": body.access_key_id,
+        "secret_access_key": body.secret_access_key,
+    }
+    try:
+        rows = AWSS3Handler.list_regions(config)
+    except ImportError as e:
+        logger.warning("AWS list-regions: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("AWS list-regions failed")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not list regions: {e!s}",
+        ) from e
+    return ListBucketsResponse(objects=[StorageObjectInfo(**o) for o in rows])
 
 
 @router.post("/local/list-directory", response_model=LocalListDirectoryResponse)

@@ -60,9 +60,29 @@ describe("endpoints", () => {
         "/storage/gcp/list-objects",
       );
     });
+    it("should return GCP list-buckets endpoint", () => {
+      expect(storageEndpoints.gcpListBuckets()).toBe(
+        "/storage/gcp/list-buckets",
+      );
+    });
+    it("should return GCP list-projects endpoint", () => {
+      expect(storageEndpoints.gcpListProjects()).toBe(
+        "/storage/gcp/list-projects",
+      );
+    });
     it("should return AWS list-objects endpoint", () => {
       expect(storageEndpoints.awsListObjects()).toBe(
         "/storage/aws/list-objects",
+      );
+    });
+    it("should return AWS list-buckets endpoint", () => {
+      expect(storageEndpoints.awsListBuckets()).toBe(
+        "/storage/aws/list-buckets",
+      );
+    });
+    it("should return AWS list-regions endpoint", () => {
+      expect(storageEndpoints.awsListRegions()).toBe(
+        "/storage/aws/list-regions",
       );
     });
     it("should return local list-directory endpoint", () => {

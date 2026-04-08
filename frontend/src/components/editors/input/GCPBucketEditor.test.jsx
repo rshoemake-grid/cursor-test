@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import GCPBucketEditor from "./GCPBucketEditor";
 import { INPUT_MODE, EMPTY_STRING } from "../../../hooks/utils/inputDefaults";
+import { api } from "../../../api/client";
 
 jest.mock("../../../api/client", () => ({
   api: {
@@ -10,6 +11,12 @@ jest.mock("../../../api/client", () => ({
       bucket_name: "test-bucket",
       prefix: "",
     }),
+    listGcpBuckets: jest.fn().mockResolvedValue({
+      objects: [{ name: "picked-gcp-bucket", display_name: "picked-gcp-bucket" }],
+    }),
+    listGcpProjects: jest.fn().mockResolvedValue({
+      objects: [{ name: "picked-gcp-project", display_name: "picked-gcp-project" }],
+    }),
   },
 }));
 
@@ -17,6 +24,20 @@ describe("GCPBucketEditor", () => {
   const mockOnConfigUpdate = jest.fn();
   beforeEach(() => {
     jest.clearAllMocks();
+    api.listGcpBucketObjects.mockResolvedValue({
+      prefixes: [],
+      objects: [],
+      bucket_name: "test-bucket",
+      prefix: "",
+    });
+    api.listGcpBuckets.mockResolvedValue({
+      objects: [{ name: "picked-gcp-bucket", display_name: "picked-gcp-bucket" }],
+    });
+    api.listGcpProjects.mockResolvedValue({
+      objects: [
+        { name: "picked-gcp-project", display_name: "picked-gcp-project" },
+      ],
+    });
   });
   const createGCPBucketNode = (overrides) => ({
     id: "1",
@@ -48,6 +69,7 @@ describe("GCPBucketEditor", () => {
       render(
         <GCPBucketEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
+      expect(screen.getByLabelText("GCP project ID")).toBeInTheDocument();
       expect(screen.getByLabelText("GCP bucket name")).toBeInTheDocument();
       expect(
         screen.getByLabelText("Object path in bucket"),
@@ -82,6 +104,15 @@ describe("GCPBucketEditor", () => {
     });
   });
   describe("Field Values", () => {
+    it("should display current project id value", () => {
+      const node = createGCPBucketNode({
+        project_id: "my-gcp-project",
+      });
+      render(
+        <GCPBucketEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      expect(screen.getByLabelText("GCP project ID").value).toBe("my-gcp-project");
+    });
     it("should display current bucket name value", () => {
       const node = createGCPBucketNode({
         bucket_name: "my-gcp-bucket",
@@ -127,6 +158,15 @@ describe("GCPBucketEditor", () => {
     });
   });
   describe("Default Values", () => {
+    it("should use empty string default for project id when not provided", () => {
+      const node = createGCPBucketNode({
+        project_id: void 0,
+      });
+      render(
+        <GCPBucketEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      expect(screen.getByLabelText("GCP project ID").value).toBe(EMPTY_STRING);
+    });
     it("should use empty string default for bucket name when not provided", () => {
       const node = createGCPBucketNode({
         bucket_name: void 0,
@@ -171,6 +211,20 @@ describe("GCPBucketEditor", () => {
     });
   });
   describe("Field Updates", () => {
+    it("should call onConfigUpdate when project id changes", () => {
+      const node = createGCPBucketNode();
+      render(
+        <GCPBucketEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      fireEvent.change(screen.getByLabelText("GCP project ID"), {
+        target: { value: "new-proj" },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "project_id",
+        "new-proj",
+      );
+    });
     it("should call onConfigUpdate when bucket name changes", () => {
       const node = createGCPBucketNode();
       render(
@@ -308,6 +362,16 @@ describe("GCPBucketEditor", () => {
     });
   });
   describe("Placeholders", () => {
+    it("should display correct placeholder for project id", () => {
+      const node = createGCPBucketNode({
+        project_id: "",
+      });
+      render(
+        <GCPBucketEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const input = screen.getByLabelText("GCP project ID");
+      expect(input).toHaveAttribute("placeholder", "my-gcp-project-id");
+    });
     it("should display correct placeholder for bucket name", () => {
       const node = createGCPBucketNode({
         bucket_name: "",
@@ -370,7 +434,7 @@ describe("GCPBucketEditor", () => {
     });
   });
   describe("Bucket object picker", () => {
-    it("should open browse dialog when Browse is clicked", async () => {
+    it("should open object browse dialog when object Browse is clicked", async () => {
       const node = createGCPBucketNode();
       render(
         <GCPBucketEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
@@ -382,6 +446,40 @@ describe("GCPBucketEditor", () => {
         ).toBeInTheDocument();
       });
       expect(screen.getByText("test-bucket")).toBeInTheDocument();
+    });
+    it("should open project list dialog when project Browse is clicked", async () => {
+      const node = createGCPBucketNode();
+      render(
+        <GCPBucketEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      fireEvent.click(screen.getByLabelText("Browse GCP projects"));
+      await waitFor(() => {
+        expect(
+          screen.getByRole("dialog", { name: /Select GCP project/i }),
+        ).toBeInTheDocument();
+      });
+      await waitFor(() => expect(api.listGcpProjects).toHaveBeenCalled());
+      expect(
+        await screen.findByText("picked-gcp-project", {}, { timeout: 5000 }),
+      ).toBeInTheDocument();
+    });
+    it("should open bucket list dialog when bucket Browse is clicked", async () => {
+      const node = createGCPBucketNode();
+      render(
+        <GCPBucketEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      fireEvent.click(
+        screen.getByLabelText("Browse Google Cloud Storage buckets"),
+      );
+      await waitFor(() => {
+        expect(
+          screen.getByRole("dialog", { name: /Select GCS bucket/i }),
+        ).toBeInTheDocument();
+      });
+      await waitFor(() => expect(api.listGcpBuckets).toHaveBeenCalled());
+      expect(
+        await screen.findByText("picked-gcp-bucket", {}, { timeout: 5000 }),
+      ).toBeInTheDocument();
     });
   });
 });

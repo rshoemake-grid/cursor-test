@@ -26,7 +26,11 @@ const chatEndpoints = {
 };
 const storageEndpoints = {
   gcpListObjects: () => "/storage/gcp/list-objects",
+  gcpListBuckets: () => "/storage/gcp/list-buckets",
+  gcpListProjects: () => "/storage/gcp/list-projects",
   awsListObjects: () => "/storage/aws/list-objects",
+  awsListBuckets: () => "/storage/aws/list-buckets",
+  awsListRegions: () => "/storage/aws/list-regions",
   localListDirectory: () => "/storage/local/list-directory",
 };
 export {

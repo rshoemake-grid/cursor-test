@@ -5,6 +5,7 @@ import {
   INPUT_REGION,
   EMPTY_STRING,
 } from "../../../hooks/utils/inputDefaults";
+import { api } from "../../../api/client";
 
 jest.mock("../../../api/client", () => ({
   api: {
@@ -14,6 +15,12 @@ jest.mock("../../../api/client", () => ({
       bucket_name: "test-bucket",
       prefix: "",
     }),
+    listS3Buckets: jest.fn().mockResolvedValue({
+      objects: [{ name: "picked-s3-bucket", display_name: "picked-s3-bucket" }],
+    }),
+    listAwsRegions: jest.fn().mockResolvedValue({
+      objects: [{ name: "us-west-2", display_name: "us-west-2" }],
+    }),
   },
 }));
 
@@ -21,6 +28,18 @@ describe("AWSS3Editor", () => {
   const mockOnConfigUpdate = jest.fn();
   beforeEach(() => {
     jest.clearAllMocks();
+    api.listS3BucketObjects.mockResolvedValue({
+      prefixes: [],
+      objects: [],
+      bucket_name: "test-bucket",
+      prefix: "",
+    });
+    api.listS3Buckets.mockResolvedValue({
+      objects: [{ name: "picked-s3-bucket", display_name: "picked-s3-bucket" }],
+    });
+    api.listAwsRegions.mockResolvedValue({
+      objects: [{ name: "us-west-2", display_name: "us-west-2" }],
+    });
   });
   const createAWSS3Node = (overrides) => ({
     id: "1",
@@ -347,7 +366,7 @@ describe("AWSS3Editor", () => {
     });
   });
   describe("S3 object picker", () => {
-    it("should open browse dialog when Browse is clicked", async () => {
+    it("should open object browse dialog when object Browse is clicked", async () => {
       const node = createAWSS3Node();
       render(<AWSS3Editor node={node} onConfigUpdate={mockOnConfigUpdate} />);
       fireEvent.click(
@@ -359,6 +378,34 @@ describe("AWSS3Editor", () => {
         ).toBeInTheDocument();
       });
       expect(screen.getByText("test-bucket")).toBeInTheDocument();
+    });
+    it("should open bucket list dialog when bucket Browse is clicked", async () => {
+      const node = createAWSS3Node();
+      render(<AWSS3Editor node={node} onConfigUpdate={mockOnConfigUpdate} />);
+      fireEvent.click(screen.getByLabelText("Browse AWS S3 buckets"));
+      await waitFor(() => {
+        expect(
+          screen.getByRole("dialog", { name: /Select S3 bucket/i }),
+        ).toBeInTheDocument();
+      });
+      await waitFor(() => expect(api.listS3Buckets).toHaveBeenCalled());
+      expect(
+        await screen.findByText("picked-s3-bucket", {}, { timeout: 5000 }),
+      ).toBeInTheDocument();
+    });
+    it("should open region list dialog when region Browse is clicked", async () => {
+      const node = createAWSS3Node();
+      render(<AWSS3Editor node={node} onConfigUpdate={mockOnConfigUpdate} />);
+      fireEvent.click(screen.getByLabelText("Browse AWS regions"));
+      await waitFor(() => {
+        expect(
+          screen.getByRole("dialog", { name: /Select AWS region/i }),
+        ).toBeInTheDocument();
+      });
+      await waitFor(() => expect(api.listAwsRegions).toHaveBeenCalled());
+      expect(
+        await screen.findByText("us-west-2", {}, { timeout: 5000 }),
+      ).toBeInTheDocument();
     });
   });
 });
