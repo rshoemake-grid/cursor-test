@@ -17,6 +17,7 @@ const EXECUTION_STATUSES = {
   COMPLETED: "completed",
   FAILED: "failed",
   PAUSED: "paused",
+  CANCELLED: "cancelled",
 };
 const LOG_LEVELS = {
   INFO: "INFO",

@@ -130,7 +130,10 @@ async def get_execution(
 @router.get("/executions", response_model=List[ExecutionResponse])
 async def list_executions(
     workflow_id: Optional[str] = Query(None, description="Filter by workflow ID"),
-    status: Optional[str] = Query(None, description="Filter by status (running, completed, failed)"),
+    status: Optional[str] = Query(
+        None,
+        description="Filter by status. Single value or comma-separated (e.g. failed,running).",
+    ),
     limit: Optional[int] = Query(None, ge=1, le=100, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     execution_service: ExecutionServiceDep = ...,
@@ -139,6 +142,7 @@ async def list_executions(
     """
     List executions with filtering and pagination.
     M-3/C-2: Requires auth; always filters by current user (user_id from query ignored).
+    List items omit embedded logs for performance; use GET /executions/{id} or /logs for full logs.
     """
     executions = await execution_service.list_executions(
         workflow_id=workflow_id,

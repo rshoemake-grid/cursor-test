@@ -276,6 +276,67 @@ describe("useExecutionPolling", () => {
     const updatedTabs = updateCall(mockTabsRef.current);
     expect(updatedTabs[0].executions[0].status).toBe("completed");
   });
+  it("should merge execution error when API reports failed", async () => {
+    const execution = {
+      id: "exec-1",
+      status: "running",
+      startedAt: new Date(),
+      nodes: {},
+      logs: [],
+    };
+    mockTabsRef.current = [createMockTab("workflow-1", [execution])];
+    const mockExecutionResponse = {
+      status: "failed",
+      completed_at: new Date().toISOString(),
+      error: "GCP credentials invalid",
+      node_states: {},
+      logs: [],
+    };
+    mockApi.getExecution.mockResolvedValue(mockExecutionResponse);
+    renderHook(() =>
+      useExecutionPolling({
+        tabsRef: mockTabsRef,
+        setTabs: mockSetTabs,
+        apiClient: mockApi,
+        pollInterval: 1e3,
+      }),
+    );
+    await act(async () => {
+      jest.advanceTimersByTime(1e3);
+    });
+    const updateCall = mockSetTabs.mock.calls[0][0];
+    const updatedTabs = updateCall(mockTabsRef.current);
+    expect(updatedTabs[0].executions[0].status).toBe("failed");
+    expect(updatedTabs[0].executions[0].error).toBe("GCP credentials invalid");
+  });
+  it("should preserve client nodes when API omits node_states", async () => {
+    const execution = {
+      id: "exec-1",
+      status: "running",
+      startedAt: new Date(),
+      nodes: { n1: { status: "running" } },
+      logs: [],
+    };
+    mockTabsRef.current = [createMockTab("workflow-1", [execution])];
+    mockApi.getExecution.mockResolvedValue({
+      status: "running",
+      logs: [],
+    });
+    renderHook(() =>
+      useExecutionPolling({
+        tabsRef: mockTabsRef,
+        setTabs: mockSetTabs,
+        apiClient: mockApi,
+        pollInterval: 1e3,
+      }),
+    );
+    await act(async () => {
+      jest.advanceTimersByTime(1e3);
+    });
+    expect(mockTabsRef.current[0].executions[0].nodes.n1).toEqual({
+      status: "running",
+    });
+  });
   it("should handle paused status by keeping as running", async () => {
     const execution = {
       id: "exec-1",

@@ -1,5 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import ExecutionDetailsModal from "./ExecutionDetailsModal";
+import { api } from "../../api/client";
+
 describe("ExecutionDetailsModal", () => {
   const mockExecution = {
     execution_id: "exec-123",
@@ -26,6 +28,10 @@ describe("ExecutionDetailsModal", () => {
   const mockOnClose = jest.fn();
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(api, "getExecution").mockResolvedValue(mockExecution);
+  });
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
   it("should not render when isOpen is false", () => {
     const { container } = render(
@@ -194,16 +200,19 @@ describe("ExecutionDetailsModal", () => {
   });
   describe("Download Logs Functionality", () => {
     const mockApiClient = {
+      getExecution: jest.fn(),
       downloadExecutionLogs: jest.fn(),
     };
     let mockAnchor;
     beforeEach(() => {
+      mockApiClient.getExecution.mockResolvedValue(mockExecution);
       mockAnchor = {
         href: "",
         download: "",
         click: jest.fn(),
       };
-      jest.clearAllMocks();
+      mockApiClient.getExecution.mockResolvedValue(mockExecution);
+      mockApiClient.downloadExecutionLogs.mockReset();
       global.URL.createObjectURL = jest.fn(() => "blob:url");
       global.URL.revokeObjectURL = jest.fn();
       const originalCreateElement = document.createElement.bind(document);
@@ -236,6 +245,7 @@ describe("ExecutionDetailsModal", () => {
         ...mockExecution,
         logs: [],
       };
+      mockApiClient.getExecution.mockResolvedValue(executionWithoutLogs);
       render(
         <ExecutionDetailsModal
           execution={executionWithoutLogs}

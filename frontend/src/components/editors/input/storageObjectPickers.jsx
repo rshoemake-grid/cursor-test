@@ -5,6 +5,8 @@ import StorageBrowserDialog from "./StorageBrowserDialog";
 import {
   browsePrefixFromObjectKey,
   browseDirectoryFromFilePath,
+  deriveLocalListCanGoUp,
+  fileBasenameFromPath,
 } from "../../../utils/storageBrowserPaths";
 
 function GcpBucketListPickerDialog({
@@ -14,27 +16,31 @@ function GcpBucketListPickerDialog({
   projectId,
   onSelectBucket,
 }) {
+  const projectTrimmed = (projectId || "").trim();
+  const prereqError = projectTrimmed
+    ? ""
+    : "Enter a GCP project ID in the editor (above) to list buckets for that project.";
   const fetchBuckets = useCallback(async () => {
     const data = await api.listGcpBuckets({
       credentials: credentials?.trim() ? credentials : undefined,
-      project_id: projectId?.trim() ? projectId.trim() : undefined,
+      project_id: projectTrimmed,
     });
     const objects = data?.objects;
     return {
       prefixes: [],
       objects: Array.isArray(objects) ? objects : [],
     };
-  }, [credentials, projectId]);
+  }, [credentials, projectTrimmed]);
   return (
     <StorageBrowserDialog
       isOpen={isOpen}
       onClose={onClose}
       title="Select GCS bucket"
-      resourceSubtitle="Uses credentials below when set, or Application Default Credentials on the server."
+      resourceSubtitle={`Project: ${projectTrimmed || "(set project ID above)"}. Uses credentials on the node or ADC on the server.`}
       titleId="gcp-bucket-list-title"
       variant="bucketList"
       initialLocation=""
-      prereqError=""
+      prereqError={prereqError}
       fetchPage={fetchBuckets}
       onSelectFile={onSelectBucket}
       selectButtonLabel="Use selected bucket"
@@ -193,7 +199,9 @@ function GcpBucketObjectPickerDialog({
   onSelectObject,
 }) {
   const bucket = (bucketName || "").trim();
-  const prereqError = bucket ? "" : "Enter a bucket name first.";
+  const prereqError = bucket
+    ? ""
+    : "Enter a bucket name above, or use Browse buckets after choosing a project.";
   const fetchPage = useCallback(
     async (prefix) => {
       const data = await api.listGcpBucketObjects({
@@ -297,6 +305,7 @@ function LocalFileObjectPickerDialog({
   onClose,
   initialFilePath,
   onSelectFile,
+  pickTarget = "existingFile",
 }) {
   const fetchPage = useCallback(async (directory) => {
     const data = await api.listLocalDirectory({
@@ -305,22 +314,26 @@ function LocalFileObjectPickerDialog({
     return {
       prefixes: data.prefixes || [],
       objects: data.objects || [],
-      canGoUp: data.can_go_up,
+      canGoUp: deriveLocalListCanGoUp(data),
       currentDirectory: data.directory,
     };
   }, []);
   const subtitleHint = "Paths are on the server running the API.";
+  const isNewInDirectory = pickTarget === "newInDirectory";
   return (
     <StorageBrowserDialog
       isOpen={isOpen}
       onClose={onClose}
-      title="Select file on server"
+      title={isNewInDirectory ? "Choose folder and file name" : "Select file on server"}
       resourceSubtitle={subtitleHint}
       titleId="local-picker-title"
       variant="localDirectory"
       initialLocation={browseDirectoryFromFilePath(initialFilePath)}
       fetchPage={fetchPage}
       onSelectFile={onSelectFile}
+      selectButtonLabel={isNewInDirectory ? "Use path" : "Use selected file"}
+      localPickTarget={pickTarget}
+      initialFilenameSuggestion={fileBasenameFromPath(initialFilePath || "")}
     />
   );
 }
@@ -330,6 +343,114 @@ LocalFileObjectPickerDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
   initialFilePath: PropTypes.string,
   onSelectFile: PropTypes.func.isRequired,
+  pickTarget: PropTypes.oneOf(["existingFile", "newInDirectory"]),
+};
+
+function GcpPubsubTopicPickerDialog({
+  isOpen,
+  onClose,
+  credentials,
+  projectId,
+  onSelectTopic,
+}) {
+  const projectTrimmed = (projectId || "").trim();
+  const prereqError = projectTrimmed
+    ? ""
+    : "Enter a GCP project ID above to list Pub/Sub topics.";
+  const fetchTopics = useCallback(async () => {
+    const data = await api.listGcpPubsubTopics({
+      credentials: credentials?.trim() ? credentials : undefined,
+      project_id: projectTrimmed,
+    });
+    const objects = data?.objects;
+    return {
+      prefixes: [],
+      objects: Array.isArray(objects) ? objects : [],
+    };
+  }, [credentials, projectTrimmed]);
+  return (
+    <StorageBrowserDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Select Pub/Sub topic"
+      resourceSubtitle={`Project: ${projectTrimmed || "(required)"}. Requires pubsub.topics.list (or broader) on the project.`}
+      titleId="gcp-pubsub-topic-picker-title"
+      variant="bucketList"
+      initialLocation=""
+      prereqError={prereqError}
+      fetchPage={fetchTopics}
+      onSelectFile={onSelectTopic}
+      selectButtonLabel="Use selected topic"
+      emptyFolderMessage="No topics found in this project."
+      listPathLabel="Topics in project"
+      listAriaLabel="Pub/Sub topics"
+    />
+  );
+}
+
+GcpPubsubTopicPickerDialog.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  credentials: PropTypes.string,
+  projectId: PropTypes.string,
+  onSelectTopic: PropTypes.func.isRequired,
+};
+
+function GcpPubsubSubscriptionPickerDialog({
+  isOpen,
+  onClose,
+  credentials,
+  projectId,
+  topicName,
+  onSelectSubscription,
+}) {
+  const projectTrimmed = (projectId || "").trim();
+  const topicTrimmed = (topicName || "").trim();
+  const prereqError = projectTrimmed
+    ? ""
+    : "Enter a GCP project ID above to list subscriptions.";
+  const fetchSubs = useCallback(async () => {
+    const data = await api.listGcpPubsubSubscriptions({
+      credentials: credentials?.trim() ? credentials : undefined,
+      project_id: projectTrimmed,
+      topic_name: topicTrimmed,
+    });
+    const objects = data?.objects;
+    return {
+      prefixes: [],
+      objects: Array.isArray(objects) ? objects : [],
+    };
+  }, [credentials, projectTrimmed, topicTrimmed]);
+  const topicHint = topicTrimmed
+    ? `Filtered to topic "${topicTrimmed}".`
+    : "Listing all subscriptions in the project (set topic above to narrow).";
+  return (
+    <StorageBrowserDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Select Pub/Sub subscription"
+      resourceSubtitle={`${topicHint} Requires pubsub.subscriptions.list (or broader).`}
+      titleId="gcp-pubsub-sub-picker-title"
+      variant="bucketList"
+      initialLocation=""
+      prereqError={prereqError}
+      fetchPage={fetchSubs}
+      onSelectFile={onSelectSubscription}
+      selectButtonLabel="Use selected subscription"
+      emptyFolderMessage="No subscriptions found."
+      listPathLabel="Subscriptions"
+      listAriaLabel="Pub/Sub subscriptions"
+    />
+  );
+}
+
+GcpPubsubSubscriptionPickerDialog.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  credentials: PropTypes.string,
+  projectId: PropTypes.string,
+  topicName: PropTypes.string,
+  onSelectSubscription: PropTypes.func.isRequired,
 };
 
 export {
@@ -337,6 +458,8 @@ export {
   GcpBucketListPickerDialog,
   GcpBucketObjectPickerDialog,
   GcpProjectListPickerDialog,
+  GcpPubsubSubscriptionPickerDialog,
+  GcpPubsubTopicPickerDialog,
   S3BucketListPickerDialog,
   S3BucketObjectPickerDialog,
   LocalFileObjectPickerDialog,

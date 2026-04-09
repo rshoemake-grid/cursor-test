@@ -108,7 +108,7 @@ class TestLocalFileSystemHandler:
 class TestGCPBucketHandler:
     """Tests for GCPBucketHandler"""
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_STORAGE_AVAILABLE", True)
     @patch("backend.inputs.input_sources.storage")
     def test_read_object(self, mock_storage):
         """Test reading an object from GCP bucket"""
@@ -131,7 +131,7 @@ class TestGCPBucketHandler:
         result = GCPBucketHandler.read(config)
         assert result == {"key": "value"}
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_STORAGE_AVAILABLE", True)
     @patch("backend.inputs.input_sources.storage")
     def test_read_object_not_found(self, mock_storage):
         """Test reading non-existent object"""
@@ -152,7 +152,7 @@ class TestGCPBucketHandler:
         with pytest.raises(FileNotFoundError):
             GCPBucketHandler.read(config)
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", False)
+    @patch("backend.inputs.input_sources.GCP_STORAGE_AVAILABLE", False)
     def test_read_gcp_not_available(self):
         """Test reading when GCP libraries not available"""
         config = {
@@ -163,7 +163,7 @@ class TestGCPBucketHandler:
         with pytest.raises(ImportError):
             GCPBucketHandler.read(config)
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_STORAGE_AVAILABLE", True)
     def test_read_missing_bucket_name(self):
         """Test reading without bucket_name"""
         config = {
@@ -231,7 +231,7 @@ class TestAWSS3Handler:
 class TestGCPPubSubHandler:
     """Tests for GCPPubSubHandler"""
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_PUBSUB_AVAILABLE", True)
     def test_read_message(self):
         """Test reading a message from GCP Pub/Sub"""
         # Skip if pubsub_v1 not available
@@ -265,7 +265,7 @@ class TestGCPPubSubHandler:
             result = GCPPubSubHandler.read(config)
             assert result == {"key": "value"}
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", False)
+    @patch("backend.inputs.input_sources.GCP_PUBSUB_AVAILABLE", False)
     def test_read_pubsub_not_available(self):
         """Test reading when GCP libraries not available"""
         config = {
@@ -276,7 +276,7 @@ class TestGCPPubSubHandler:
         with pytest.raises(ImportError):
             GCPPubSubHandler.read(config)
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_PUBSUB_AVAILABLE", True)
     def test_read_missing_project_id(self):
         """Test reading without project_id"""
         config = {

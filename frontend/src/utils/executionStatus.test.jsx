@@ -18,6 +18,9 @@ describe("executionStatus utilities", () => {
     it("returns paused for paused", () => {
       expect(getExecutionStatusTone("paused")).toBe("paused");
     });
+    it("returns cancelled for cancelled", () => {
+      expect(getExecutionStatusTone("cancelled")).toBe("cancelled");
+    });
     it("returns paused for unknown status", () => {
       expect(getExecutionStatusTone("unknown")).toBe(EXECUTION_STATUSES.PAUSED);
     });
@@ -28,11 +31,16 @@ describe("executionStatus utilities", () => {
 
   describe("isValidExecutionStatus", () => {
     it("should return true for valid statuses", () => {
-      ["pending", "running", "completed", "failed", "paused"].forEach(
-        (status) => {
-          expect(isValidExecutionStatus(status)).toBe(true);
-        },
-      );
+      [
+        "pending",
+        "running",
+        "completed",
+        "failed",
+        "paused",
+        "cancelled",
+      ].forEach((status) => {
+        expect(isValidExecutionStatus(status)).toBe(true);
+      });
     });
     it("should return false for invalid statuses", () => {
       ["unknown", "invalid", "", "123", null, void 0].forEach((status) => {

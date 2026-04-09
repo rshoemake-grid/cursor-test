@@ -11,8 +11,10 @@ from backend.database.models import UserDB
 from backend.inputs.input_sources import (
     AWSS3Handler,
     GCPBucketHandler,
+    GCPPubSubHandler,
     LocalFileSystemHandler,
 )
+from backend.inputs.gcp_auth import resolve_gcp_default_project_id
 from backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -72,6 +74,14 @@ class LocalListDirectoryResponse(BaseModel):
     can_go_up: bool
 
 
+class GcpDefaultProjectRequest(BaseModel):
+    credentials: Optional[str] = None
+
+
+class GcpDefaultProjectResponse(BaseModel):
+    project_id: Optional[str] = None
+
+
 class GcpListBucketsRequest(BaseModel):
     credentials: Optional[str] = None
     project_id: Optional[str] = None
@@ -80,6 +90,19 @@ class GcpListBucketsRequest(BaseModel):
 
 class GcpListProjectsRequest(BaseModel):
     credentials: Optional[str] = None
+    max_results: int = Field(default=500, ge=1, le=2000)
+
+
+class GcpPubsubListTopicsRequest(BaseModel):
+    credentials: Optional[str] = None
+    project_id: str = Field(..., min_length=1)
+    max_results: int = Field(default=500, ge=1, le=2000)
+
+
+class GcpPubsubListSubscriptionsRequest(BaseModel):
+    credentials: Optional[str] = None
+    project_id: str = Field(..., min_length=1)
+    topic_name: str = ""
     max_results: int = Field(default=500, ge=1, le=2000)
 
 
@@ -142,6 +165,19 @@ async def gcp_list_objects(
     )
 
 
+@router.post("/gcp/default-project", response_model=GcpDefaultProjectResponse)
+async def gcp_default_project(
+    body: GcpDefaultProjectRequest,
+    _user: UserDB = Depends(get_current_active_user),
+) -> GcpDefaultProjectResponse:
+    """
+    Resolve the default GCP project for the GCP Bucket editor (service account JSON,
+    env vars, or Application Default Credentials).
+    """
+    pid = resolve_gcp_default_project_id(credentials_inline=body.credentials)
+    return GcpDefaultProjectResponse(project_id=pid)
+
+
 @router.post("/gcp/list-buckets", response_model=ListBucketsResponse)
 async def gcp_list_buckets(
     body: GcpListBucketsRequest,
@@ -187,6 +223,66 @@ async def gcp_list_projects(
         raise HTTPException(
             status_code=502,
             detail=f"Could not list projects: {e!s}",
+        ) from e
+    return ListBucketsResponse(objects=[StorageObjectInfo(**o) for o in rows])
+
+
+@router.post("/gcp/pubsub/list-topics", response_model=ListBucketsResponse)
+async def gcp_pubsub_list_topics(
+    body: GcpPubsubListTopicsRequest,
+    _user: UserDB = Depends(get_current_active_user),
+) -> ListBucketsResponse:
+    """List Pub/Sub topics in a project for the Pub/Sub node picker."""
+    config: dict = {
+        "credentials": body.credentials,
+        "project_id": body.project_id.strip(),
+    }
+    try:
+        rows = GCPPubSubHandler.list_topics(config, max_results=body.max_results)
+    except ImportError as e:
+        logger.warning("GCP Pub/Sub list-topics: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("GCP Pub/Sub list-topics failed")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not list Pub/Sub topics: {e!s}",
+        ) from e
+    return ListBucketsResponse(objects=[StorageObjectInfo(**o) for o in rows])
+
+
+@router.post("/gcp/pubsub/list-subscriptions", response_model=ListBucketsResponse)
+async def gcp_pubsub_list_subscriptions(
+    body: GcpPubsubListSubscriptionsRequest,
+    _user: UserDB = Depends(get_current_active_user),
+) -> ListBucketsResponse:
+    """
+    List Pub/Sub subscriptions. When topic_name is set, only subscriptions on that topic;
+    otherwise all subscriptions in the project (capped).
+    """
+    config: dict = {
+        "credentials": body.credentials,
+        "project_id": body.project_id.strip(),
+    }
+    topic = body.topic_name.strip() if body.topic_name else ""
+    try:
+        rows = GCPPubSubHandler.list_subscriptions(
+            config,
+            topic_name=topic or None,
+            max_results=body.max_results,
+        )
+    except ImportError as e:
+        logger.warning("GCP Pub/Sub list-subscriptions: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("GCP Pub/Sub list-subscriptions failed")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not list Pub/Sub subscriptions: {e!s}",
         ) from e
     return ListBucketsResponse(objects=[StorageObjectInfo(**o) for o in rows])
 

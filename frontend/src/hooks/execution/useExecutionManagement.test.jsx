@@ -34,6 +34,10 @@ describe("useExecutionManagement", () => {
     mockSetTabs = jest.fn();
     mockTabsRef = { current: [mockTab] };
     mockOnExecutionStart = jest.fn();
+    mockApi.getExecution.mockResolvedValue({
+      status: "running",
+      logs: [],
+    });
   });
   afterEach(() => {
     jest.runOnlyPendingTimers();
@@ -631,6 +635,42 @@ describe("useExecutionManagement", () => {
         (e) => e.id === "exec-1",
       );
       expect(updatedExecution.completedAt).toBeUndefined();
+    });
+    it("should request execution snapshot after failed terminal status", async () => {
+      const execution = {
+        id: "exec-1",
+        status: "running",
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      };
+      const tabWithExecution = {
+        ...mockTab,
+        executions: [execution],
+      };
+      const { result } = renderHook(() =>
+        useExecutionManagement({
+          tabs: [tabWithExecution],
+          activeTabId: "tab-1",
+          setTabs: mockSetTabs,
+          tabsRef: { current: [tabWithExecution] },
+        }),
+      );
+      act(() => {
+        result.current.handleExecutionStatusUpdate(
+          "workflow-1",
+          "exec-1",
+          "failed",
+          "live",
+        );
+      });
+      expect(mockApi.getExecution).not.toHaveBeenCalled();
+      await act(async () => {
+        jest.advanceTimersByTime(500);
+      });
+      await waitFor(() => {
+        expect(mockApi.getExecution).toHaveBeenCalledWith("exec-1");
+      });
     });
   });
   describe("handleExecutionNodeUpdate", () => {

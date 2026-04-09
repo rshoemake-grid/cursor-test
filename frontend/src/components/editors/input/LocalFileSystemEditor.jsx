@@ -111,7 +111,11 @@ function LocalFileSystemEditor({ node, onConfigUpdate }) {
           <EditorSecondaryFullButton
             type="button"
             onClick={openFilePicker}
-            aria-label="Browse server filesystem for a file"
+            aria-label={
+              modeValue === INPUT_MODE.WRITE
+                ? "Browse server filesystem for folder and file name"
+                : "Browse server filesystem for a file"
+            }
             style={{
               width: "auto",
               flexShrink: 0,
@@ -130,6 +134,9 @@ function LocalFileSystemEditor({ node, onConfigUpdate }) {
           onClose={() => setPickerOpen(false)}
           initialFilePath={filePathValue}
           onSelectFile={handlePickedPath}
+          pickTarget={
+            modeValue === INPUT_MODE.WRITE ? "newInDirectory" : "existingFile"
+          }
         />
       ) : null}
       {modeValue === INPUT_MODE.READ && (

@@ -317,6 +317,44 @@ describe("ExecutionStateManager", () => {
       );
       expect(result[0].executions[0].completedAt).toBeDefined();
     });
+    it("should persist failure detail when failed with error message", () => {
+      const exec = {
+        id: "exec-1",
+        status: "running",
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      };
+      const tabs = [createMockTab("workflow-1", [exec])];
+      const result = manager.handleExecutionStatusUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "failed",
+        "Permission denied on topic",
+      );
+      expect(result[0].executions[0].error).toBe(
+        "Permission denied on topic",
+      );
+    });
+    it("should clear error when status becomes completed", () => {
+      const exec = {
+        id: "exec-1",
+        status: "failed",
+        error: "previous failure",
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      };
+      const tabs = [createMockTab("workflow-1", [exec])];
+      const result = manager.handleExecutionStatusUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "completed",
+      );
+      expect(result[0].executions[0].error).toBeUndefined();
+    });
     it("should preserve completedAt when status is running", () => {
       const existingCompletedAt = new Date("2024-01-01");
       const exec = {
@@ -430,6 +468,100 @@ describe("ExecutionStateManager", () => {
       expect(result[0].executions[0].completedAt).toBeDefined();
       expect(result[0].executions[1].status).toBe("running");
       expect(result[0].executions[1].completedAt).toBeUndefined();
+    });
+  });
+  describe("mergeExecutionFromServer", () => {
+    it("should prefer longer API log list over streamed logs", () => {
+      const exec = {
+        id: "exec-1",
+        status: "failed",
+        error: "x",
+        startedAt: new Date(),
+        nodes: {},
+        logs: [{ level: "INFO", message: "a" }],
+      };
+      const tabs = [createMockTab("workflow-1", [exec])];
+      const result = manager.mergeExecutionFromServer(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        {
+          status: "failed",
+          error: "persisted err",
+          logs: [
+            { level: "INFO", message: "a" },
+            { level: "ERROR", message: "boom" },
+          ],
+          completed_at: "2026-01-01T12:00:00Z",
+        },
+      );
+      expect(result[0].executions[0].logs).toHaveLength(2);
+      expect(result[0].executions[0].logs[1].message).toBe("boom");
+      expect(result[0].executions[0].error).toBe("persisted err");
+    });
+    it("should keep streamed logs when API returns fewer entries", () => {
+      const exec = {
+        id: "exec-1",
+        status: "failed",
+        startedAt: new Date(),
+        nodes: {},
+        logs: [
+          { level: "INFO", message: "a" },
+          { level: "ERROR", message: "client-only" },
+        ],
+      };
+      const tabs = [createMockTab("workflow-1", [exec])];
+      const result = manager.mergeExecutionFromServer(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        {
+          status: "failed",
+          logs: [{ level: "INFO", message: "a" }],
+        },
+      );
+      expect(result[0].executions[0].logs).toHaveLength(2);
+    });
+    it("should preserve client nodes when API has no node_states", () => {
+      const exec = {
+        id: "exec-1",
+        status: "failed",
+        startedAt: new Date(),
+        nodes: { n1: { status: "failed", error: "e1" } },
+        logs: [],
+      };
+      const tabs = [createMockTab("workflow-1", [exec])];
+      const result = manager.mergeExecutionFromServer(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        {
+          status: "failed",
+          logs: [],
+        },
+      );
+      expect(result[0].executions[0].nodes.n1.error).toBe("e1");
+    });
+    it("should keep client failed status when API still reports running", () => {
+      const exec = {
+        id: "exec-1",
+        status: "failed",
+        error: "ws",
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      };
+      const tabs = [createMockTab("workflow-1", [exec])];
+      const result = manager.mergeExecutionFromServer(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        {
+          status: "running",
+          logs: [],
+        },
+      );
+      expect(result[0].executions[0].status).toBe("failed");
     });
   });
   describe("handleExecutionNodeUpdate", () => {

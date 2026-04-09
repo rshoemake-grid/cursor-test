@@ -147,6 +147,44 @@ export const StoragePickerRowMeta = styled.span`
   color: ${c.gray500};
 `;
 
+export const StoragePickerFilenameSection = styled.div`
+  padding: 0.65rem 1.25rem;
+  border-top: 1px solid ${c.gray200};
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-shrink: 0;
+`;
+
+export const StoragePickerFilenameLabel = styled.label`
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: ${c.gray700};
+`;
+
+export const StoragePickerFilenameInput = styled.input`
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid ${c.gray200};
+  border-radius: 0.375rem;
+  color: ${c.gray900};
+  width: 100%;
+  box-sizing: border-box;
+  background: ${c.white};
+
+  &:focus {
+    outline: 2px solid ${c.primary600};
+    outline-offset: 1px;
+  }
+`;
+
+export const StoragePickerFilenameHint = styled.p`
+  margin: 0;
+  font-size: 0.75rem;
+  color: ${c.gray500};
+`;
+
 export const StoragePickerFooter = styled.div`
   display: flex;
   justify-content: flex-end;

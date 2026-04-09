@@ -1,10 +1,37 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import GCPPubSubEditor from "./GCPPubSubEditor";
 import { INPUT_MODE, EMPTY_STRING } from "../../../hooks/utils/inputDefaults";
+import { api } from "../../../api/client";
+
+jest.mock("../../../api/client", () => ({
+  api: {
+    listGcpProjects: jest.fn().mockResolvedValue({
+      objects: [{ name: "picked-gcp-project", display_name: "picked-gcp-project" }],
+    }),
+    getGcpDefaultProject: jest.fn().mockResolvedValue({ project_id: null }),
+    listGcpPubsubTopics: jest.fn().mockResolvedValue({
+      objects: [{ name: "my-topic", display_name: "my-topic" }],
+    }),
+    listGcpPubsubSubscriptions: jest.fn().mockResolvedValue({
+      objects: [{ name: "my-sub", display_name: "my-sub" }],
+    }),
+  },
+}));
+
 describe("GCPPubSubEditor", () => {
   const mockOnConfigUpdate = jest.fn();
   beforeEach(() => {
     jest.clearAllMocks();
+    api.listGcpProjects.mockResolvedValue({
+      objects: [{ name: "picked-gcp-project", display_name: "picked-gcp-project" }],
+    });
+    api.getGcpDefaultProject.mockResolvedValue({ project_id: null });
+    api.listGcpPubsubTopics.mockResolvedValue({
+      objects: [{ name: "my-topic", display_name: "my-topic" }],
+    });
+    api.listGcpPubsubSubscriptions.mockResolvedValue({
+      objects: [{ name: "my-sub", display_name: "my-sub" }],
+    });
   });
   const createGCPPubSubNode = (overrides) => ({
     id: "1",
@@ -15,7 +42,7 @@ describe("GCPPubSubEditor", () => {
     },
     data: {
       input_config: {
-        project_id: "my-project",
+        project_id: "fixture-pubsub-project",
         topic_name: "my-topic",
         subscription_name: "my-subscription",
         credentials: '{"type":"service_account"}',
@@ -47,6 +74,13 @@ describe("GCPPubSubEditor", () => {
       ).toBeInTheDocument();
       expect(
         screen.getByLabelText("Select Pub/Sub operation mode"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Browse GCP projects for Pub/Sub"),
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText("Browse Pub/Sub topics")).toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Browse Pub/Sub subscriptions"),
       ).toBeInTheDocument();
     });
     it("should render mode select with options", () => {
@@ -127,17 +161,47 @@ describe("GCPPubSubEditor", () => {
       const modeSelect = screen.getByLabelText("Select Pub/Sub operation mode");
       expect(modeSelect.value).toBe(INPUT_MODE.WRITE);
     });
+    it("should hide subscription field in publish (write) mode", () => {
+      const node = createGCPPubSubNode({
+        mode: INPUT_MODE.WRITE,
+      });
+      render(
+        <GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      expect(
+        screen.queryByLabelText("Pub/Sub subscription name"),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText("Browse Pub/Sub subscriptions"),
+      ).not.toBeInTheDocument();
+    });
   });
   describe("Default Values", () => {
     it("should use empty string default for project ID when not provided", () => {
       const node = createGCPPubSubNode({
-        project_id: void 0,
+        project_id: "",
       });
       render(
         <GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
       const projectIdInput = screen.getByLabelText("GCP project ID");
       expect(projectIdInput.value).toBe(EMPTY_STRING);
+    });
+    it("should apply default project ID from API when project is empty", async () => {
+      api.getGcpDefaultProject.mockResolvedValue({ project_id: "resolved-pubsub-proj" });
+      const node = createGCPPubSubNode({
+        project_id: "",
+      });
+      render(
+        <GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      await waitFor(() => {
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "project_id",
+          "resolved-pubsub-proj",
+        );
+      });
     });
     it("should use empty string default for topic name when not provided", () => {
       const node = createGCPPubSubNode({
@@ -404,6 +468,49 @@ describe("GCPPubSubEditor", () => {
           "Subscribe: Receive messages from topic. Publish: Send messages to topic.",
         ),
       ).toBeInTheDocument();
+    });
+  });
+  describe("Project picker", () => {
+    it("should open project browse dialog when Browse is clicked", async () => {
+      const node = createGCPPubSubNode();
+      render(
+        <GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      fireEvent.click(screen.getByLabelText("Browse GCP projects for Pub/Sub"));
+      await waitFor(() => {
+        expect(
+          screen.getByRole("dialog", { name: /Select GCP project/i }),
+        ).toBeInTheDocument();
+      });
+      await waitFor(() => expect(api.listGcpProjects).toHaveBeenCalled());
+    });
+    it("should open topic browse dialog when topic Browse is clicked", async () => {
+      const node = createGCPPubSubNode();
+      render(
+        <GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      fireEvent.click(screen.getByLabelText("Browse Pub/Sub topics"));
+      await waitFor(() => {
+        expect(
+          screen.getByRole("dialog", { name: /Select Pub\/Sub topic/i }),
+        ).toBeInTheDocument();
+      });
+      await waitFor(() => expect(api.listGcpPubsubTopics).toHaveBeenCalled());
+    });
+    it("should open subscription browse dialog when subscription Browse is clicked", async () => {
+      const node = createGCPPubSubNode();
+      render(
+        <GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      fireEvent.click(screen.getByLabelText("Browse Pub/Sub subscriptions"));
+      await waitFor(() => {
+        expect(
+          screen.getByRole("dialog", { name: /Select Pub\/Sub subscription/i }),
+        ).toBeInTheDocument();
+      });
+      await waitFor(() =>
+        expect(api.listGcpPubsubSubscriptions).toHaveBeenCalled(),
+      );
     });
   });
 });

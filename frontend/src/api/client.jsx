@@ -302,6 +302,21 @@ function createApiClient(options) {
         await http.post(storageEndpoints.gcpListProjects(), body),
       );
     },
+    async getGcpDefaultProject(body = {}) {
+      return extractData(
+        await http.post(storageEndpoints.gcpDefaultProject(), body),
+      );
+    },
+    async listGcpPubsubTopics(body) {
+      return extractData(
+        await http.post(storageEndpoints.gcpPubsubListTopics(), body),
+      );
+    },
+    async listGcpPubsubSubscriptions(body) {
+      return extractData(
+        await http.post(storageEndpoints.gcpPubsubListSubscriptions(), body),
+      );
+    },
     async listS3BucketObjects(body) {
       return extractData(
         await http.post(storageEndpoints.awsListObjects(), body),

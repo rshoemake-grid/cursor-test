@@ -72,7 +72,7 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
     refetch,
   } = useExecutionListQuery({
     apiClient: injectedApiClient || api,
-    refetchInterval: 5e3,
+    refetchInterval: 12e3,
     filters: filters.status
       ? {
           status: filters.status.join(","),

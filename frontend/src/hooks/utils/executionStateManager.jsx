@@ -140,23 +140,34 @@ class ExecutionStateManager {
    * Handle execution status updates from WebSocket
    * Single Responsibility: Only handles status update logic
    */
-  handleExecutionStatusUpdate(tabs, workflowId, executionId, status) {
+  handleExecutionStatusUpdate(tabs, workflowId, executionId, status, errorMessage) {
     return updateTabByWorkflowId(tabs, workflowId, {
       executions: logicalOrToEmptyArray(
         tabs
           .find((tab) => tab.workflowId === workflowId)
-          ?.executions.map((exec) =>
-            exec.id === executionId
-              ? {
-                  ...exec,
-                  status,
-                  completedAt:
-                    status === "completed" || status === "failed"
-                      ? new Date()
-                      : exec.completedAt,
-                }
-              : exec,
-          ),
+          ?.executions.map((exec) => {
+            if (exec.id !== executionId) {
+              return exec;
+            }
+            let nextError = exec.error;
+            if (status === "completed") {
+              nextError = undefined;
+            } else if (status === "failed") {
+              nextError =
+                errorMessage != null && String(errorMessage).trim() !== ""
+                  ? String(errorMessage)
+                  : exec.error;
+            }
+            return {
+              ...exec,
+              status,
+              error: nextError,
+              completedAt:
+                status === "completed" || status === "failed"
+                  ? new Date()
+                  : exec.completedAt,
+            };
+          }),
       ),
     });
   }
@@ -180,6 +191,80 @@ class ExecutionStateManager {
                 }
               : exec,
           ),
+      ),
+    });
+  }
+
+  /**
+   * Merge GET /executions/{id} snapshot after a terminal WebSocket update.
+   * API may persist more logs than streamed live; ExecutionResponse has no node_states,
+   * so we keep existing nodes unless the payload includes them.
+   */
+  mergeExecutionFromServer(tabs, workflowId, executionId, api) {
+    const apiLogs = Array.isArray(api?.logs) ? api.logs : [];
+    return updateTabByWorkflowId(tabs, workflowId, {
+      executions: logicalOrToEmptyArray(
+        tabs
+          .find((tab) => tab.workflowId === workflowId)
+          ?.executions.map((exec) => {
+            if (exec.id !== executionId) {
+              return exec;
+            }
+            const clientLogs = exec.logs ?? [];
+            const mergedLogs =
+              apiLogs.length >= clientLogs.length ? apiLogs : clientLogs;
+
+            const apiStatusRaw = String(api?.status ?? "").toLowerCase();
+            const normalizedApi =
+              apiStatusRaw === "failed"
+                ? "failed"
+                : apiStatusRaw === "completed"
+                  ? "completed"
+                  : apiStatusRaw === "running" || apiStatusRaw === "pending"
+                    ? "running"
+                    : null;
+            const apiTerminal =
+              normalizedApi === "failed" || normalizedApi === "completed";
+            const nextStatus =
+              normalizedApi !== null
+                ? apiTerminal
+                  ? normalizedApi
+                  : exec.status
+                : exec.status;
+
+            const apiError =
+              api?.error != null && String(api.error).trim() !== ""
+                ? String(api.error)
+                : undefined;
+
+            const hasApiNodes =
+              api?.node_states != null &&
+              typeof api.node_states === "object" &&
+              Object.keys(api.node_states).length > 0;
+            const nextNodes = hasApiNodes ? api.node_states : (exec.nodes ?? {});
+
+            const hasCompletedAt =
+              api?.completed_at != null && api?.completed_at !== "";
+            const nextCompletedAt = hasCompletedAt
+              ? new Date(api.completed_at)
+              : exec.completedAt;
+
+            return {
+              ...exec,
+              status: nextStatus,
+              logs: mergedLogs,
+              nodes: nextNodes,
+              completedAt: nextCompletedAt,
+              error:
+                nextStatus === "completed"
+                  ? undefined
+                  : nextStatus === "failed"
+                    ? apiError !== undefined
+                      ? apiError
+                      : exec.error
+                    : exec.error,
+            };
+          }),
       ),
     });
   }

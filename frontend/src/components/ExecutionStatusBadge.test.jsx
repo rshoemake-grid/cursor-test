@@ -38,6 +38,13 @@ describe("ExecutionStatusBadge", () => {
       "paused",
     );
   });
+  it("should render cancelled status", () => {
+    render(<ExecutionStatusBadge status="cancelled" />);
+    expect(screen.getByText("cancelled")).toHaveAttribute(
+      "data-execution-status",
+      "cancelled",
+    );
+  });
   it("should use light variant when specified", () => {
     render(<ExecutionStatusBadge status="completed" variant="light" />);
     expect(screen.getByText("completed")).toHaveAttribute(
@@ -71,6 +78,7 @@ describe("ExecutionStatusBadge", () => {
         "failed",
         "pending",
         "paused",
+        "cancelled",
         "INVALID",
       ];
       for (const status of statuses) {
@@ -116,7 +124,14 @@ describe("ExecutionStatusBadge", () => {
       expect(el).toHaveClass("class1", "class2", "class3");
     });
     it("should handle all valid statuses with light variant", () => {
-      const statuses = ["running", "completed", "failed", "pending", "paused"];
+      const statuses = [
+        "running",
+        "completed",
+        "failed",
+        "pending",
+        "paused",
+        "cancelled",
+      ];
       for (const status of statuses) {
         const { unmount } = render(
           <ExecutionStatusBadge status={status} variant="light" />,

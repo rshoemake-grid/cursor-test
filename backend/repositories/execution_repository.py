@@ -45,7 +45,11 @@ class ExecutionRepository(BaseRepository[ExecutionDB]):
         if user_id:
             filters.append(ExecutionDB.user_id == user_id)
         if status:
-            filters.append(ExecutionDB.status == status)
+            parts = [p.strip() for p in str(status).split(",") if p.strip()]
+            if len(parts) == 1:
+                filters.append(ExecutionDB.status == parts[0])
+            elif len(parts) > 1:
+                filters.append(ExecutionDB.status.in_(parts))
         
         if filters:
             query = query.where(and_(*filters))

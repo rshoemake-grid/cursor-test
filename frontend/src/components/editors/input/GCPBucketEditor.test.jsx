@@ -17,6 +17,7 @@ jest.mock("../../../api/client", () => ({
     listGcpProjects: jest.fn().mockResolvedValue({
       objects: [{ name: "picked-gcp-project", display_name: "picked-gcp-project" }],
     }),
+    getGcpDefaultProject: jest.fn().mockResolvedValue({ project_id: null }),
   },
 }));
 
@@ -38,6 +39,7 @@ describe("GCPBucketEditor", () => {
         { name: "picked-gcp-project", display_name: "picked-gcp-project" },
       ],
     });
+    api.getGcpDefaultProject.mockResolvedValue({ project_id: null });
   });
   const createGCPBucketNode = (overrides) => ({
     id: "1",
@@ -48,6 +50,7 @@ describe("GCPBucketEditor", () => {
     },
     data: {
       input_config: {
+        project_id: "fixture-gcp-project",
         bucket_name: "test-bucket",
         object_path: "path/to/file.txt",
         credentials: '{"type":"service_account"}',
@@ -160,12 +163,28 @@ describe("GCPBucketEditor", () => {
   describe("Default Values", () => {
     it("should use empty string default for project id when not provided", () => {
       const node = createGCPBucketNode({
-        project_id: void 0,
+        project_id: "",
       });
       render(
         <GCPBucketEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
       expect(screen.getByLabelText("GCP project ID").value).toBe(EMPTY_STRING);
+    });
+    it("should apply default project id from API when project is empty", async () => {
+      api.getGcpDefaultProject.mockResolvedValue({ project_id: "resolved-proj" });
+      const node = createGCPBucketNode({
+        project_id: "",
+      });
+      render(
+        <GCPBucketEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      await waitFor(() => {
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "project_id",
+          "resolved-proj",
+        );
+      });
     });
     it("should use empty string default for bucket name when not provided", () => {
       const node = createGCPBucketNode({

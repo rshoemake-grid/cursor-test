@@ -218,6 +218,28 @@ export const ConsoleLogMeta = styled.p`
   color: ${c.gray400};
 `;
 
+export const ConsoleExecutionErrorPanel = styled.div`
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgb(185 28 28 / 0.55);
+  background: rgb(127 29 29 / 0.35);
+  color: #fecaca;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+`;
+
+export const ConsoleExecutionErrorLabel = styled.strong`
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #fca5a5;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+`;
+
 export const ConsoleLogEntries = styled.div`
   display: flex;
   flex-direction: column;

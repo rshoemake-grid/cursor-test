@@ -7,6 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import ExecutionStatusBadge from "./ExecutionStatusBadge";
 import LogLevelBadge from "./LogLevelBadge";
 import { logger } from "../utils/logger";
+import { extractApiErrorMessage } from "../hooks/utils/apiUtils";
 import { nullableString } from "../utils/propTypes";
 import { getLogLevelTone } from "../utils/logLevel";
 import { defaultAdapters } from "../types/adapters";
@@ -31,11 +32,35 @@ import {
   ConsoleLogHeaderRow,
   ConsoleLogTitle,
   ConsoleLogMeta,
+  ConsoleExecutionErrorPanel,
+  ConsoleExecutionErrorLabel,
   ConsoleLogEntries,
   ConsoleLogEntry,
   ConsoleLogTime,
   ConsoleLogNodeRef,
 } from "../styles/executionConsole.styled";
+
+function resolveExecutionFailureDetail(execution) {
+  if (!execution) {
+    return null;
+  }
+  if (execution.error != null && String(execution.error).trim() !== "") {
+    return String(execution.error);
+  }
+  const nodes = execution.nodes || {};
+  for (const state of Object.values(nodes)) {
+    if (
+      state &&
+      state.status === "failed" &&
+      state.error != null &&
+      String(state.error).trim() !== ""
+    ) {
+      return String(state.error);
+    }
+  }
+  return null;
+}
+
 function ExecutionConsole({
   workflowContext,
   executionsState,
@@ -231,7 +256,16 @@ function ExecutionConsole({
           "[ExecutionConsole] Received completion via WebSocket:",
           result,
         );
-        callback(workflowId, executionId, "completed");
+        const raw =
+          result && typeof result.status === "string"
+            ? result.status.toLowerCase()
+            : "completed";
+        const status = raw === "failed" ? "failed" : "completed";
+        const errMsg =
+          status === "failed" && result != null && result.error != null
+            ? String(result.error)
+            : undefined;
+        callback(workflowId, executionId, status, errMsg);
       }
     },
     onError: (error) => {
@@ -240,7 +274,11 @@ function ExecutionConsole({
       const executionId = activeExecutionIdRef.current;
       const callback = onExecutionStatusUpdateRef.current;
       if (workflowId && executionId && callback) {
-        callback(workflowId, executionId, "failed");
+        const detail = extractApiErrorMessage(
+          error,
+          "WebSocket connection error",
+        );
+        callback(workflowId, executionId, "failed", detail);
       }
     },
   });
@@ -418,6 +456,15 @@ function ExecutionConsole({
                   </div>
                   <ExecutionStatusBadge status={activeExecution.status} />
                 </ConsoleLogHeaderRow>
+                {activeExecution.status === "failed" ? (
+                  <ConsoleExecutionErrorPanel role="alert">
+                    <ConsoleExecutionErrorLabel>
+                      Failure reason
+                    </ConsoleExecutionErrorLabel>
+                    {resolveExecutionFailureDetail(activeExecution) ||
+                      "No error message was reported. Check ERROR-level lines in the log below, or open this run in the Logs page for full details."}
+                  </ConsoleExecutionErrorPanel>
+                ) : null}
                 {activeExecution.logs !== null &&
                 activeExecution.logs !== void 0 &&
                 activeExecution.logs.length > 0 ? (

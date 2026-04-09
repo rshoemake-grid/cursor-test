@@ -14,6 +14,15 @@ from ..utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+_TERMINAL_STATUSES = frozenset(
+    {
+        ExecutionStatus.COMPLETED.value,
+        ExecutionStatus.FAILED.value,
+        ExecutionStatus.CANCELLED.value,
+        ExecutionStatus.PAUSED.value,
+    }
+)
+
 
 class ExecutionService:
     """Service for execution operations following Single Responsibility Principle"""
@@ -27,29 +36,73 @@ class ExecutionService:
         """
         self.db = db
         self.repository = ExecutionRepository(db)
-    
-    def _db_to_response(self, execution: ExecutionDB) -> ExecutionResponse:
+
+    @staticmethod
+    def _normalize_status_token(value: object) -> str:
+        """Lowercase API status token; map US spelling to cancelled."""
+        if value is None:
+            return ""
+        if isinstance(value, ExecutionStatus):
+            return value.value
+        if isinstance(value, str):
+            s = value.strip().lower()
+            return "cancelled" if s == "canceled" else s
+        if isinstance(value, dict) and value.get("value") is not None:
+            return ExecutionService._normalize_status_token(value.get("value"))
+        inner = getattr(value, "value", None)
+        if isinstance(inner, str):
+            return ExecutionService._normalize_status_token(inner)
+        return ""
+
+    @staticmethod
+    def _effective_status(execution: ExecutionDB, state_data: dict) -> ExecutionStatus:
         """
-        Convert database model to response model (DRY principle)
-        
-        Args:
-            execution: Database execution entity
-            
-        Returns:
-            ExecutionResponse model
+        Column `status` can lag `state` (e.g. error + completed_at while still running).
+        Prefer explicit terminal values from column or JSON state, then infer failed.
+        """
+        col = ExecutionService._normalize_status_token(execution.status)
+        inner = ExecutionService._normalize_status_token(state_data.get("status"))
+        completed_at = execution.completed_at
+        err_raw = state_data.get("error")
+        has_err = err_raw is not None and str(err_raw).strip() != ""
+
+        if col in _TERMINAL_STATUSES:
+            return ExecutionStatus(col)
+        if inner in _TERMINAL_STATUSES:
+            return ExecutionStatus(inner)
+        if completed_at is not None and has_err:
+            if col in ("", ExecutionStatus.PENDING.value, ExecutionStatus.RUNNING.value):
+                return ExecutionStatus.FAILED
+        for token in (col, inner):
+            if token:
+                try:
+                    return ExecutionStatus(token)
+                except ValueError:
+                    pass
+        return ExecutionStatus.PENDING
+
+    def _db_to_response(
+        self, execution: ExecutionDB, *, include_logs: bool = True
+    ) -> ExecutionResponse:
+        """
+        Convert database model to response model (DRY principle).
+
+        List endpoints set include_logs=False so responses stay small; full logs
+        are available via GET /executions/{id} or /executions/{id}/logs.
         """
         state_data = execution.state if execution.state else {}
-        
+        logs = state_data.get("logs", []) if include_logs else []
+
         return ExecutionResponse(
             execution_id=execution.id,
             workflow_id=execution.workflow_id,
-            status=execution.status,
+            status=self._effective_status(execution, state_data),
             current_node=state_data.get('current_node'),
             result=state_data.get('result'),
             error=state_data.get('error'),
             started_at=execution.started_at if execution.started_at else datetime.now(timezone.utc),
             completed_at=execution.completed_at,
-            logs=state_data.get('logs', [])
+            logs=logs,
         )
     
     def _check_execution_ownership(self, execution: ExecutionDB, user_id: str) -> None:
@@ -122,7 +175,10 @@ class ExecutionService:
         )
         
         logger.debug(f"Retrieved {len(executions)} executions (workflow_id={workflow_id}, user_id={user_id}, status={status})")
-        return [self._db_to_response(execution) for execution in executions]
+        return [
+            self._db_to_response(execution, include_logs=False)
+            for execution in executions
+        ]
     
     async def get_executions_by_workflow(
         self,
@@ -141,7 +197,10 @@ class ExecutionService:
         """
         executions = await self.repository.get_by_workflow_id(workflow_id, limit=limit)
         logger.debug(f"Retrieved {len(executions)} executions for workflow {workflow_id}")
-        return [self._db_to_response(execution) for execution in executions]
+        return [
+            self._db_to_response(execution, include_logs=False)
+            for execution in executions
+        ]
     
     async def get_executions_by_user(
         self,
@@ -160,7 +219,10 @@ class ExecutionService:
         """
         executions = await self.repository.get_by_user_id(user_id, limit=limit)
         logger.debug(f"Retrieved {len(executions)} executions for user {user_id}")
-        return [self._db_to_response(execution) for execution in executions]
+        return [
+            self._db_to_response(execution, include_logs=False)
+            for execution in executions
+        ]
     
     async def get_running_executions(self, user_id: Optional[str] = None) -> List[ExecutionResponse]:
         """
@@ -176,7 +238,10 @@ class ExecutionService:
         if user_id is not None:
             executions = [e for e in executions if e.user_id == user_id]
         logger.debug(f"Retrieved {len(executions)} running executions")
-        return [self._db_to_response(execution) for execution in executions]
+        return [
+            self._db_to_response(execution, include_logs=False)
+            for execution in executions
+        ]
     
     async def get_execution_logs(
         self,

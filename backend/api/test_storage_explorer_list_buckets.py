@@ -7,8 +7,49 @@ from fastapi import HTTPException
 from backend.api import storage_explorer_routes as ser
 from backend.api.storage_explorer_routes import (
     AwsListBucketsRequest,
+    GcpDefaultProjectRequest,
     GcpListBucketsRequest,
+    GcpPubsubListSubscriptionsRequest,
+    GcpPubsubListTopicsRequest,
 )
+
+
+@pytest.mark.asyncio
+async def test_gcp_pubsub_list_topics_returns_objects():
+    fake = [
+        {"name": "t1", "display_name": "t1", "size": None, "updated": None},
+    ]
+    with patch.object(ser.GCPPubSubHandler, "list_topics", return_value=fake):
+        out = await ser.gcp_pubsub_list_topics(
+            GcpPubsubListTopicsRequest(project_id="p1"),
+            _user=MagicMock(),
+        )
+    assert len(out.objects) == 1
+    assert out.objects[0].name == "t1"
+
+
+@pytest.mark.asyncio
+async def test_gcp_pubsub_list_subscriptions_returns_objects():
+    fake = [
+        {"name": "s1", "display_name": "s1", "size": None, "updated": None},
+    ]
+    with patch.object(ser.GCPPubSubHandler, "list_subscriptions", return_value=fake):
+        out = await ser.gcp_pubsub_list_subscriptions(
+            GcpPubsubListSubscriptionsRequest(project_id="p1", topic_name="my-topic"),
+            _user=MagicMock(),
+        )
+    assert len(out.objects) == 1
+    assert out.objects[0].name == "s1"
+
+
+@pytest.mark.asyncio
+async def test_gcp_default_project_returns_project_id():
+    with patch.object(ser, "resolve_gcp_default_project_id", return_value="my-proj"):
+        out = await ser.gcp_default_project(
+            GcpDefaultProjectRequest(),
+            _user=MagicMock(),
+        )
+    assert out.project_id == "my-proj"
 
 
 @pytest.mark.asyncio

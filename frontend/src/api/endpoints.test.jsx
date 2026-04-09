@@ -70,6 +70,21 @@ describe("endpoints", () => {
         "/storage/gcp/list-projects",
       );
     });
+    it("should return GCP default-project endpoint", () => {
+      expect(storageEndpoints.gcpDefaultProject()).toBe(
+        "/storage/gcp/default-project",
+      );
+    });
+    it("should return GCP Pub/Sub list-topics endpoint", () => {
+      expect(storageEndpoints.gcpPubsubListTopics()).toBe(
+        "/storage/gcp/pubsub/list-topics",
+      );
+    });
+    it("should return GCP Pub/Sub list-subscriptions endpoint", () => {
+      expect(storageEndpoints.gcpPubsubListSubscriptions()).toBe(
+        "/storage/gcp/pubsub/list-subscriptions",
+      );
+    });
     it("should return AWS list-objects endpoint", () => {
       expect(storageEndpoints.awsListObjects()).toBe(
         "/storage/aws/list-objects",

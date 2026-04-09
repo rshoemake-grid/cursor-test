@@ -5,6 +5,7 @@ const VALID_EXECUTION_STATUSES = [
   "completed",
   "failed",
   "paused",
+  "cancelled",
 ];
 const VALID_CONDITION_TYPES = [
   "equals",

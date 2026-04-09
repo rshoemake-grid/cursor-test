@@ -8,6 +8,7 @@ const darkSkin = {
   running: { bg: "#1e3a8a", fg: "#bfdbfe" },
   pending: { bg: "#713f12", fg: "#fef08a" },
   paused: { bg: c.gray900, fg: c.gray200 },
+  cancelled: { bg: "#3f3f46", fg: "#e4e4e7" },
 };
 
 /** Tailwind-aligned light chips (bg-*-100 text-*-800) */
@@ -17,6 +18,7 @@ const lightSkin = {
   running: { bg: c.blue100, fg: c.blue800 },
   pending: { bg: c.yellow100, fg: c.yellow800 },
   paused: { bg: c.gray100, fg: c.gray800 },
+  cancelled: { bg: c.gray100, fg: c.gray700 },
 };
 
 export const ExecutionStatusBadgeRoot = styled.div.attrs((p) => ({

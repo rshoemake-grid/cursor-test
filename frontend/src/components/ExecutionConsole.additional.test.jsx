@@ -419,6 +419,38 @@ describe("ExecutionConsole - Additional Coverage", () => {
         expect(mockUseWebSocket).toHaveBeenCalled();
       }
     });
+    it("should call onExecutionStatusUpdate with failed when completion status is failed", async () => {
+      let onCompletionCallback;
+      mockUseWebSocket.mockImplementation((options) => {
+        onCompletionCallback = options.onCompletion;
+        return {};
+      });
+      renderWithAuth(
+        <ExecutionConsole
+          {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionStatusUpdate: mockOnExecutionStatusUpdate })}
+        />,      );
+      await waitForWithTimeout(() => {
+        expect(mockUseWebSocket).toHaveBeenCalled();
+      });
+      if (onCompletionCallback) {
+        await act(async () => {
+          onCompletionCallback({
+            status: "failed",
+            error: "Subscription not found",
+            result: null,
+            completed_at: new Date().toISOString(),
+          });
+        });
+        await waitForWithTimeout(() => {
+          expect(mockOnExecutionStatusUpdate).toHaveBeenCalledWith(
+            "workflow-1",
+            "exec-123",
+            "failed",
+            "Subscription not found",
+          );
+        }, 2e3);
+      }
+    });
     it("should handle WebSocket errors", async () => {
       mockUseWebSocket.mockImplementation((options) => {
         setTimeout(() => {
@@ -433,11 +465,13 @@ describe("ExecutionConsole - Additional Coverage", () => {
           {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionStatusUpdate: mockOnExecutionStatusUpdate })}
         />,      );
       await waitForWithTimeout(() => {
-        expect(mockOnExecutionStatusUpdate).toHaveBeenCalledWith(
-          "workflow-1",
-          "exec-123",
-          "failed",
-        );
+        expect(mockOnExecutionStatusUpdate).toHaveBeenCalled();
+        const args = mockOnExecutionStatusUpdate.mock.calls[0];
+        expect(args[0]).toBe("workflow-1");
+        expect(args[1]).toBe("exec-123");
+        expect(args[2]).toBe("failed");
+        expect(typeof args[3]).toBe("string");
+        expect(args[3].length).toBeGreaterThan(0);
       });
     });
   });

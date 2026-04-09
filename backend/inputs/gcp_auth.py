@@ -264,3 +264,40 @@ def gcp_client_with_adc_retry(
                 "service account JSON file, add a key at ./credentials.json or "
                 "./gcp-credentials.json, or paste service account JSON on the node."
             ) from e
+
+
+def resolve_gcp_default_project_id(
+    *,
+    credentials_inline: Optional[str] = None,
+) -> Optional[str]:
+    """
+    Best-effort default GCP project ID for editors and storage pickers.
+
+    Order:
+    1. ``project_id`` from resolved service account JSON (inline or file discovery).
+    2. Environment: ``GOOGLE_CLOUD_PROJECT``, ``GCLOUD_PROJECT``, ``GCP_PROJECT``.
+    3. Project from ``google.auth.default()`` (gcloud ADC, GCE metadata, etc.).
+    """
+    resolved = resolve_gcp_service_account_json(credentials_inline)
+    if resolved:
+        try:
+            data = json.loads(resolved)
+        except json.JSONDecodeError:
+            data = None
+        if isinstance(data, dict):
+            pid = (data.get("project_id") or "").strip()
+            if pid:
+                return pid
+    for key in ("GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT", "GCP_PROJECT"):
+        env_val = (os.environ.get(key) or "").strip()
+        if env_val:
+            return env_val
+    try:
+        import google.auth
+
+        _, project = google.auth.default()
+        if project and str(project).strip():
+            return str(project).strip()
+    except Exception as e:
+        logger.debug("Could not resolve default GCP project from ADC: %s", e)
+    return None

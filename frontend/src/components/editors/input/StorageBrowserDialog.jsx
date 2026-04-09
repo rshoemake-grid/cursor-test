@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useId } from "react";
 import PropTypes from "prop-types";
 import { Folder, FileText, ChevronUp, RefreshCw } from "lucide-react";
 import {
@@ -14,6 +14,10 @@ import {
   StoragePickerList,
   StoragePickerRow,
   StoragePickerRowMeta,
+  StoragePickerFilenameSection,
+  StoragePickerFilenameLabel,
+  StoragePickerFilenameInput,
+  StoragePickerFilenameHint,
   StoragePickerFooter,
   StoragePickerPrimaryBtn,
   StoragePickerMessage,
@@ -22,6 +26,9 @@ import {
   parentLocalDirectory,
   parentObjectKeyPrefix,
   formatStorageSize,
+  fileBasenameFromPath,
+  sanitizeNewLocalFileName,
+  joinLocalDirectoryAndFilename,
 } from "../../../utils/storageBrowserPaths";
 
 /**
@@ -29,6 +36,7 @@ import {
  *
  * @param {Object} props
  * @param {'keyPrefix'|'localDirectory'|'bucketList'} props.variant
+ * @param {string} [props.listAriaLabel] Accessible name for the flat list when variant is bucketList (defaults to "Bucket list").
  * @param {function(string=): Promise<{prefixes: string[], objects: Array, canGoUp?: boolean}>} props.fetchPage
  */
 function StorageBrowserDialog({
@@ -45,7 +53,13 @@ function StorageBrowserDialog({
   selectButtonLabel = "Use selected file",
   emptyFolderMessage = "This folder is empty.",
   listPathLabel = "All accessible buckets",
+  listAriaLabel,
+  localPickTarget = "existingFile",
+  initialFilenameSuggestion = "",
 }) {
+  const filenameFieldId = useId();
+  const isNewFileInDirectory =
+    variant === "localDirectory" && localPickTarget === "newInDirectory";
   const [location, setLocation] = useState(initialLocation || "");
   const [prefixes, setPrefixes] = useState([]);
   const [objects, setObjects] = useState([]);
@@ -53,6 +67,7 @@ function StorageBrowserDialog({
   const [error, setError] = useState("");
   const [selectedName, setSelectedName] = useState(null);
   const [canGoUp, setCanGoUp] = useState(false);
+  const [filenameInput, setFilenameInput] = useState("");
 
   useEffect(() => {
     if (!isOpen) {
@@ -61,8 +76,11 @@ function StorageBrowserDialog({
     setLocation(variant === "bucketList" ? "" : initialLocation || "");
     setSelectedName(null);
     setError("");
+    setFilenameInput(
+      isNewFileInDirectory ? initialFilenameSuggestion || "" : "",
+    );
     return undefined;
-  }, [isOpen, initialLocation, variant]);
+  }, [isOpen, initialLocation, variant, isNewFileInDirectory, initialFilenameSuggestion]);
 
   const load = useCallback(async () => {
     if (prereqError) {
@@ -149,11 +167,36 @@ function StorageBrowserDialog({
   }, []);
 
   const applySelection = useCallback(() => {
+    if (isNewFileInDirectory) {
+      const full = joinLocalDirectoryAndFilename(location, filenameInput);
+      if (full) {
+        onSelectFile(full);
+        onClose();
+      }
+      return;
+    }
     if (selectedName) {
       onSelectFile(selectedName);
       onClose();
     }
-  }, [selectedName, onSelectFile, onClose]);
+  }, [
+    isNewFileInDirectory,
+    location,
+    filenameInput,
+    selectedName,
+    onSelectFile,
+    onClose,
+  ]);
+
+  const newFilePathPreview = isNewFileInDirectory
+    ? joinLocalDirectoryAndFilename(location, filenameInput)
+    : "";
+  const canApplyNewFile =
+    isNewFileInDirectory &&
+    !loading &&
+    !error &&
+    Boolean(sanitizeNewLocalFileName(filenameInput)) &&
+    Boolean(newFilePathPreview);
 
   const handleRowActivate = useCallback(
     (kind, value) => {
@@ -207,7 +250,7 @@ function StorageBrowserDialog({
             type="button"
             disabled={variant === "bucketList" || !canGoUp || loading}
             onClick={goUp}
-            aria-label="Parent folder"
+            aria-label="Go to parent folder"
           >
             <ChevronUp
               aria-hidden
@@ -240,9 +283,39 @@ function StorageBrowserDialog({
         {!loading && !error ? (
           <StoragePickerList
             aria-label={
-              variant === "bucketList" ? "Bucket list" : "Folder contents"
+              variant === "bucketList"
+                ? (listAriaLabel ?? "Bucket list")
+                : "Folder contents"
             }
           >
+            {canGoUp && variant !== "bucketList" ? (
+              <StoragePickerRow
+                key="storage-picker-parent"
+                $selected={false}
+                onClick={() => goUp()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    goUp();
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label="Open parent folder"
+              >
+                <ChevronUp
+                  aria-hidden
+                  style={{
+                    width: "1rem",
+                    height: "1rem",
+                    flexShrink: 0,
+                    color: "#6b7280",
+                  }}
+                />
+                ..
+                <StoragePickerRowMeta>parent folder</StoragePickerRowMeta>
+              </StoragePickerRow>
+            ) : null}
             {prefixes.map((p) => (
               <StoragePickerRow
                 key={`pre-${p}`}
@@ -278,11 +351,22 @@ function StorageBrowserDialog({
             {objects.map((obj) => (
               <StoragePickerRow
                 key={obj.name}
-                $selected={selectedName === obj.name}
-                onClick={() => handleSelectFile(obj.name)}
+                $selected={!isNewFileInDirectory && selectedName === obj.name}
+                onClick={() => {
+                  if (isNewFileInDirectory) {
+                    setFilenameInput(
+                      obj.display_name || fileBasenameFromPath(obj.name),
+                    );
+                    setSelectedName(null);
+                    return;
+                  }
+                  handleSelectFile(obj.name);
+                }}
                 onDoubleClick={() => handleRowActivate("object", obj.name)}
                 role="option"
-                aria-selected={selectedName === obj.name}
+                aria-selected={
+                  !isNewFileInDirectory && selectedName === obj.name
+                }
               >
                 <FileText
                   aria-hidden
@@ -304,13 +388,37 @@ function StorageBrowserDialog({
             ) : null}
           </StoragePickerList>
         ) : null}
+        {isNewFileInDirectory ? (
+          <StoragePickerFilenameSection>
+            <StoragePickerFilenameLabel htmlFor={filenameFieldId}>
+              File name
+            </StoragePickerFilenameLabel>
+            <StoragePickerFilenameInput
+              id={filenameFieldId}
+              type="text"
+              value={filenameInput}
+              onChange={(e) => setFilenameInput(e.target.value)}
+              placeholder="e.g. output.txt (file may not exist yet)"
+              autoComplete="off"
+              aria-label="Output file name in the selected folder"
+            />
+            <StoragePickerFilenameHint>
+              Choose a folder above, then enter a file name. The file can be new.
+              Double-click a file to use its full path instead.
+            </StoragePickerFilenameHint>
+          </StoragePickerFilenameSection>
+        ) : null}
         <StoragePickerFooter>
           <StoragePickerToolbarBtn type="button" onClick={onClose}>
             Cancel
           </StoragePickerToolbarBtn>
           <StoragePickerPrimaryBtn
             type="button"
-            disabled={!selectedName}
+            disabled={
+              isNewFileInDirectory
+                ? !canApplyNewFile
+                : !selectedName || loading || !!error
+            }
             onClick={applySelection}
           >
             {selectButtonLabel}
@@ -336,6 +444,9 @@ StorageBrowserDialog.propTypes = {
   selectButtonLabel: PropTypes.string,
   emptyFolderMessage: PropTypes.string,
   listPathLabel: PropTypes.string,
+  listAriaLabel: PropTypes.string,
+  localPickTarget: PropTypes.oneOf(["existingFile", "newInDirectory"]),
+  initialFilenameSuggestion: PropTypes.string,
 };
 
 export { StorageBrowserDialog as default };

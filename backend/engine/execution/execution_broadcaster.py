@@ -59,14 +59,15 @@ class ExecutionBroadcaster:
     async def broadcast_completion(self) -> None:
         """Broadcast execution completion"""
         if self.stream_updates:
-            await ws_manager.broadcast_completion(
-                self.execution_id,
-                {
-                    "status": self.execution_state.status.value,
-                    "result": self.execution_state.result,
-                    "completed_at": str(self.execution_state.completed_at),
-                },
-            )
+            payload = {
+                "status": self.execution_state.status.value,
+                "result": self.execution_state.result,
+                "completed_at": str(self.execution_state.completed_at),
+            }
+            err = self.execution_state.error
+            if err is not None and str(err).strip():
+                payload["error"] = str(err)
+            await ws_manager.broadcast_completion(self.execution_id, payload)
 
     async def broadcast_error(self, error: str) -> None:
         """Broadcast execution error"""

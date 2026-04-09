@@ -13,7 +13,7 @@ from backend.inputs.input_sources import (
 class TestGCPBucketHandlerMore:
     """More tests for GCPBucketHandler"""
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_STORAGE_AVAILABLE", True)
     @patch("backend.inputs.input_sources.storage")
     def test_read_object_text(self, mock_storage):
         """Test reading text object from GCP bucket"""
@@ -34,7 +34,7 @@ class TestGCPBucketHandlerMore:
         result = GCPBucketHandler.read(config)
         assert result == "Plain text content"
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_STORAGE_AVAILABLE", True)
     @patch("backend.inputs.input_sources.storage")
     def test_read_object_list(self, mock_storage):
         """Test listing objects in GCP bucket"""
@@ -58,7 +58,7 @@ class TestGCPBucketHandlerMore:
         assert isinstance(result, list)
         assert len(result) == 2
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_STORAGE_AVAILABLE", True)
     @patch("backend.inputs.input_sources.storage")
     def test_write_object_list(self, mock_storage):
         """Test writing list data to GCP bucket"""
@@ -155,7 +155,7 @@ class TestAWSS3HandlerMore:
 class TestGCPPubSubHandlerMore:
     """More tests for GCPPubSubHandler"""
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_PUBSUB_AVAILABLE", True)
     def test_read_multiple_messages(self):
         """Test reading multiple messages from Pub/Sub"""
         pytest.importorskip("google.cloud.pubsub_v1")
@@ -182,7 +182,7 @@ class TestGCPPubSubHandlerMore:
             assert isinstance(result, list)
             assert len(result) == 2
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_PUBSUB_AVAILABLE", True)
     def test_read_no_messages(self):
         """Test reading when no messages available"""
         pytest.importorskip("google.cloud.pubsub_v1")
@@ -202,7 +202,7 @@ class TestGCPPubSubHandlerMore:
             result = GCPPubSubHandler.read(config)
             assert result is None
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_PUBSUB_AVAILABLE", True)
     def test_write_list_data(self):
         """Test writing list data to Pub/Sub"""
         pytest.importorskip("google.cloud.pubsub_v1")
@@ -224,7 +224,7 @@ class TestGCPPubSubHandlerMore:
             assert result["status"] == "success"
             mock_publisher.publish.assert_called_once()
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_PUBSUB_AVAILABLE", True)
     def test_read_missing_config(self):
         """Test reading from Pub/Sub with missing config"""
         config = {
@@ -235,7 +235,7 @@ class TestGCPPubSubHandlerMore:
         with pytest.raises(ValueError, match="project_id and subscription_name are required"):
             GCPPubSubHandler.read(config)
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_PUBSUB_AVAILABLE", True)
     def test_write_missing_config(self):
         """Test writing to Pub/Sub with missing config"""
         config = {

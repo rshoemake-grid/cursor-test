@@ -167,7 +167,7 @@ class TestLocalFileSystemHandlerExtended:
 class TestGCPBucketHandlerExtended:
     """Extended tests for GCPBucketHandler"""
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_STORAGE_AVAILABLE", True)
     @patch("backend.inputs.input_sources.storage")
     def test_write_object(self, mock_storage):
         """Test writing an object to GCP bucket"""
@@ -189,7 +189,7 @@ class TestGCPBucketHandlerExtended:
         assert result["status"] == "success"
         mock_blob.upload_from_string.assert_called_once()
     
-    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
+    @patch("backend.inputs.input_sources.GCP_STORAGE_AVAILABLE", True)
     @patch("backend.inputs.input_sources.storage")
     def test_list_objects(self, mock_storage):
         """Test listing objects in bucket"""

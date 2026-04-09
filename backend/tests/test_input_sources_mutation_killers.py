@@ -32,7 +32,7 @@ def temp_dir():
 class TestGCPPubSubMessageCountBoundaries:
     """Test boundary conditions for message count comparisons"""
     
-    @patch('backend.inputs.input_sources.GCP_AVAILABLE', True)
+    @patch('backend.inputs.input_sources.GCP_PUBSUB_AVAILABLE', True)
     def test_read_zero_messages(self):
         """Test PubSub read with 0 messages (boundary: len(messages) > 1 false)"""
         import backend.inputs.input_sources as input_sources_module
@@ -56,7 +56,7 @@ class TestGCPPubSubMessageCountBoundaries:
         result = GCPPubSubHandler.read(config)
         assert result is None  # 0 messages returns None
     
-    @patch('backend.inputs.input_sources.GCP_AVAILABLE', True)
+    @patch('backend.inputs.input_sources.GCP_PUBSUB_AVAILABLE', True)
     def test_read_one_message(self):
         """Test PubSub read with 1 message (boundary: len(messages) > 1 false)"""
         import backend.inputs.input_sources as input_sources_module
@@ -84,7 +84,7 @@ class TestGCPPubSubMessageCountBoundaries:
         result = GCPPubSubHandler.read(config)
         assert result is not None  # 1 message returns the message
     
-    @patch('backend.inputs.input_sources.GCP_AVAILABLE', True)
+    @patch('backend.inputs.input_sources.GCP_PUBSUB_AVAILABLE', True)
     def test_read_two_messages(self):
         """Test PubSub read with 2 messages (boundary: len(messages) > 1 true)"""
         import backend.inputs.input_sources as input_sources_module

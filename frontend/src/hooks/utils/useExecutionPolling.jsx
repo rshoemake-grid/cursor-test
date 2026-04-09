@@ -107,13 +107,22 @@ function useExecutionPolling({
                 : void 0;
             const hasNodeStates =
               execution.node_states !== null &&
-              execution.node_states !== void 0;
-            const nodes = hasNodeStates === true ? execution.node_states : {};
+              execution.node_states !== void 0 &&
+              typeof execution.node_states === "object" &&
+              Object.keys(execution.node_states).length > 0;
+            const nodes = hasNodeStates === true ? execution.node_states : (exec.nodes ?? {});
             const hasLogs =
               execution.logs !== null &&
               execution.logs !== void 0 &&
               Array.isArray(execution.logs) === true;
-            const logs = hasLogs === true ? execution.logs : [];
+            const apiLogs = hasLogs === true ? execution.logs : [];
+            const clientLogs = exec.logs ?? [];
+            const logs =
+              apiLogs.length >= clientLogs.length ? apiLogs : clientLogs;
+            const apiError =
+              execution.error != null && String(execution.error).trim() !== ""
+                ? String(execution.error)
+                : undefined;
             return {
               id: exec.id,
               status: newStatus,
@@ -121,6 +130,12 @@ function useExecutionPolling({
               completedAt,
               nodes,
               logs,
+              error:
+                newStatus === "completed"
+                  ? undefined
+                  : apiError !== undefined
+                    ? apiError
+                    : exec.error,
             };
           } catch (error) {
             const shouldLog = shouldLogExecutionError(exec) === true;

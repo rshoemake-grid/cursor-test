@@ -8,7 +8,7 @@ import {
   AlertCircle,
   Download,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { formatExecutionDuration } from "../../utils/executionFormat";
 import ExecutionStatusBadge from "../ExecutionStatusBadge";
 import { api } from "../../api/client";
@@ -59,15 +59,40 @@ function ExecutionDetailsModal({
   apiClient = api,
 }) {
   const [downloading, setDownloading] = useState(false);
+  const [detail, setDetail] = useState(null);
+  useEffect(() => {
+    if (!isOpen || !execution?.execution_id) {
+      setDetail(null);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const full = await apiClient.getExecution(execution.execution_id);
+        if (!cancelled) {
+          setDetail(full);
+        }
+      } catch (err) {
+        logger.error("Failed to load execution details:", err);
+        if (!cancelled) {
+          setDetail(null);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, execution?.execution_id, apiClient]);
   if (!isOpen || !execution) {
     return null;
   }
+  const display = detail ?? execution;
   const handleDownloadLogs = async (format) => {
     if (!execution || downloading) return;
     try {
       setDownloading(true);
       const blob = await apiClient.downloadExecutionLogs(
-        execution.execution_id,
+        display.execution_id,
         format,
       );
       const url = window.URL.createObjectURL(blob);
@@ -134,10 +159,10 @@ function ExecutionDetailsModal({
         <ExecModalDialog onClick={(e) => e.stopPropagation()}>
           <ExecModalHeader>
             <ExecModalHeaderLeft>
-              {getStatusIcon(execution.status)}
+              {getStatusIcon(display.status)}
               <ExecModalTitleBlock>
                 <ExecModalTitle>Execution Details</ExecModalTitle>
-                <ExecModalSubtitle>{execution.execution_id}</ExecModalSubtitle>
+                <ExecModalSubtitle>{display.execution_id}</ExecModalSubtitle>
               </ExecModalTitleBlock>
             </ExecModalHeaderLeft>
             <ExecModalIconBtn
@@ -154,26 +179,26 @@ function ExecutionDetailsModal({
                 <div>
                   <ExecModalFieldLabel>Status</ExecModalFieldLabel>
                   <ExecModalFieldSpacer>
-                    <ExecutionStatusBadge status={execution.status} />
+                    <ExecutionStatusBadge status={display.status} />
                   </ExecModalFieldSpacer>
                 </div>
                 <div>
                   <ExecModalFieldLabel>Workflow ID</ExecModalFieldLabel>
-                  <ExecModalMonoText>{execution.workflow_id}</ExecModalMonoText>
+                  <ExecModalMonoText>{display.workflow_id}</ExecModalMonoText>
                 </div>
               </ExecModalGrid2>
               <ExecModalGrid2>
                 <div>
                   <ExecModalFieldLabel>Started At</ExecModalFieldLabel>
                   <ExecModalText>
-                    {new Date(execution.started_at).toLocaleString()}
+                    {new Date(display.started_at).toLocaleString()}
                   </ExecModalText>
                 </div>
-                {execution.completed_at && (
+                {display.completed_at && (
                   <div>
                     <ExecModalFieldLabel>Completed At</ExecModalFieldLabel>
                     <ExecModalText>
-                      {new Date(execution.completed_at).toLocaleString()}
+                      {new Date(display.completed_at).toLocaleString()}
                     </ExecModalText>
                   </div>
                 )}
@@ -181,32 +206,32 @@ function ExecutionDetailsModal({
                   <ExecModalFieldLabel>Duration</ExecModalFieldLabel>
                   <ExecModalText>
                     {formatExecutionDuration(
-                      execution.started_at,
-                      execution.completed_at,
+                      display.started_at,
+                      display.completed_at,
                     )}
                   </ExecModalText>
                 </div>
               </ExecModalGrid2>
-              {execution.current_node && (
+              {display.current_node && (
                 <div>
                   <ExecModalFieldLabel>Current Node</ExecModalFieldLabel>
-                  <ExecModalMonoText>{execution.current_node}</ExecModalMonoText>
+                  <ExecModalMonoText>{display.current_node}</ExecModalMonoText>
                 </div>
               )}
-              {execution.error && (
+              {display.error && (
                 <div>
                   <ExecModalFieldLabel>Error</ExecModalFieldLabel>
                   <ExecModalErrorBox>
-                    <ExecModalErrorText>{execution.error}</ExecModalErrorText>
+                    <ExecModalErrorText>{display.error}</ExecModalErrorText>
                   </ExecModalErrorBox>
                 </div>
               )}
-              {execution.node_states &&
-                Object.keys(execution.node_states).length > 0 && (
+              {display.node_states &&
+                Object.keys(display.node_states).length > 0 && (
                   <div>
                     <ExecModalSectionLabel>Node States</ExecModalSectionLabel>
                     <ExecModalNodeStack>
-                      {Object.entries(execution.node_states).map(
+                      {Object.entries(display.node_states).map(
                         ([nodeId, nodeState]) => (
                           <ExecModalNodeCard key={nodeId}>
                             <ExecModalNodeCardHeader>
@@ -229,11 +254,11 @@ function ExecutionDetailsModal({
                     </ExecModalNodeStack>
                   </div>
                 )}
-              {execution.logs && execution.logs.length > 0 && (
+              {display.logs && display.logs.length > 0 && (
                 <div>
                   <ExecModalSectionLabel>Logs</ExecModalSectionLabel>
                   <ExecModalLogsConsole>
-                    {execution.logs.map((log, index) => (
+                    {display.logs.map((log, index) => (
                       <ExecModalLogLine key={index}>
                         {typeof log === "string" ? log : JSON.stringify(log)}
                       </ExecModalLogLine>
@@ -241,13 +266,13 @@ function ExecutionDetailsModal({
                   </ExecModalLogsConsole>
                 </div>
               )}
-              {execution.variables &&
-                Object.keys(execution.variables).length > 0 && (
+              {display.variables &&
+                Object.keys(display.variables).length > 0 && (
                   <div>
                     <ExecModalSectionLabel>Variables</ExecModalSectionLabel>
                     <ExecModalVariablesBox>
                       <ExecModalPre>
-                        {JSON.stringify(execution.variables, null, 2)}
+                        {JSON.stringify(display.variables, null, 2)}
                       </ExecModalPre>
                     </ExecModalVariablesBox>
                   </div>
@@ -256,7 +281,7 @@ function ExecutionDetailsModal({
           </ExecModalBody>
           <ExecModalFooter>
             <ExecModalFooterLeft>
-              {execution.logs && execution.logs.length > 0 && (
+              {display.logs && display.logs.length > 0 && (
                 <>
                   <ExecModalDownloadPrimary
                     type="button"
@@ -292,6 +317,7 @@ ExecutionDetailsModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   apiClient: PropTypes.shape({
+    getExecution: PropTypes.func,
     downloadExecutionLogs: PropTypes.func,
   }),
 };

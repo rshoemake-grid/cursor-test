@@ -11,13 +11,20 @@ from typing import Dict, Any, Optional, List, Tuple
 from pathlib import Path
 import glob
 
-# Optional imports for cloud services
+# Optional imports for cloud services (independent: bucket nodes vs Pub/Sub nodes)
 try:
     from google.cloud import storage
-    from google.cloud import pubsub_v1
-    GCP_AVAILABLE = True
+
+    GCP_STORAGE_AVAILABLE = True
 except ImportError:
-    GCP_AVAILABLE = False
+    GCP_STORAGE_AVAILABLE = False
+
+try:
+    from google.cloud import pubsub_v1
+
+    GCP_PUBSUB_AVAILABLE = True
+except ImportError:
+    GCP_PUBSUB_AVAILABLE = False
 
 try:
     import boto3
@@ -63,6 +70,23 @@ def _gcp_project_id_from_config(config: Dict[str, Any]) -> Optional[str]:
     return s or None
 
 
+def _normalize_gcp_pubsub_project_id(project_ref: Optional[str]) -> str:
+    """
+    Return a project id or number string for Pub/Sub client paths.
+
+    Accepts ``my-proj`` or ``projects/my-proj``. If a longer resource name is pasted
+    (e.g. ``projects/p/topics/t``), only the project segment is kept.
+    """
+    s = (project_ref or "").strip()
+    if not s:
+        return ""
+    if s.startswith("projects/"):
+        s = s[len("projects/") :].lstrip("/")
+    if "/" in s:
+        s = s.split("/", 1)[0].strip()
+    return s
+
+
 def _gcp_storage_client_kwargs(
     config: Dict[str, Any],
     *,
@@ -103,7 +127,7 @@ class GCPBucketHandler(InputSourceHandler):
     
     @staticmethod
     def read(config: Dict[str, Any]) -> Any:
-        if not GCP_AVAILABLE:
+        if not GCP_STORAGE_AVAILABLE:
             raise ImportError("google-cloud-storage not installed. Install with: pip install google-cloud-storage")
         
         bucket_name = config.get('bucket_name')
@@ -143,7 +167,7 @@ class GCPBucketHandler(InputSourceHandler):
     @staticmethod
     def write(config: Dict[str, Any], data: Any) -> Any:
         """Write data to GCP Bucket"""
-        if not GCP_AVAILABLE:
+        if not GCP_STORAGE_AVAILABLE:
             raise ImportError("google-cloud-storage not installed. Install with: pip install google-cloud-storage")
         
         bucket_name = config.get('bucket_name')
@@ -186,7 +210,7 @@ class GCPBucketHandler(InputSourceHandler):
         Returns:
             (prefixes, objects) where objects are dicts with name, display_name, size, updated.
         """
-        if not GCP_AVAILABLE:
+        if not GCP_STORAGE_AVAILABLE:
             raise ImportError("google-cloud-storage not installed. Install with: pip install google-cloud-storage")
 
         bucket_name = config.get("bucket_name")
@@ -238,7 +262,7 @@ class GCPBucketHandler(InputSourceHandler):
         List GCS bucket names visible to the client (picker UI).
         ``config`` may include optional ``credentials`` JSON; otherwise uses ADC.
         """
-        if not GCP_AVAILABLE:
+        if not GCP_STORAGE_AVAILABLE:
             raise ImportError(
                 "google-cloud-storage not installed. Install with: pip install google-cloud-storage"
             )
@@ -585,10 +609,10 @@ class GCPPubSubHandler(InputSourceHandler):
     
     @staticmethod
     def read(config: Dict[str, Any]) -> Any:
-        if not GCP_AVAILABLE:
+        if not GCP_PUBSUB_AVAILABLE:
             raise ImportError("google-cloud-pubsub not installed. Install with: pip install google-cloud-pubsub")
         
-        project_id = config.get('project_id')
+        project_id = _normalize_gcp_pubsub_project_id(str(config.get("project_id") or ""))
         topic_name = config.get('topic_name')
         subscription_name = config.get('subscription_name')
 
@@ -639,10 +663,10 @@ class GCPPubSubHandler(InputSourceHandler):
     @staticmethod
     def write(config: Dict[str, Any], data: Any) -> Any:
         """Publish data to GCP Pub/Sub topic"""
-        if not GCP_AVAILABLE:
+        if not GCP_PUBSUB_AVAILABLE:
             raise ImportError("google-cloud-pubsub not installed. Install with: pip install google-cloud-pubsub")
         
-        project_id = config.get('project_id')
+        project_id = _normalize_gcp_pubsub_project_id(str(config.get("project_id") or ""))
         topic_name = config.get('topic_name')
 
         if not project_id or not topic_name:
@@ -668,6 +692,131 @@ class GCPPubSubHandler(InputSourceHandler):
         message_id = future.result(timeout=60)
         
         return {"status": "success", "topic": topic_name, "message_id": message_id}
+
+    @staticmethod
+    def _pubsub_short_id(full_resource_name: str) -> str:
+        t = str(full_resource_name or "").strip().rstrip("/")
+        return t.split("/")[-1] if t else ""
+
+    @staticmethod
+    def list_topics(config: Dict[str, Any], max_results: int = 500) -> List[Dict[str, Any]]:
+        """List Pub/Sub topic IDs in a project (short names for UI pickers)."""
+        if not GCP_PUBSUB_AVAILABLE:
+            raise ImportError(
+                "google-cloud-pubsub not installed. Install with: pip install google-cloud-pubsub"
+            )
+        project_id = _normalize_gcp_pubsub_project_id(str(config.get("project_id") or ""))
+        if not project_id:
+            raise ValueError("project_id is required to list Pub/Sub topics")
+
+        resolved = resolve_gcp_service_account_json(config.get("credentials"))
+        credentials = parse_gcp_service_account_credentials(resolved)
+
+        def _publisher_client():
+            return (
+                pubsub_v1.PublisherClient(credentials=credentials)
+                if credentials
+                else pubsub_v1.PublisherClient()
+            )
+
+        publisher = gcp_client_with_adc_retry(resolved, _publisher_client)
+        parent = f"projects/{project_id}"
+        out: List[Dict[str, Any]] = []
+        for i, topic in enumerate(publisher.list_topics(project=parent)):
+            if i >= max_results:
+                break
+            short = GCPPubSubHandler._pubsub_short_id(getattr(topic, "name", ""))
+            if not short:
+                continue
+            out.append(
+                {
+                    "name": short,
+                    "display_name": short,
+                    "size": None,
+                    "updated": None,
+                }
+            )
+        out.sort(key=lambda x: x["name"].lower())
+        return out
+
+    @staticmethod
+    def list_subscriptions(
+        config: Dict[str, Any],
+        topic_name: Optional[str] = None,
+        max_results: int = 500,
+    ) -> List[Dict[str, Any]]:
+        """
+        List Pub/Sub subscription IDs. If topic_name is set, only subscriptions attached to
+        that topic; otherwise subscriptions in the project.
+        """
+        if not GCP_PUBSUB_AVAILABLE:
+            raise ImportError(
+                "google-cloud-pubsub not installed. Install with: pip install google-cloud-pubsub"
+            )
+        project_id = _normalize_gcp_pubsub_project_id(str(config.get("project_id") or ""))
+        if not project_id:
+            raise ValueError("project_id is required to list Pub/Sub subscriptions")
+
+        resolved = resolve_gcp_service_account_json(config.get("credentials"))
+        credentials = parse_gcp_service_account_credentials(resolved)
+        out: List[Dict[str, Any]] = []
+        topic_filter = (topic_name or "").strip()
+
+        if topic_filter:
+
+            def _publisher_for_subs():
+                return (
+                    pubsub_v1.PublisherClient(credentials=credentials)
+                    if credentials
+                    else pubsub_v1.PublisherClient()
+                )
+
+            publisher = gcp_client_with_adc_retry(resolved, _publisher_for_subs)
+            topic_path = publisher.topic_path(project_id, topic_filter)
+            for i, sub_full in enumerate(
+                publisher.list_topic_subscriptions(request={"topic": topic_path})
+            ):
+                if i >= max_results:
+                    break
+                path_str = getattr(sub_full, "name", sub_full)
+                short = GCPPubSubHandler._pubsub_short_id(str(path_str))
+                if not short:
+                    continue
+                out.append(
+                    {
+                        "name": short,
+                        "display_name": short,
+                        "size": None,
+                        "updated": None,
+                    }
+                )
+        else:
+
+            def _subscriber_client():
+                return (
+                    pubsub_v1.SubscriberClient(credentials=credentials)
+                    if credentials
+                    else pubsub_v1.SubscriberClient()
+                )
+
+            subscriber = gcp_client_with_adc_retry(resolved, _subscriber_client)
+            parent = f"projects/{project_id}"
+            for i, sub in enumerate(subscriber.list_subscriptions(project=parent)):
+                if i >= max_results:
+                    break
+                short = GCPPubSubHandler._pubsub_short_id(getattr(sub, "name", ""))
+                if not short:
+                    continue
+                out.append(
+                    {
+                        "name": short,
+                        "display_name": short,
+                        "size": None,
+                        "updated": None,
+                    }
+                )
+        out.sort(key=lambda x: x["name"].lower())
+        return out
 
 
 from .local_file_read_modes import READ_MODE_STRATEGIES, read_full

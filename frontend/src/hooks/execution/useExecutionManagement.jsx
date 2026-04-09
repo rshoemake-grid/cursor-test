@@ -3,6 +3,9 @@ import { api } from "../../api/client";
 import { logger } from "../../utils/logger";
 import { useExecutionPolling } from "../utils/useExecutionPolling";
 import { ExecutionStateManager } from "../utils/executionStateManager";
+import { isRealExecutionId } from "../utils/executionIdValidation";
+
+const TERMINAL_EXECUTION_REFRESH_MS = 400;
 function useExecutionManagement({
   tabs,
   activeTabId,
@@ -60,17 +63,44 @@ function useExecutionManagement({
     [setTabs, stateManager],
   );
   const handleExecutionStatusUpdate = useCallback(
-    (workflowId, executionId, status) => {
+    (workflowId, executionId, status, errorMessage) => {
       setTabs((prev) =>
         stateManager.handleExecutionStatusUpdate(
           prev,
           workflowId,
           executionId,
           status,
+          errorMessage,
         ),
       );
+      if (
+        (status === "failed" || status === "completed") &&
+        isRealExecutionId(executionId)
+      ) {
+        void (async () => {
+          try {
+            await new Promise((r) =>
+              setTimeout(r, TERMINAL_EXECUTION_REFRESH_MS),
+            );
+            const snapshot = await apiClient.getExecution(executionId);
+            setTabs((prev) =>
+              stateManager.mergeExecutionFromServer(
+                prev,
+                workflowId,
+                executionId,
+                snapshot,
+              ),
+            );
+          } catch (err) {
+            injectedLogger.debug(
+              "[Execution] Could not refresh execution from API:",
+              err?.message ?? err,
+            );
+          }
+        })();
+      }
     },
-    [setTabs, stateManager],
+    [setTabs, stateManager, apiClient, injectedLogger],
   );
   const handleExecutionNodeUpdate = useCallback(
     (workflowId, executionId, nodeId, nodeState) => {

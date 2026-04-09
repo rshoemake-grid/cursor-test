@@ -299,6 +299,7 @@ describe("ExecutionConsole", () => {
       "workflow-1",
       "exec-123",
       "failed",
+      "WebSocket error",
     );
     expect(logger.error).toHaveBeenCalled();
   });

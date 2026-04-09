@@ -16,6 +16,7 @@ Development server defaults to **http://localhost:3000**.
 ## API URL in development
 
 - **Default:** leave **`REACT_APP_API_BASE_URL` empty** in `.env.development` so the browser uses same-origin **`/api`**. `src/setupProxy.js` forwards to FastAPI (`PROXY_TARGET`, default `http://127.0.0.1:8000`).
+- **504 / proxy errors in the browser:** the CRA dev server could not reach the API on `PROXY_TARGET`. Start the backend from the repo root: `python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000`, or point `PROXY_TARGET` at wherever the API listens.
 - **Direct API:** set `REACT_APP_API_BASE_URL=http://127.0.0.1:8000` in `.env.development.local` if you must bypass the proxy (mind CORS).
 
 See **[docs/CONFIGURATION_REFERENCE.md](../docs/CONFIGURATION_REFERENCE.md#frontend-configuration)**.

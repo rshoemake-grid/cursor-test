@@ -511,5 +511,27 @@ describe("LocalFileSystemEditor", () => {
         ).toBeInTheDocument();
       });
     });
+    it("should open write-mode browse for folder and new file name", async () => {
+      const node = createLocalFileSystemNode({ mode: INPUT_MODE.WRITE });
+      render(
+        <LocalFileSystemEditor
+          node={node}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      fireEvent.click(
+        screen.getByLabelText(
+          "Browse server filesystem for folder and file name",
+        ),
+      );
+      await waitFor(() => {
+        expect(
+          screen.getByRole("dialog", { name: /Choose folder and file name/i }),
+        ).toBeInTheDocument();
+      });
+      expect(
+        screen.getByLabelText("Output file name in the selected folder"),
+      ).toBeInTheDocument();
+    });
   });
 });

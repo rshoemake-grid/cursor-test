@@ -23,6 +23,7 @@ describe("types/workflow.ts", () => {
         "completed",
         "failed",
         "paused",
+        "cancelled",
       ];
       validStatuses.forEach((status) => {
         expect([
@@ -31,6 +32,7 @@ describe("types/workflow.ts", () => {
           "completed",
           "failed",
           "paused",
+          "cancelled",
         ]).toContain(status);
       });
     });
@@ -377,6 +379,7 @@ describe("types/workflow.ts", () => {
         expect(isValidExecutionStatus("completed")).toBe(true);
         expect(isValidExecutionStatus("failed")).toBe(true);
         expect(isValidExecutionStatus("paused")).toBe(true);
+        expect(isValidExecutionStatus("cancelled")).toBe(true);
       });
       it("should reject invalid execution statuses", () => {
         expect(isValidExecutionStatus("invalid")).toBe(false);

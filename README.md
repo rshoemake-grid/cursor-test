@@ -69,9 +69,9 @@ Visit `http://localhost:3000` to use the visual workflow builder!
 
 #### Terminal 1: Backend
 ```bash
-python main.py
+python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
-Backend runs at `http://localhost:8000`
+Backend runs at `http://localhost:8000`. (Running `python main.py` from the repo root only runs a PyCharm sample stub and does **not** start the API.)
 
 #### Terminal 2: Frontend
 ```bash

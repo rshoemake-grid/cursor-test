@@ -7,7 +7,7 @@ from backend.inputs.input_sources import GCPBucketHandler
 
 
 @pytest.mark.skipif(
-    not __import__("backend.inputs.input_sources", fromlist=["GCP_AVAILABLE"]).GCP_AVAILABLE,
+    not __import__("backend.inputs.input_sources", fromlist=["GCP_STORAGE_AVAILABLE"]).GCP_STORAGE_AVAILABLE,
     reason="google-cloud-storage not installed",
 )
 def test_list_objects_returns_prefixes_and_objects():

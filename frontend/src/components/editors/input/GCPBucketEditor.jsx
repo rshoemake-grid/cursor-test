@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
   useInputFieldSync,
@@ -22,6 +22,7 @@ import {
   EditorInlineCode,
   EditorSecondaryFullButton,
 } from "../../../styles/editorForm.styled";
+import { api } from "../../../api/client";
 import GcpBucketObjectPickerDialog, {
   GcpBucketListPickerDialog,
   GcpProjectListPickerDialog,
@@ -63,6 +64,45 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
     inputConfig.mode,
     INPUT_MODE.READ,
   );
+
+  useEffect(() => {
+    const fromNode = (inputConfig.project_id || "").trim();
+    const fromField = (projectIdValue || "").trim();
+    if (fromNode || fromField) {
+      return undefined;
+    }
+    const cred = gcpCredentialsValue || "";
+    let cancelled = false;
+    const handle = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const data = await api.getGcpDefaultProject({
+            credentials: cred.trim() ? cred.trim() : undefined,
+          });
+          const pid = (data?.project_id || "").trim();
+          if (cancelled || !pid) {
+            return;
+          }
+          setProjectIdValue(pid);
+          onConfigUpdate(CONFIG_FIELD, "project_id", pid);
+        } catch {
+          /* leave blank */
+        }
+      })();
+    }, 400);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+  }, [
+    node.id,
+    inputConfig.project_id,
+    projectIdValue,
+    gcpCredentialsValue,
+    onConfigUpdate,
+    setProjectIdValue,
+  ]);
+
   const openObjectPicker = useCallback(() => {
     setPickerSession((s) => s + 1);
     setPickerOpen(true);
@@ -158,8 +198,10 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
           </EditorSecondaryFullButton>
         </div>
         <EditorHint>
-          Optional. When set, the Storage client uses this project (billing/quota scope). Browse
-          lists projects via Resource Manager; your principal needs{" "}
+          Defaults to your current GCP project (service account JSON,{" "}
+          <EditorInlineCode>GOOGLE_CLOUD_PROJECT</EditorInlineCode>, or Application Default
+          Credentials). This value scopes bucket listing; browse buckets uses this project ID.
+          Browse projects requires{" "}
           <EditorInlineCode>resourcemanager.projects.list</EditorInlineCode>.
         </EditorHint>
       </EditorFieldGroup>
@@ -202,8 +244,8 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
           </EditorSecondaryFullButton>
         </div>
         <EditorHint>
-          Browse lists buckets for the selected project / credentials (service account JSON below,
-          or ADC on the server).
+          Browse lists buckets in the GCP project ID above. Object browse uses the bucket name
+          here (service account JSON below, or ADC on the server).
         </EditorHint>
       </EditorFieldGroup>
       <EditorFieldGroup $mt="sm">
@@ -245,8 +287,8 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
           </EditorSecondaryFullButton>
         </div>
         <EditorHint>
-          Opens a signed-in request to list objects under the current path prefix (same
-          credentials and project as above, or ADC on the server).
+          Lists objects in the bucket named above (same credentials and project as above, or ADC
+          on the server).
         </EditorHint>
       </EditorFieldGroup>
       {projectPickerOpen ? (
