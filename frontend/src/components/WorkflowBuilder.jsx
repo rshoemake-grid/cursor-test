@@ -34,6 +34,7 @@ import {
 } from "../hooks/marketplace";
 import { useNodeSelection } from "../hooks/nodes";
 import { convertNodesForExecutionInput } from "../utils/nodeConversion";
+import { selectExecutionStateForBuilderTab } from "../utils/workflowExecutionTabs";
 import { WorkflowBuilderLayout } from "./WorkflowBuilder/WorkflowBuilderLayout";
 import { WorkflowBuilderDialogs } from "./WorkflowBuilder/WorkflowBuilderDialogs";
 const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
@@ -337,12 +338,11 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
     },
     [execution],
   );
-  const executions =
-    workflowTabs?.find((t) => t.workflowId === localWorkflowId)?.executions ||
-    [];
-  const activeExecutionId =
-    workflowTabs?.find((t) => t.workflowId === localWorkflowId)
-      ?.activeExecutionId || null;
+  const { executions, activeExecutionId } = selectExecutionStateForBuilderTab(
+    workflowTabs,
+    tabId,
+    localWorkflowId,
+  );
   const workflowChatCanvasRef = useRef({
     nodes: [],
     edges: [],

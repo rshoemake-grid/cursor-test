@@ -13,6 +13,8 @@ import { getLogLevelTone } from "../utils/logLevel";
 import { defaultAdapters } from "../types/adapters";
 import { coalesceString } from "../utils/nullCoalescing";
 import { LOG_LEVELS } from "../constants/stringLiterals";
+import { isValidExecutionStatus } from "../utils/executionStatus";
+import { deriveExecutionCompletionFromWsResult } from "../hooks/utils/wsExecutionCompletion";
 import { ConsoleEmptyState } from "../styles/contentBlocks.styled";
 import {
   ConsoleRoot,
@@ -39,6 +41,25 @@ import {
   ConsoleLogTime,
   ConsoleLogNodeRef,
 } from "../styles/executionConsole.styled";
+
+/**
+ * Normalize execution status from WS `status` messages only.
+ * Ignores transport-only strings (connected / disconnected / error) from
+ * WebSocketConnectionManager so they do not overwrite workflow status in UI.
+ */
+function normalizeExecutionStatusFromSocket(status) {
+  if (status == null) {
+    return "";
+  }
+  if (typeof status === "string") {
+    const s = status.toLowerCase().trim();
+    return s === "canceled" ? "cancelled" : s;
+  }
+  if (typeof status === "object" && status.value != null) {
+    return normalizeExecutionStatusFromSocket(status.value);
+  }
+  return "";
+}
 
 function resolveExecutionFailureDetail(execution) {
   if (!execution) {
@@ -167,6 +188,7 @@ function ExecutionConsole({
   useWebSocket({
     executionId: activeExecutionId,
     executionStatus: activeExecutionStatus,
+    authReady: Boolean(authToken),
     getAuthToken: () => authTokenRef.current ?? null,
     onLog: (log) => {
       const workflowId = activeWorkflowIdRef.current;
@@ -178,6 +200,13 @@ function ExecutionConsole({
       }
     },
     onStatus: (status) => {
+      const workflowStatus = normalizeExecutionStatusFromSocket(status);
+      if (
+        workflowStatus === "" ||
+        isValidExecutionStatus(workflowStatus) !== true
+      ) {
+        return;
+      }
       const workflowId = activeWorkflowIdRef.current;
       const executionId = activeExecutionIdRef.current;
       const callback = onExecutionStatusUpdateRef.current;
@@ -208,11 +237,10 @@ function ExecutionConsole({
       if (hasWorkflowId && hasExecutionId && hasCallback) {
         logger.debug(
           "[ExecutionConsole] Received status update via WebSocket:",
-          status,
+          workflowStatus,
         );
-        callback(workflowId, executionId, status);
-      }
-      if (!hasWorkflowId || !hasExecutionId || !hasCallback) {
+        callback(workflowId, executionId, workflowStatus);
+      } else {
         logger.debug(
           "[ExecutionConsole] Skipping status update - missing required values:",
           {
@@ -225,13 +253,6 @@ function ExecutionConsole({
             callbackValue: callback,
           },
         );
-      }
-      if (hasWorkflowId && hasExecutionId && hasCallback) {
-        logger.debug(
-          "[ExecutionConsole] Received status update via WebSocket:",
-          status,
-        );
-        callback(workflowId, executionId, status);
       }
     },
     onNodeUpdate: (nodeId, nodeState) => {
@@ -256,15 +277,8 @@ function ExecutionConsole({
           "[ExecutionConsole] Received completion via WebSocket:",
           result,
         );
-        const raw =
-          result && typeof result.status === "string"
-            ? result.status.toLowerCase()
-            : "completed";
-        const status = raw === "failed" ? "failed" : "completed";
-        const errMsg =
-          status === "failed" && result != null && result.error != null
-            ? String(result.error)
-            : undefined;
+        const { status, errorMessage: errMsg } =
+          deriveExecutionCompletionFromWsResult(result);
         callback(workflowId, executionId, status, errMsg);
       }
     },

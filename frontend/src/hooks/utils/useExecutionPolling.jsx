@@ -5,6 +5,7 @@ import {
   shouldLogExecutionError,
 } from "./executionIdValidation";
 import { safeGetTabsRefCurrent } from "./safeRefs";
+import { mapApiStatusToExecutionUiStatus } from "./apiExecutionStatus";
 function useExecutionPolling({
   tabsRef,
   setTabs,
@@ -80,18 +81,9 @@ function useExecutionPolling({
         runningExecutions.map(async (exec) => {
           try {
             const execution = await apiClient.getExecution(exec.id);
-            const isCompleted = execution.status === "completed";
-            const isFailed = execution.status === "failed";
-            const isPaused = execution.status === "paused";
+            const mapped = mapApiStatusToExecutionUiStatus(execution);
             const newStatus =
-              isCompleted === true
-                ? "completed"
-                : isFailed === true
-                  ? "failed"
-                  : isPaused === true
-                    ? "running"
-                    : // Keep as running if paused
-                      "running";
+              mapped !== null && mapped !== void 0 ? mapped : exec.status;
             const statusChanged = exec.status !== newStatus;
             if (statusChanged === true) {
               injectedLogger.debug(

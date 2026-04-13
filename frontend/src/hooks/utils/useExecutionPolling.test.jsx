@@ -337,6 +337,65 @@ describe("useExecutionPolling", () => {
       status: "running",
     });
   });
+  it("should map cancelled API status to cancelled in tab state", async () => {
+    const execution = {
+      id: "exec-1",
+      status: "running",
+      startedAt: new Date(),
+      nodes: {},
+      logs: [],
+    };
+    mockTabsRef.current = [createMockTab("workflow-1", [execution])];
+    mockApi.getExecution.mockResolvedValue({
+      status: "cancelled",
+      completed_at: "2026-04-01T12:00:00Z",
+      logs: [],
+    });
+    renderHook(() =>
+      useExecutionPolling({
+        tabsRef: mockTabsRef,
+        setTabs: mockSetTabs,
+        apiClient: mockApi,
+        pollInterval: 1e3,
+      }),
+    );
+    await act(async () => {
+      jest.advanceTimersByTime(1e3);
+    });
+    const updateCall = mockSetTabs.mock.calls[0][0];
+    const updatedTabs = updateCall(mockTabsRef.current);
+    expect(updatedTabs[0].executions[0].status).toBe("cancelled");
+  });
+  it("should infer completed from completed_at when API status still running", async () => {
+    const execution = {
+      id: "exec-1",
+      status: "running",
+      startedAt: new Date(),
+      nodes: {},
+      logs: [],
+    };
+    mockTabsRef.current = [createMockTab("workflow-1", [execution])];
+    mockApi.getExecution.mockResolvedValue({
+      status: "running",
+      completed_at: "2026-04-01T12:00:00Z",
+      error: null,
+      logs: [],
+    });
+    renderHook(() =>
+      useExecutionPolling({
+        tabsRef: mockTabsRef,
+        setTabs: mockSetTabs,
+        apiClient: mockApi,
+        pollInterval: 1e3,
+      }),
+    );
+    await act(async () => {
+      jest.advanceTimersByTime(1e3);
+    });
+    const updateCall = mockSetTabs.mock.calls[0][0];
+    const updatedTabs = updateCall(mockTabsRef.current);
+    expect(updatedTabs[0].executions[0].status).toBe("completed");
+  });
   it("should handle paused status by keeping as running", async () => {
     const execution = {
       id: "exec-1",

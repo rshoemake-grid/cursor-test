@@ -259,6 +259,28 @@ describe("ExecutionConsole", () => {
     );
     expect(logger.debug).toHaveBeenCalled();
   });
+  it("does not forward WebSocket transport status to workflow state", () => {
+    let onStatusCallback;
+    mockUseWebSocket.mockImplementation((config) => {
+      onStatusCallback = config.onStatus;
+      return {};
+    });
+    renderWithAuth(
+      <ExecutionConsole
+        {...ec({
+          activeWorkflowId: "workflow-1",
+          executions: [mockExecution],
+          activeExecutionId: "exec-123",
+          onExecutionStatusUpdate: mockOnExecutionStatusUpdate,
+        })}
+      />,
+    );
+    mockOnExecutionStatusUpdate.mockClear();
+    onStatusCallback("connected");
+    onStatusCallback("disconnected");
+    onStatusCallback("error");
+    expect(mockOnExecutionStatusUpdate).not.toHaveBeenCalled();
+  });
   it("should handle WebSocket node update callback", () => {
     let onNodeUpdateCallback;
     mockUseWebSocket.mockImplementation((config) => {

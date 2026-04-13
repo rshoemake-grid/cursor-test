@@ -5,7 +5,7 @@ from sqlalchemy import select
 from ..websocket.manager import manager
 from ..utils.logger import get_logger
 from ..database.db import AsyncSessionLocal
-from ..database.models import UserDB, ExecutionDB
+from ..database.models import UserDB, ExecutionDB, WorkflowDB
 from ..auth.auth import SECRET_KEY, ALGORITHM
 
 logger = get_logger(__name__)
@@ -43,8 +43,28 @@ async def _verify_websocket_auth_and_ownership(websocket: WebSocket, execution_i
         execution = result.scalar_one_or_none()
         if not execution:
             return False
-        if execution.user_id is None or execution.user_id != user.id:
-            return False
+        if execution.user_id is not None:
+            if execution.user_id != user.id:
+                return False
+        else:
+            # POST /execute with optional auth leaves user_id null; allow the workflow
+            # owner to open the stream (same person who can read the workflow).
+            wf_result = await db.execute(
+                select(WorkflowDB).where(WorkflowDB.id == execution.workflow_id)
+            )
+            workflow = wf_result.scalar_one_or_none()
+            if (
+                workflow is None
+                or workflow.owner_id is None
+                or workflow.owner_id != user.id
+            ):
+                logger.debug(
+                    "WebSocket denied: execution %s has no user_id and workflow "
+                    "owner does not match user %s",
+                    execution_id,
+                    user.id,
+                )
+                return False
     return True
 
 
@@ -55,6 +75,9 @@ async def websocket_execution_stream(websocket: WebSocket, execution_id: str):
     C-3: Requires token in query param (?token=xxx); verifies execution ownership.
     """
     if not await _verify_websocket_auth_and_ownership(websocket, execution_id):
+        # Browsers report an opaque failure if we close before accept(); accept then
+        # close so the client receives a proper policy close (e.g. code 4001).
+        await websocket.accept()
         await websocket.close(code=WS_CLOSE_UNAUTHORIZED, reason="Unauthorized")
         return
 

@@ -17,6 +17,8 @@ import {
   isPendingExecutionId,
 } from "./executionIdValidation";
 import { logicalOrToEmptyArray } from "./logicalOr";
+import { isValidExecutionStatus } from "../../constants/stringLiterals";
+import { mapApiStatusToExecutionUiStatus } from "./apiExecutionStatus";
 class ExecutionStateManager {
   constructor({ logger: injectedLogger = logger } = {}) {
     __publicField(this, "logger");
@@ -141,6 +143,13 @@ class ExecutionStateManager {
    * Single Responsibility: Only handles status update logic
    */
   handleExecutionStatusUpdate(tabs, workflowId, executionId, status, errorMessage) {
+    const normalized =
+      typeof status === "string" ? status.toLowerCase().trim() : "";
+    const workflowStatus =
+      normalized === "canceled" ? "cancelled" : normalized;
+    if (!isValidExecutionStatus(workflowStatus)) {
+      return tabs;
+    }
     return updateTabByWorkflowId(tabs, workflowId, {
       executions: logicalOrToEmptyArray(
         tabs
@@ -150,9 +159,9 @@ class ExecutionStateManager {
               return exec;
             }
             let nextError = exec.error;
-            if (status === "completed") {
+            if (workflowStatus === "completed") {
               nextError = undefined;
-            } else if (status === "failed") {
+            } else if (workflowStatus === "failed") {
               nextError =
                 errorMessage != null && String(errorMessage).trim() !== ""
                   ? String(errorMessage)
@@ -160,10 +169,10 @@ class ExecutionStateManager {
             }
             return {
               ...exec,
-              status,
+              status: workflowStatus,
               error: nextError,
               completedAt:
-                status === "completed" || status === "failed"
+                workflowStatus === "completed" || workflowStatus === "failed"
                   ? new Date()
                   : exec.completedAt,
             };
@@ -214,24 +223,18 @@ class ExecutionStateManager {
             const mergedLogs =
               apiLogs.length >= clientLogs.length ? apiLogs : clientLogs;
 
-            const apiStatusRaw = String(api?.status ?? "").toLowerCase();
-            const normalizedApi =
-              apiStatusRaw === "failed"
-                ? "failed"
-                : apiStatusRaw === "completed"
-                  ? "completed"
-                  : apiStatusRaw === "running" || apiStatusRaw === "pending"
-                    ? "running"
-                    : null;
-            const apiTerminal =
-              normalizedApi === "failed" || normalizedApi === "completed";
+            const mappedStatus = mapApiStatusToExecutionUiStatus(api);
+            const execIsTerminal =
+              exec.status === "completed" ||
+              exec.status === "failed" ||
+              exec.status === "cancelled";
+            const apiLooksStillRunning = mappedStatus === "running";
             const nextStatus =
-              normalizedApi !== null
-                ? apiTerminal
-                  ? normalizedApi
-                  : exec.status
-                : exec.status;
-
+              execIsTerminal === true && apiLooksStillRunning === true
+                ? exec.status
+                : mappedStatus !== null && mappedStatus !== void 0
+                  ? mappedStatus
+                  : exec.status;
             const apiError =
               api?.error != null && String(api.error).trim() !== ""
                 ? String(api.error)
@@ -256,7 +259,7 @@ class ExecutionStateManager {
               nodes: nextNodes,
               completedAt: nextCompletedAt,
               error:
-                nextStatus === "completed"
+                nextStatus === "completed" || nextStatus === "cancelled"
                   ? undefined
                   : nextStatus === "failed"
                     ? apiError !== undefined

@@ -283,6 +283,24 @@ describe("ExecutionStateManager", () => {
       expect(result[0].executions[0].status).toBe("completed");
       expect(result[0].executions[0].completedAt).toBeDefined();
     });
+    it("ignores WebSocket transport status strings (same tabs ref)", () => {
+      const exec = {
+        id: "exec-1",
+        status: "running",
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      };
+      const tabs = [createMockTab("workflow-1", [exec])];
+      const result = manager.handleExecutionStatusUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "connected",
+      );
+      expect(result).toBe(tabs);
+      expect(result[0].executions[0].status).toBe("running");
+    });
     it("should set completedAt for completed status", () => {
       const exec = {
         id: "exec-1",

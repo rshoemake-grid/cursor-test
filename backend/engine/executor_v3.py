@@ -196,10 +196,21 @@ class WorkflowExecutorV3:
                 await self._broadcaster.log("INFO", None, f"Breaking: no parallel batch, no in progress, and queue is empty")
                 break
             
-            # If queue still has items but parallel_batch is empty, continue to next iteration
-            if not parallel_batch and queue:
-                await self._broadcaster.log("INFO", None, f"Queue has items but parallel batch empty - continuing to next iteration")
-                continue
+            # Queued nodes exist but none are runnable (e.g. dependency cycle or orphaned
+            # edges). Previously this path used `continue` without yielding, busy-looping
+            # forever and leaving executions stuck in RUNNING with no progress.
+            if not parallel_batch and queue and not in_progress:
+                pending = ", ".join(queue)
+                msg = (
+                    "Workflow cannot proceed: queued nodes have unmet dependencies "
+                    f"(queued: [{pending}]). Check for cycles, broken edges, or condition "
+                    "branches that never connect."
+                )
+                await self._broadcaster.log("ERROR", None, msg)
+                self.execution_state.status = ExecutionStatus.FAILED
+                self.execution_state.error = msg
+                self.execution_state.completed_at = datetime.now(timezone.utc)
+                return
             
             # Execute parallel batch
             if parallel_batch:

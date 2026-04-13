@@ -20,6 +20,7 @@ import {
   WS_STATUS,
   WS_CLOSE_REASONS,
   WS_RECONNECT,
+  WS_CLIENT_PING_INTERVAL_MS,
 } from "./websocketConstants";
 import { extractApiErrorMessage } from "./apiUtils";
 import {
@@ -41,6 +42,7 @@ class WebSocketConnectionManager {
     __publicField(this, "lastKnownStatus");
     __publicField(this, "isConnectedState", false);
     __publicField(this, "reconnectionStrategy");
+    __publicField(this, "clientPingInterval", null);
     this.lastKnownStatus = config.executionStatus;
     this.reconnectionStrategy =
       config.reconnectionStrategy ?? new ExponentialBackoffStrategy();
@@ -62,11 +64,7 @@ class WebSocketConnectionManager {
           this.config.logger.debug(
             `[WebSocket] Closing connection - execution ${this.config.executionId} is ${status}`,
           );
-          this.ws.close(
-            WS_CLOSE_CODES.NORMAL_CLOSURE,
-            WS_CLOSE_REASONS.EXECUTION_COMPLETED,
-          );
-          this.ws = null;
+          this.close(WS_CLOSE_REASONS.EXECUTION_COMPLETED);
         }
         this.isConnectedState = false;
         const hasPending =
@@ -103,6 +101,16 @@ class WebSocketConnectionManager {
     }
     this.close();
     const authToken = this.config.getAuthToken?.() ?? null;
+    const hasTokenGetter = typeof this.config.getAuthToken === "function";
+    if (
+      hasTokenGetter === true &&
+      (authToken === null || authToken === "")
+    ) {
+      this.config.logger.debug(
+        "[WebSocket] Skipping connect: access token not available yet",
+      );
+      return;
+    }
     const wsUrl = buildWebSocketUrl(
       this.config.executionId,
       this.config.windowLocation,
@@ -132,6 +140,19 @@ class WebSocketConnectionManager {
       );
       this.isConnectedState = true;
       this.reconnectAttempts = 0;
+      if (this.clientPingInterval != null) {
+        clearInterval(this.clientPingInterval);
+        this.clientPingInterval = null;
+      }
+      this.clientPingInterval = setInterval(() => {
+        try {
+          if (this.ws === ws && ws.readyState === WebSocket.OPEN) {
+            ws.send("ping");
+          }
+        } catch (_e) {
+          /* ignore */
+        }
+      }, WS_CLIENT_PING_INTERVAL_MS);
       callbacks.onStatus?.(WS_STATUS.CONNECTED);
     };
     ws.onmessage = (event) => {
@@ -166,6 +187,10 @@ class WebSocketConnectionManager {
       callbacks.onStatus?.(WS_STATUS.ERROR);
     };
     ws.onclose = (event) => {
+      if (this.clientPingInterval != null) {
+        clearInterval(this.clientPingInterval);
+        this.clientPingInterval = null;
+      }
       const reason = getCloseReason(event);
       this.config.logger.debug(
         `[WebSocket] Disconnected from execution ${this.config.executionId}`,
@@ -236,6 +261,10 @@ class WebSocketConnectionManager {
    * Single Responsibility: Only closes connection
    */
   close(reason) {
+    if (this.clientPingInterval != null) {
+      clearInterval(this.clientPingInterval);
+      this.clientPingInterval = null;
+    }
     const hasPending = hasPendingReconnection(this.reconnectTimeout) === true;
     if (hasPending === true) {
       clearTimeout(this.reconnectTimeout);
@@ -243,8 +272,32 @@ class WebSocketConnectionManager {
     }
     const hasWebSocket = this.ws !== null && this.ws !== void 0;
     if (hasWebSocket === true) {
-      this.ws.close(WS_CLOSE_CODES.NORMAL_CLOSURE, reason);
+      const socket = this.ws;
       this.ws = null;
+      try {
+        const rs = socket.readyState;
+        if (rs === WebSocket.OPEN) {
+          socket.close(WS_CLOSE_CODES.NORMAL_CLOSURE, reason);
+        } else if (rs === WebSocket.CONNECTING) {
+          // Closing a CONNECTING socket synchronously makes Chrome log
+          // "WebSocket is closed before the connection is established" (benign but noisy).
+          // Supersede: strip handlers, then close after OPEN (do not run prior onopen — this
+          // socket is abandoned and must not flip connection state or reconnect logic).
+          const code = WS_CLOSE_CODES.NORMAL_CLOSURE;
+          socket.onmessage = null;
+          socket.onerror = null;
+          socket.onopen = () => {
+            try {
+              socket.close(code, reason);
+            } catch (_e) {
+              /* ignore */
+            }
+          };
+          socket.onclose = () => {};
+        }
+      } catch (_e) {
+        /* ignore */
+      }
     }
     this.isConnectedState = false;
   }

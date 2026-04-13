@@ -2,7 +2,12 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from ...models.schemas import ExecutionState, ExecutionLogEntry, NodeState
+from ...models.schemas import (
+    ExecutionState,
+    ExecutionLogEntry,
+    ExecutionStatus,
+    NodeState,
+)
 from ...websocket.manager import manager as ws_manager
 
 
@@ -67,6 +72,10 @@ class ExecutionBroadcaster:
             err = self.execution_state.error
             if err is not None and str(err).strip():
                 payload["error"] = str(err)
+            elif self.execution_state.status == ExecutionStatus.FAILED:
+                payload["error"] = (
+                    "Execution failed (no error message was recorded)."
+                )
             await ws_manager.broadcast_completion(self.execution_id, payload)
 
     async def broadcast_error(self, error: str) -> None:

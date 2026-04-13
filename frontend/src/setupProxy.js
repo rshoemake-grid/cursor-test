@@ -52,10 +52,13 @@ module.exports = function setupProxy(app) {
     }),
   );
 
+  // WebSocket: target must be the API *origin* only. A target like `${origin}/ws`
+  // makes node-http-proxy concatenate paths and produce `/ws/ws/executions/...`,
+  // which breaks the upgrade (browser sees code 1006, abnormal closure).
   app.use(
     "/ws",
-    createProxyMiddleware({
-      target: `${origin}/ws`,
+    legacyCreateProxyMiddleware({
+      target: origin,
       changeOrigin: true,
       ws: true,
       onError: makeProxyErrorHandler(origin, "/ws"),

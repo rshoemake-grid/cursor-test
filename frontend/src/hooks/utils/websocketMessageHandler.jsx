@@ -1,4 +1,5 @@
 import { logicalOr } from "./logicalOr";
+import { formatWebSocketExecutionErrorPayload } from "./wsExecutionCompletion";
 function handleWebSocketMessage(message, options) {
   const { onLog, onStatus, onNodeUpdate, onCompletion, onError } = options;
   switch (message.type) {
@@ -26,8 +27,8 @@ function handleWebSocketMessage(message, options) {
       }
       break;
     case "error":
-      if (message.error && onError) {
-        onError(message.error);
+      if (onError) {
+        onError(formatWebSocketExecutionErrorPayload(message.error));
       }
       break;
   }

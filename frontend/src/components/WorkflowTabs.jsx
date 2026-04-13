@@ -217,14 +217,13 @@ function WorkflowTabs({
               tabName: activeTab.name,
               tabIsUnsaved: activeTab.isUnsaved,
             }}
-            workflowTabs={tabs
-              .filter((tab) => tab.workflowId !== null)
-              .map((tab) => ({
-                workflowId: tab.workflowId,
-                workflowName: tab.name,
-                executions: tab.executions,
-                activeExecutionId: tab.activeExecutionId,
-              }))}
+            workflowTabs={tabs.map((tab) => ({
+              tabId: tab.id,
+              workflowId: tab.workflowId,
+              workflowName: tab.name,
+              executions: tab.executions,
+              activeExecutionId: tab.activeExecutionId,
+            }))}
             callbacks={{
               onExecutionStart: handleExecutionStart,
               onWorkflowSaved: (workflowId, name) =>

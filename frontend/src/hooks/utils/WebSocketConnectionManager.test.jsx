@@ -12,7 +12,11 @@ var __publicField = (obj, key, value) =>
   __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import { act } from "@testing-library/react";
 import { WebSocketConnectionManager } from "./WebSocketConnectionManager";
-import { WS_CLOSE_CODES, EXECUTION_STATUS } from "./websocketConstants";
+import {
+  WS_CLOSE_CODES,
+  EXECUTION_STATUS,
+  WS_CLIENT_PING_INTERVAL_MS,
+} from "./websocketConstants";
 const _MockWebSocket = class _MockWebSocket {
   constructor(url) {
     __publicField(this, "readyState", _MockWebSocket.CONNECTING);
@@ -269,6 +273,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         jest.advanceTimersByTime(20);
       });
       const ws = manager.ws;
+      ws.readyState = MockWebSocket.OPEN;
       const closeSpy = jest.spyOn(ws, "close");
       manager.updateStatus(EXECUTION_STATUS.COMPLETED);
       expect(closeSpy).toHaveBeenCalledWith(
@@ -359,6 +364,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
       const ws = manager.ws;
       expect(ws).not.toBeNull();
       expect(ws).not.toBeUndefined();
+      ws.readyState = MockWebSocket.OPEN;
       const closeSpy = jest.spyOn(ws, "close");
       manager.close();
       expect(closeSpy).toHaveBeenCalledWith(
@@ -380,6 +386,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         jest.advanceTimersByTime(20);
       });
       const ws = manager.ws;
+      ws.readyState = MockWebSocket.OPEN;
       const closeSpy = jest.spyOn(ws, "close");
       manager.close("Test reason");
       expect(closeSpy).toHaveBeenCalledWith(
@@ -426,6 +433,25 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
       expect(manager.ws).toBeNull();
       manager.close();
       expect(manager.ws).toBeNull();
+    });
+    it("defers close() while CONNECTING until onopen (no synchronous socket.close)", () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: "exec-123",
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: "ws:", host: "localhost:8000" },
+        logger: mockLogger,
+      });
+      manager.connect(callbacks);
+      const ws = manager.ws;
+      expect(ws.readyState).toBe(MockWebSocket.CONNECTING);
+      const closeSpy = jest.spyOn(ws, "close");
+      manager.close();
+      expect(closeSpy).not.toHaveBeenCalled();
+      expect(manager.ws).toBeNull();
+      ws.readyState = MockWebSocket.OPEN;
+      ws.onopen(new Event("open"));
+      expect(closeSpy).toHaveBeenCalled();
     });
   });
   describe("isConnected Getter - Explicit Boolean Checks", () => {
@@ -581,6 +607,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         jest.advanceTimersByTime(20);
       });
       const ws = manager.ws;
+      ws.readyState = MockWebSocket.OPEN;
       const closeSpy = jest.spyOn(ws, "close");
       manager.updateStatus(EXECUTION_STATUS.COMPLETED);
       expect(closeSpy).toHaveBeenCalled();
@@ -615,6 +642,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         jest.advanceTimersByTime(20);
       });
       const ws = manager.ws;
+      ws.readyState = MockWebSocket.OPEN;
       const closeSpy = jest.spyOn(ws, "close");
       manager.updateStatus(EXECUTION_STATUS.COMPLETED);
       expect(closeSpy).toHaveBeenCalled();
@@ -651,6 +679,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
       const ws = manager.ws;
       expect(ws).not.toBeNull();
       expect(ws).not.toBeUndefined();
+      ws.readyState = MockWebSocket.OPEN;
       const closeSpy = jest.spyOn(ws, "close");
       manager.updateStatus(EXECUTION_STATUS.COMPLETED);
       expect(closeSpy).toHaveBeenCalled();
@@ -703,6 +732,39 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
       expect(manager.reconnectTimeout).toBeNull();
       manager.updateStatus(EXECUTION_STATUS.COMPLETED);
       expect(manager.reconnectTimeout).toBeNull();
+    });
+  });
+  describe("Client keepalive ping", () => {
+    it("sends literal ping after interval and stops after close", () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: "exec-123",
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: "ws:", host: "localhost:8000" },
+        logger: mockLogger,
+      });
+      manager.connect(callbacks);
+      act(() => {
+        jest.advanceTimersByTime(20);
+      });
+      const ws = manager.ws;
+      const sendSpy = jest.spyOn(ws, "send");
+      ws.readyState = MockWebSocket.OPEN;
+      ws.onopen(new Event("open"));
+      act(() => {
+        jest.advanceTimersByTime(WS_CLIENT_PING_INTERVAL_MS - 1);
+      });
+      expect(sendSpy).not.toHaveBeenCalled();
+      act(() => {
+        jest.advanceTimersByTime(1);
+      });
+      expect(sendSpy).toHaveBeenCalledWith("ping");
+      sendSpy.mockClear();
+      manager.close();
+      act(() => {
+        jest.advanceTimersByTime(WS_CLIENT_PING_INTERVAL_MS);
+      });
+      expect(sendSpy).not.toHaveBeenCalled();
     });
   });
 });

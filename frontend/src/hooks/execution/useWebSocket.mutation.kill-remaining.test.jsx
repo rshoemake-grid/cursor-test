@@ -19,6 +19,9 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     jest.runOnlyPendingTimers();
     wsInstances.splice(0, wsInstances.length);
     jest.useRealTimers();
+    if (mockWebSocketWrapper) {
+      global.WebSocket = mockWebSocketWrapper;
+    }
   });
   describe("connect catch block edge cases", () => {
     it("should verify exact error instanceof Error ? error.message : fallback - error is Error instance", async () => {
@@ -156,20 +159,20 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         }
       };
       const { rerender } = renderHook(
-        ({ onError: onError2 }) =>
+        ({ onError: onError2, executionId }) =>
           useWebSocket({
-            executionId: "exec-1",
+            executionId,
             executionStatus: "running",
             onError: onError2,
           }),
         {
-          initialProps: { onError: void 0 },
+          initialProps: { onError: void 0, executionId: "exec-1" },
         },
       );
       await advanceTimersByTime(100);
       expect(logger.error).toHaveBeenCalled();
       const onError = jest.fn();
-      rerender({ onError });
+      rerender({ onError, executionId: "exec-2" });
       await advanceTimersByTime(100);
       expect(onError).toHaveBeenCalled();
       global.WebSocket = OriginalWebSocket;
@@ -1782,6 +1785,7 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         );
         await advanceTimersByTime(100);
         expect(onError).toHaveBeenCalledWith("String error");
+        global.WebSocket = OriginalWebSocket;
       });
     });
     describe("node_id extraction logical OR", () => {

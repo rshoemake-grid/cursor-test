@@ -63,13 +63,39 @@ describe("buildWebSocketUrl", () => {
     const url = buildWebSocketUrl("exec-123-abc_xyz", windowLocation);
     expect(url).toBe("wss://example.com/ws/executions/exec-123-abc_xyz");
   });
-  it("should handle different port numbers", () => {
+  it("should use API port for CRA dev host (localhost:3000 → :8000)", () => {
     const windowLocation = {
       protocol: "http:",
       host: "localhost:3000",
     };
     const url = buildWebSocketUrl("exec-123", windowLocation);
-    expect(url).toBe("ws://localhost:3000/ws/executions/exec-123");
+    expect(url).toBe("ws://localhost:8000/ws/executions/exec-123");
+  });
+  it("should use API port for CRA dev host (127.0.0.1:3000 → :8000)", () => {
+    const windowLocation = {
+      protocol: "http:",
+      host: "127.0.0.1:3000",
+    };
+    const url = buildWebSocketUrl("exec-456", windowLocation);
+    expect(url).toBe("ws://127.0.0.1:8000/ws/executions/exec-456");
+  });
+  it("should honor REACT_APP_WS_HOST when set", () => {
+    const prev = process.env.REACT_APP_WS_HOST;
+    process.env.REACT_APP_WS_HOST = "api.test:9000";
+    try {
+      const windowLocation = {
+        protocol: "http:",
+        host: "localhost:3000",
+      };
+      const url = buildWebSocketUrl("exec-123", windowLocation);
+      expect(url).toBe("ws://api.test:9000/ws/executions/exec-123");
+    } finally {
+      if (prev === undefined) {
+        delete process.env.REACT_APP_WS_HOST;
+      } else {
+        process.env.REACT_APP_WS_HOST = prev;
+      }
+    }
   });
   it("should handle custom domains", () => {
     const windowLocation = {
