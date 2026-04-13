@@ -156,8 +156,23 @@ class WorkflowExecutorV3:
         await self._broadcaster.log("INFO", None, f"In-degree map: {in_degree}")
         
         queue = start_nodes.copy()
-        
+        # Failsafe: a logic bug could spin the scheduler forever; cap iterations.
+        max_scheduler_iterations = max(50_000, len(node_map) * 2_000)
+        scheduler_iteration = 0
+
         while queue or in_progress:
+            scheduler_iteration += 1
+            if scheduler_iteration > max_scheduler_iterations:
+                msg = (
+                    "Workflow executor exceeded the maximum scheduling iterations "
+                    f"({max_scheduler_iterations}). This usually indicates an internal "
+                    "executor bug; report the workflow structure and logs."
+                )
+                await self._broadcaster.log("ERROR", None, msg)
+                self.execution_state.status = ExecutionStatus.FAILED
+                self.execution_state.error = msg
+                self.execution_state.completed_at = datetime.now(timezone.utc)
+                return
             await self._broadcaster.log("INFO", None, f"Queue: {queue}, In Progress: {in_progress}, Completed: {completed}")
             
             # Collect nodes that can be executed in parallel

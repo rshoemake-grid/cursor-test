@@ -2,6 +2,8 @@
 Execution Orchestrator Service - SRP Refactoring
 Extracts workflow execution orchestration logic from routes into a service layer.
 """
+import asyncio
+import os
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, TYPE_CHECKING
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -374,6 +376,32 @@ class ExecutionOrchestrator:
         if completed_at is not None:
             db_exec.completed_at = completed_at
     
+    async def _persist_running_execution_snapshot_loop(
+        self,
+        execution_id: str,
+        executor: WorkflowExecutor,
+        interval_sec: float,
+    ) -> None:
+        """
+        Periodically write execution_state to the DB while status is RUNNING.
+
+        Without this, GET /executions/{id} stays empty until the workflow finishes,
+        so the UI looks hung during long agent/LLM calls even though work is ongoing.
+        """
+        while True:
+            await asyncio.sleep(interval_sec)
+            state_obj = getattr(executor, "execution_state", None)
+            if state_obj is None:
+                continue
+            if getattr(state_obj, "status", None) != ExecutionStatus.RUNNING:
+                continue
+            await self.update_execution_status(
+                execution_id=execution_id,
+                status=ExecutionStatus.RUNNING,
+                state=state_obj.model_dump(mode="json"),
+                completed_at=None,
+            )
+
     async def run_execution_in_background(
         self,
         executor: WorkflowExecutor,
@@ -390,6 +418,18 @@ class ExecutionOrchestrator:
             execution_id: Execution identifier
             inputs: Execution inputs
         """
+        persist_raw = os.environ.get("EXECUTION_STATE_PERSIST_INTERVAL_SEC", "10")
+        try:
+            persist_interval = float(persist_raw)
+        except ValueError:
+            persist_interval = 10.0
+        heartbeat: Optional[asyncio.Task] = None
+        if persist_interval > 0:
+            heartbeat = asyncio.create_task(
+                self._persist_running_execution_snapshot_loop(
+                    execution_id, executor, persist_interval
+                )
+            )
         try:
             logger.info(f"Starting background execution for execution_id={execution_id}")
             execution_state = await executor.execute(inputs)
@@ -406,6 +446,13 @@ class ExecutionOrchestrator:
             logger.error(f"Background execution {execution_id} failed: {e}", exc_info=True)
             # Update execution status to failed
             await self._handle_execution_failure(execution_id)
+        finally:
+            if heartbeat is not None:
+                heartbeat.cancel()
+                try:
+                    await heartbeat
+                except asyncio.CancelledError:
+                    pass
     
     async def _handle_execution_failure(self, execution_id: str) -> None:
         """
