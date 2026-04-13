@@ -74,9 +74,6 @@ function useExecutionPolling({
         );
         runningExecutions.splice(50);
       }
-      injectedLogger.debug(
-        `[WorkflowTabs] Polling ${runningExecutions.length} running execution(s) (fallback)...`,
-      );
       const updates = await Promise.all(
         runningExecutions.map(async (exec) => {
           try {
