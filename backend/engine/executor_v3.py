@@ -1,7 +1,8 @@
-import uuid
 import asyncio
+import os
+import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Awaitable, TypeVar
 
 from ..models.schemas import (
     WorkflowDefinition,
@@ -23,6 +24,41 @@ from .execution.execution_broadcaster import ExecutionBroadcaster
 from .nodes.node_executor_registry import NodeExecutorRegistry
 
 logger = get_logger(__name__)
+
+_T = TypeVar("_T")
+
+
+def node_execution_timeout_seconds() -> Optional[float]:
+    """
+    Wall-clock limit for one node's executor await (LLM, storage I/O, etc.).
+    Set NODE_EXECUTION_TIMEOUT_SEC=0 to disable. Invalid values fall back to default.
+    """
+    raw = os.environ.get("NODE_EXECUTION_TIMEOUT_SEC", "900")
+    try:
+        value = float(raw)
+    except ValueError:
+        return 900.0
+    if value <= 0:
+        return None
+    return value
+
+
+async def await_with_node_timeout(
+    coro: Awaitable[_T],
+    *,
+    node_id: str,
+    timeout: Optional[float],
+) -> _T:
+    if timeout is None:
+        return await coro
+    try:
+        return await asyncio.wait_for(coro, timeout=timeout)
+    except asyncio.TimeoutError as exc:
+        raise TimeoutError(
+            f"Node '{node_id}' exceeded NODE_EXECUTION_TIMEOUT_SEC "
+            f"({int(timeout)}s). Increase the limit or set "
+            "NODE_EXECUTION_TIMEOUT_SEC=0 to disable."
+        ) from exc
 
 
 class WorkflowExecutorV3:
@@ -55,7 +91,8 @@ class WorkflowExecutorV3:
         self.user_id = user_id
         self.provider_resolver = provider_resolver
         self.settings_service = settings_service
-        
+        self._node_timeout_sec: Optional[float] = None
+
     async def execute(self, inputs: Dict[str, Any]) -> ExecutionState:
         """
         Execute the workflow with given inputs
@@ -86,6 +123,7 @@ class WorkflowExecutorV3:
         self._broadcaster = ExecutionBroadcaster(
             self.execution_id, self.execution_state, self.stream_updates
         )
+        self._node_timeout_sec = node_execution_timeout_seconds()
         await self._broadcaster.log("INFO", None, "Workflow execution started (V3 - WebSocket Streaming)")
         await self._broadcaster.broadcast_status("running")
 
@@ -295,7 +333,11 @@ class WorkflowExecutorV3:
             executor_fn = NodeExecutorRegistry.get(node.type)
 
             if NodeExecutorRegistry.is_storage(node.type) and executor_fn:
-                output = await executor_fn(self, node)
+                output = await await_with_node_timeout(
+                    executor_fn(self, node),
+                    node_id=node.id,
+                    timeout=self._node_timeout_sec,
+                )
             else:
                 # Prepare inputs for non-storage nodes
                 node_inputs = prepare_node_inputs(
@@ -335,10 +377,19 @@ class WorkflowExecutorV3:
                 await self._broadcaster.log("INFO", node.id, f"Node inputs: {list(node_inputs.keys())}")
 
                 if executor_fn:
-                    output = await executor_fn(self, node, node_inputs)
+                    output = await await_with_node_timeout(
+                        executor_fn(self, node, node_inputs),
+                        node_id=node.id,
+                        timeout=self._node_timeout_sec,
+                    )
                 else:
                     from .nodes.executors import execute_passthrough
-                    output = await execute_passthrough(self, node, node_inputs)
+
+                    output = await await_with_node_timeout(
+                        execute_passthrough(self, node, node_inputs),
+                        node_id=node.id,
+                        timeout=self._node_timeout_sec,
+                    )
             
             # Update node state
             node_state.status = ExecutionStatus.COMPLETED
