@@ -28,20 +28,23 @@ public class ConditionNodeExecutor implements NodeExecutor {
     public Object execute(Node node, Map<String, Object> inputs, ExecutionState state,
                           NodeExecutionContext ctx) {
         ConditionConfig cfg = node.getConditionConfig();
+        if (cfg == null) {
+            throw new IllegalStateException("Node " + node.getId() + " requires condition_config");
+        }
         String field = ObjectUtils.safeGet(cfg, ConditionConfig::getField);
-        String expectValue = ObjectUtils.safeGet(cfg, ConditionConfig::getValue);
-
-        if (field == null || field.isEmpty()) {
-            return Map.of(BRANCH_KEY, WorkflowConstants.BRANCH_TRUE);
+        if (field == null || field.isBlank()) {
+            throw new IllegalStateException("Condition node " + node.getId() + " requires 'field' in condition_config");
         }
 
-        Object actual = inputs.get(field);
-        if (actual == null) {
-            actual = inputs.get("data");
-        }
-        String actualStr = ObjectUtils.toStringOrDefault(actual, "");
-        String expectStr = ObjectUtils.orDefault(expectValue, "");
-        boolean match = actualStr.equals(expectStr);
-        return Map.of(BRANCH_KEY, match ? WorkflowConstants.BRANCH_TRUE : WorkflowConstants.BRANCH_FALSE);
+        Object fieldValue = ConditionFieldResolver.resolve(inputs, field);
+        String conditionType = ObjectUtils.orDefault(cfg.getConditionType(), "equals");
+        String compareValue = ObjectUtils.orDefault(cfg.getValue(), "");
+        boolean result = ConditionEvaluationUtils.evaluate(conditionType, fieldValue, compareValue, cfg.getCustomExpression());
+        return Map.of(
+                BRANCH_KEY, result ? WorkflowConstants.BRANCH_TRUE : WorkflowConstants.BRANCH_FALSE,
+                "condition_result", result,
+                "field_value", fieldValue == null ? "" : fieldValue,
+                "evaluated_value", compareValue
+        );
     }
 }

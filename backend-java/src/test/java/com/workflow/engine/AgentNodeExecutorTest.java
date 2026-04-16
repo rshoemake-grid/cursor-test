@@ -1,0 +1,207 @@
+package com.workflow.engine;
+
+import com.workflow.dto.AgentConfig;
+import com.workflow.dto.Node;
+import com.workflow.dto.NodeType;
+import com.workflow.entity.Settings;
+import com.workflow.repository.SettingsRepository;
+import com.workflow.service.SettingsService;
+import com.workflow.util.ErrorMessages;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.env.MockEnvironment;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class AgentNodeExecutorTest {
+
+    @Mock
+    private SettingsRepository settingsRepository;
+
+    private SettingsService settingsService;
+
+    @BeforeEach
+    void setUp() {
+        settingsService = new SettingsService(settingsRepository);
+    }
+
+    @Test
+    void execute_routesAnthropicWhenProviderResolved() {
+        MockEnvironment env = new MockEnvironment().withProperty("ANTHROPIC_API_KEY", "fallback-ant");
+        CapturingLlmClient client = new CapturingLlmClient();
+        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, settingsService);
+
+        Map<String, Object> anthropic = new HashMap<>();
+        anthropic.put("type", "anthropic");
+        anthropic.put("enabled", true);
+        anthropic.put("apiKey", "sk-ant");
+        anthropic.put("baseUrl", "https://api.anthropic.com/v1");
+        anthropic.put("models", List.of("claude-3"));
+        when(settingsRepository.findById("u1"))
+                .thenReturn(Optional.of(settingsRow("u1", Map.of("providers", List.of(anthropic)))));
+
+        Node node = agentNode("claude-3", "Be helpful", "hi");
+        Map<String, Object> ctxLlm = new HashMap<>();
+        ctxLlm.put("type", "openai");
+        ctxLlm.put("api_key", "ignored");
+        ctxLlm.put("base_url", "https://api.openai.com/v1");
+        ctxLlm.put("model", "gpt-4o-mini");
+
+        NodeExecutionContext ctx = new NodeExecutionContext(ctxLlm, "u1", List.of(), Map.of());
+
+        Object out = exec.execute(node, Map.of("message", "user text"), new ExecutionState(), ctx);
+
+        assertEquals("anthropic-out", out);
+        assertEquals("https://api.anthropic.com/v1", client.anthropicBase);
+        assertEquals("sk-ant", client.anthropicKey);
+        assertEquals("claude-3", client.anthropicModel);
+        assertEquals("Be helpful", client.anthropicSystem);
+        assertEquals("user text", client.anthropicUser);
+    }
+
+    @Test
+    void execute_routesGeminiWhenProviderResolved() {
+        MockEnvironment env = new MockEnvironment().withProperty("GEMINI_API_KEY", "fallback-g");
+        CapturingLlmClient client = new CapturingLlmClient();
+        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, settingsService);
+
+        Map<String, Object> gemini = new HashMap<>();
+        gemini.put("type", "gemini");
+        gemini.put("enabled", true);
+        gemini.put("apiKey", "g-real");
+        gemini.put("baseUrl", "https://generativelanguage.googleapis.com/v1beta");
+        gemini.put("models", List.of("gemini-pro"));
+        when(settingsRepository.findById("u1"))
+                .thenReturn(Optional.of(settingsRow("u1", Map.of("providers", List.of(gemini)))));
+
+        Node node = agentNode("gemini-pro", "sys", "n1");
+        Map<String, Object> ctxLlm = new HashMap<>();
+        ctxLlm.put("type", "openai");
+        ctxLlm.put("api_key", "sk-openai");
+        ctxLlm.put("base_url", "https://api.openai.com/v1");
+        ctxLlm.put("model", "gpt-4o-mini");
+
+        NodeExecutionContext ctx = new NodeExecutionContext(ctxLlm, "u1", List.of(), Map.of());
+
+        Object out = exec.execute(node, Map.of("message", "gem user"), new ExecutionState(), ctx);
+
+        assertEquals("gemini-out", out);
+        assertEquals("https://generativelanguage.googleapis.com/v1beta", client.geminiBase);
+        assertEquals("g-real", client.geminiKey);
+        assertEquals("gemini-pro", client.geminiModel);
+    }
+
+    @Test
+    void execute_skipsSettingsLookupWhenUserIdNull() {
+        MockEnvironment env = new MockEnvironment();
+        CapturingLlmClient client = new CapturingLlmClient();
+        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, settingsService);
+
+        Node node = agentNode("gpt-4o-mini", "", "x");
+        Map<String, Object> ctxLlm = Map.of(
+                "type", "openai",
+                "api_key", "k",
+                "base_url", "https://api.openai.com/v1",
+                "model", "gpt-4o-mini");
+        NodeExecutionContext ctx = new NodeExecutionContext(ctxLlm, null, List.of(), Map.of());
+
+        exec.execute(node, Map.of("message", "m"), new ExecutionState(), ctx);
+
+        verify(settingsRepository, never()).findById(any());
+    }
+
+    @Test
+    void execute_throwsWhenLlmConfigEmpty() {
+        AgentNodeExecutor exec = new AgentNodeExecutor(new CapturingLlmClient(), new MockEnvironment(), null);
+        Node node = agentNode("m", "", "x");
+        NodeExecutionContext ctx = new NodeExecutionContext(Map.of(), "u", List.of(), Map.of());
+        IllegalStateException ex =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> exec.execute(node, Map.of(), new ExecutionState(), ctx));
+        assertEquals(ErrorMessages.LLM_CONFIG_REQUIRED_AGENT, ex.getMessage());
+    }
+
+    private static Settings settingsRow(String userId, Map<String, Object> data) {
+        Settings s = new Settings();
+        s.setUserId(userId);
+        s.setSettingsData(new HashMap<>(data));
+        return s;
+    }
+
+    private static Node agentNode(String model, String system, String id) {
+        Node n = new Node();
+        n.setId(id);
+        n.setType(NodeType.AGENT);
+        AgentConfig cfg = new AgentConfig();
+        cfg.setModel(model);
+        cfg.setSystemPrompt(system);
+        cfg.setMaxTokens(512);
+        cfg.setTemperature(0.5);
+        n.setAgentConfig(cfg);
+        return n;
+    }
+
+    private static final class CapturingLlmClient implements LlmApiClient {
+        String anthropicBase;
+        String anthropicKey;
+        String anthropicModel;
+        String anthropicSystem;
+        String anthropicUser;
+        String geminiBase;
+        String geminiKey;
+        String geminiModel;
+
+        @Override
+        public String chatCompletions(
+                String url, String apiKey, String model, List<Map<String, Object>> messages) {
+            return "openai-out";
+        }
+
+        @Override
+        public String chatAnthropic(
+                String baseUrl,
+                String apiKey,
+                String model,
+                String systemPrompt,
+                String userText,
+                int maxTokens,
+                double temperature) {
+            this.anthropicBase = baseUrl;
+            this.anthropicKey = apiKey;
+            this.anthropicModel = model;
+            this.anthropicSystem = systemPrompt;
+            this.anthropicUser = userText;
+            return "anthropic-out";
+        }
+
+        @Override
+        public String chatGemini(
+                String baseUrl,
+                String apiKey,
+                String model,
+                String systemPrompt,
+                String userText,
+                int maxOutputTokens,
+                double temperature) {
+            this.geminiBase = baseUrl;
+            this.geminiKey = apiKey;
+            this.geminiModel = model;
+            return "gemini-out";
+        }
+    }
+}

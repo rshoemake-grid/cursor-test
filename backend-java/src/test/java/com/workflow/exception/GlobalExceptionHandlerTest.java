@@ -38,6 +38,7 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(404, response.getStatusCode().value());
         assertNotNull(response.getBody());
+        assertEquals("Workflow not found: 123", response.getBody().get("detail"));
         assertTrue(response.getBody().containsKey("error"));
 
         @SuppressWarnings("unchecked")

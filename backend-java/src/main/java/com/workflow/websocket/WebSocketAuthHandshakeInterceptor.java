@@ -56,8 +56,8 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
             return false;
         }
 
-        if (!ownershipChecker.isExecutionOwner(executionId, userId)) {
-            log.warn("WebSocket handshake rejected: execution {} not found or not owned by user {}", executionId, userId);
+        if (!ownershipChecker.canOpenExecutionStream(executionId, userId)) {
+            log.warn("WebSocket handshake rejected: execution {} not found or not stream-authorized for user {}", executionId, userId);
             return false;
         }
 

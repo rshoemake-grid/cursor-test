@@ -4,7 +4,9 @@ import com.workflow.dto.ExecutionStatus;
 import com.workflow.entity.Execution;
 import com.workflow.exception.ExecutionNotFoundException;
 import com.workflow.exception.ForbiddenException;
+import com.workflow.entity.Workflow;
 import com.workflow.repository.ExecutionRepository;
+import com.workflow.repository.WorkflowRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +30,9 @@ class ExecutionServiceTest {
 
     @Mock
     private ExecutionRepository executionRepository;
+
+    @Mock
+    private WorkflowRepository workflowRepository;
 
     @InjectMocks
     private ExecutionService executionService;
@@ -196,5 +201,68 @@ class ExecutionServiceTest {
                 executionService.cancelExecution(EXEC_ID, USER_ID));
         verify(executionRepository).findById(EXEC_ID);
         verify(executionRepository, never()).save(any());
+    }
+
+    @Test
+    void updateRunningExecutionSnapshot_setsStateAndKeepsRunningWithoutCompletedAt() {
+        execution.setCompletedAt(null);
+        when(executionRepository.findById(EXEC_ID)).thenReturn(Optional.of(execution));
+        when(executionRepository.save(any(Execution.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Map<String, Object> snap = new HashMap<>();
+        snap.put("status", ExecutionStatus.RUNNING.getValue());
+        snap.put("current_node", "agent-1");
+        snap.put("logs", List.of());
+
+        executionService.updateRunningExecutionSnapshot(EXEC_ID, snap);
+
+        assertEquals(ExecutionStatus.RUNNING.getValue(), execution.getStatus());
+        assertEquals("agent-1", execution.getState().get("current_node"));
+        assertNull(execution.getCompletedAt());
+        verify(executionRepository).save(execution);
+    }
+
+    @Test
+    void updateRunningExecutionSnapshot_missingExecution_isNoOp() {
+        when(executionRepository.findById(EXEC_ID)).thenReturn(Optional.empty());
+        executionService.updateRunningExecutionSnapshot(EXEC_ID, Map.of("status", "running"));
+        verify(executionRepository, never()).save(any());
+    }
+
+    @Test
+    void canOpenExecutionStream_whenExecutionUserMatches_returnsTrue() {
+        when(executionRepository.findById(EXEC_ID)).thenReturn(Optional.of(execution));
+        assertTrue(executionService.canOpenExecutionStream(EXEC_ID, USER_ID));
+        verify(workflowRepository, never()).findById(any());
+    }
+
+    @Test
+    void canOpenExecutionStream_whenExecutionUserNull_andWorkflowOwnerMatches_returnsTrue() {
+        execution.setUserId(null);
+        when(executionRepository.findById(EXEC_ID)).thenReturn(Optional.of(execution));
+        Workflow wf = new Workflow();
+        wf.setId(WORKFLOW_ID);
+        wf.setOwnerId(USER_ID);
+        when(workflowRepository.findById(WORKFLOW_ID)).thenReturn(Optional.of(wf));
+
+        assertTrue(executionService.canOpenExecutionStream(EXEC_ID, USER_ID));
+    }
+
+    @Test
+    void canOpenExecutionStream_whenExecutionUserNull_andWorkflowOwnerMismatch_returnsFalse() {
+        execution.setUserId(null);
+        when(executionRepository.findById(EXEC_ID)).thenReturn(Optional.of(execution));
+        Workflow wf = new Workflow();
+        wf.setId(WORKFLOW_ID);
+        wf.setOwnerId(OTHER_USER_ID);
+        when(workflowRepository.findById(WORKFLOW_ID)).thenReturn(Optional.of(wf));
+
+        assertFalse(executionService.canOpenExecutionStream(EXEC_ID, USER_ID));
+    }
+
+    @Test
+    void canOpenExecutionStream_nullUser_returnsFalse() {
+        assertFalse(executionService.canOpenExecutionStream(EXEC_ID, null));
+        verify(executionRepository, never()).findById(any());
     }
 }

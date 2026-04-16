@@ -60,7 +60,7 @@ class WorkflowServiceTest {
         // Manually create service instance since @InjectMocks doesn't work with manual construction
         TemplateConfig.TemplateOptions templateOptions = new TemplateConfig.TemplateOptions();
         workflowService = new WorkflowService(workflowRepository, workflowTemplateRepository, workflowMapper, ownershipService, templateOptions);
-        
+
         // Setup valid WorkflowCreate
         validWorkflowCreate = new WorkflowCreate();
         validWorkflowCreate.setName("Test Workflow");
@@ -98,6 +98,11 @@ class WorkflowServiceTest {
         workflowResponse.setVariables(Map.of("key", "value"));
         workflowResponse.setCreatedAt(LocalDateTime.now());
         workflowResponse.setUpdatedAt(LocalDateTime.now());
+    }
+
+    @Test
+    void workflowServiceImplementsChatChangesService() {
+        assertTrue(workflowService instanceof ChatChangesService);
     }
 
     @Test

@@ -110,9 +110,9 @@ class SecurityConfigIntegrationTest {
     }
 
     @Test
-    void importExport_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(get("/api/import-export/export/some-id"))
-                .andExpect(status().isUnauthorized());
+    void importExport_exportWithoutAuth_returns404WhenWorkflowMissing() throws Exception {
+        mockMvc.perform(get("/api/import-export/export/nonexistent-workflow-id"))
+                .andExpect(status().isNotFound());
     }
 
     @Test

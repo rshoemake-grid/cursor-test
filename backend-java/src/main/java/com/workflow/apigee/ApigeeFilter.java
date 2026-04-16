@@ -1,5 +1,7 @@
 package com.workflow.apigee;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.workflow.util.ErrorResponseBuilder;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,14 +23,20 @@ import java.util.UUID;
  * Mirrors Python backend Apigee middleware.
  */
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE - 1)  // Run before MetricsFilter to set request ID early
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class ApigeeFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(ApigeeFilter.class);
     private static final int DEFAULT_MAX_REQUEST_SIZE = 10 * 1024 * 1024;  // 10MB
 
+    private final ObjectMapper objectMapper;
+
     @Value("${apigee.max-request-size:" + DEFAULT_MAX_REQUEST_SIZE + "}")
     private long maxRequestSize;
+
+    public ApigeeFilter(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -51,15 +59,16 @@ public class ApigeeFilter extends OncePerRequestFilter {
                 try {
                     long size = Long.parseLong(contentLength.trim());
                     if (size > maxRequestSize) {
-                        response.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
-                        response.setContentType("application/json");
-                        response.setCharacterEncoding("UTF-8");
                         double sizeMb = maxRequestSize / (1024.0 * 1024.0);
-                        String body = String.format(
-                            "{\"error\":{\"code\":\"413\",\"message\":\"Request body too large. Maximum size: %.1fMB\",\"path\":\"%s\",\"timestamp\":\"%s\"}}",
-                            sizeMb, request.getRequestURI(), java.time.Instant.now().toString()
-                        );
-                        response.getWriter().write(body);
+                        String message = String.format(
+                                "Request body too large. Maximum size: %.1fMB", sizeMb);
+                        ErrorResponseBuilder.writeToServletResponse(
+                                response,
+                                objectMapper,
+                                "413",
+                                message,
+                                HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE,
+                                request.getRequestURI());
                         return;
                     }
                 } catch (NumberFormatException ignored) {

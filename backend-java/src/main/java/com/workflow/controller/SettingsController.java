@@ -59,13 +59,10 @@ public class SettingsController {
     }
 
     @PostMapping("/llm/test")
-    @Operation(summary = "Test LLM Connection", description = "Test LLM provider connection (S-H4: requires auth)")
+    @Operation(summary = "Test LLM Connection", description = "Test LLM provider connection (matches Python: no auth required)")
     public ResponseEntity<?> testLlmConnection(
             @RequestBody Map<String, Object> testRequest,
-            Authentication authentication,
             HttpServletRequest request) {
-        authenticationHelper.extractUserIdRequired(authentication);
-
         String type = (String) testRequest.get("type");
         String apiKey = LlmConfigUtils.getApiKey(testRequest);
         String baseUrl = LlmConfigUtils.getBaseUrlOrNull(testRequest);

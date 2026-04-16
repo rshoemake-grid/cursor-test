@@ -6,6 +6,7 @@ import com.workflow.dto.*;
 import com.workflow.entity.Workflow;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -109,6 +110,41 @@ public class WorkflowMapper {
             return objectMapper.convertValue(value, typeRef);
         } catch (Exception e) {
             return (T) value;
+        }
+    }
+
+    /**
+     * Nodes as maps for workflow-chat merge (preserves arbitrary JSON shape).
+     */
+    public List<Map<String, Object>> definitionNodesAsMaps(Map<String, Object> definition) {
+        return convertMapList(ObjectUtils.orEmptyMap(definition).get("nodes"));
+    }
+
+    /**
+     * Edges as maps for workflow-chat merge.
+     */
+    public List<Map<String, Object>> definitionEdgesAsMaps(Map<String, Object> definition) {
+        return convertMapList(ObjectUtils.orEmptyMap(definition).get("edges"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> convertMapList(Object raw) {
+        if (raw == null) {
+            return new ArrayList<>();
+        }
+        try {
+            return objectMapper.convertValue(raw, new TypeReference<List<Map<String, Object>>>() {});
+        } catch (Exception e) {
+            if (raw instanceof List<?> list) {
+                List<Map<String, Object>> out = new ArrayList<>();
+                for (Object o : list) {
+                    if (o instanceof Map) {
+                        out.add((Map<String, Object>) o);
+                    }
+                }
+                return out;
+            }
+            return new ArrayList<>();
         }
     }
 }

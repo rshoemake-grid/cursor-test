@@ -26,7 +26,7 @@ class WorkflowChatContextFormatterTest {
         agent.setName("Agent");
         agent.setPosition(Map.of("x", 200.0, "y", 0.0));
 
-        Edge edge = new Edge("e1", "start-1", "agent-1", null, null, null);
+        Edge edge = new Edge("e1", "start-1", "agent-1", null, null, null, null);
 
         String text = WorkflowChatContextFormatter.formatWorkflowForLlm(
                 "My Flow", "Desc", List.of(start, agent), List.of(edge));

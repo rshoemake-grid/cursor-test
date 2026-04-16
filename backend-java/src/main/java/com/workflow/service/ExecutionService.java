@@ -9,8 +9,10 @@ import com.workflow.util.OwnershipUtils;
 import com.workflow.util.JsonStateUtils;
 import com.workflow.util.PaginationUtils;
 import com.workflow.util.RepositoryUtils;
+import com.workflow.entity.Workflow;
 import com.workflow.exception.ExecutionNotFoundException;
 import com.workflow.repository.ExecutionRepository;
+import com.workflow.repository.WorkflowRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -31,9 +33,11 @@ public class ExecutionService implements ExecutionOwnershipChecker {
     private static final Logger log = LoggerFactory.getLogger(ExecutionService.class);
 
     private final ExecutionRepository executionRepository;
+    private final WorkflowRepository workflowRepository;
 
-    public ExecutionService(ExecutionRepository executionRepository) {
+    public ExecutionService(ExecutionRepository executionRepository, WorkflowRepository workflowRepository) {
         this.executionRepository = executionRepository;
+        this.workflowRepository = workflowRepository;
     }
 
     /**
@@ -140,6 +144,21 @@ public class ExecutionService implements ExecutionOwnershipChecker {
     }
 
     /**
+     * Periodic snapshot while execution is RUNNING (Python {@code _persist_running_execution_snapshot_loop}).
+     * Does not set {@code completedAt} so GET /executions shows live progress during long runs.
+     */
+    void updateRunningExecutionSnapshot(String executionId, Map<String, Object> state) {
+        Execution execution = executionRepository.findById(executionId).orElse(null);
+        if (execution == null) {
+            return;
+        }
+        execution.setStatus(ExecutionStatus.RUNNING.getValue());
+        execution.setState(state);
+        execution.setCompletedAt(null);
+        executionRepository.save(execution);
+    }
+
+    /**
      * Append log entry and update execution status. DRY: used by ExecutionOrchestratorService (failure) and cancelExecution.
      */
     public void appendLogAndUpdateExecutionState(String executionId, String userId, String level, String nodeId,
@@ -177,6 +196,33 @@ public class ExecutionService implements ExecutionOwnershipChecker {
     public boolean isExecutionOwner(String executionId, String userId) {
         Execution execution = executionRepository.findById(executionId).orElse(null);
         return execution != null && Objects.equals(userId, execution.getUserId());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public boolean canOpenExecutionStream(String executionId, String userId) {
+        if (userId == null) {
+            return false;
+        }
+        Execution execution = executionRepository.findById(executionId).orElse(null);
+        if (execution == null) {
+            return false;
+        }
+        if (execution.getUserId() != null) {
+            return Objects.equals(userId, execution.getUserId());
+        }
+        return isWorkflowOwnerForGuestExecution(execution.getWorkflowId(), userId);
+    }
+
+    private boolean isWorkflowOwnerForGuestExecution(String workflowId, String userId) {
+        if (workflowId == null) {
+            return false;
+        }
+        Optional<Workflow> wf = workflowRepository.findById(workflowId);
+        return wf.filter(w -> w.getOwnerId() != null && Objects.equals(userId, w.getOwnerId())).isPresent();
     }
 
     private void assertExecutionOwner(Execution execution, String userId) {

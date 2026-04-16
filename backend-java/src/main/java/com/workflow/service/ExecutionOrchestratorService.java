@@ -10,6 +10,7 @@ import com.workflow.util.ErrorMessages;
 import com.workflow.util.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,12 @@ public class ExecutionOrchestratorService {
     private final WorkflowService workflowService;
     private final SettingsService settingsService;
     private final WorkflowExecutor workflowExecutor;
+
+    /**
+     * Seconds between RUNNING state DB snapshots. {@code 0} disables (Python {@code EXECUTION_STATE_PERSIST_INTERVAL_SEC}).
+     */
+    @Value("${execution.state-persist-interval-sec:10}")
+    private double executionStatePersistIntervalSec;
 
     public ExecutionOrchestratorService(ExecutionCreationService executionCreationService,
                                        ExecutionService executionService,
@@ -72,23 +79,56 @@ public class ExecutionOrchestratorService {
     @Async
     public void runExecutionInBackground(String executionId, String workflowId, String userId,
                                          Map<String, Object> inputs) {
+        Thread snapshotThread = null;
+        if (executionStatePersistIntervalSec > 0) {
+            snapshotThread = new Thread(() -> persistRunningExecutionSnapshotLoop(executionId),
+                    "exec-state-snap-" + executionId);
+            snapshotThread.setDaemon(true);
+            snapshotThread.start();
+        }
         try {
             log.info("Starting background execution for {}", executionId);
 
-            // Simplified executor: process workflow and update state
-            Map<String, Object> state = executeWorkflowInternal(workflowId, userId, inputs);
+            Map<String, Object> state = executeWorkflowInternal(executionId, workflowId, userId, inputs);
             executionService.updateExecutionState(executionId, state);
         } catch (Exception e) {
             log.error("Background execution {} failed: {}", executionId, e.getMessage(), e);
             executionService.appendLogAndUpdateExecutionState(executionId, userId, ExecutionLogConstants.LOG_LEVEL_ERROR, null, ErrorMessages.EXECUTION_FAILED,
                     ExecutionStatus.FAILED.getValue(), ErrorMessages.EXECUTION_FAILED);
+        } finally {
+            if (snapshotThread != null) {
+                snapshotThread.interrupt();
+            }
         }
     }
 
-    private Map<String, Object> executeWorkflowInternal(String workflowId, String userId,
+    private void persistRunningExecutionSnapshotLoop(String executionId) {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                long sleepMs = (long) (executionStatePersistIntervalSec * 1000);
+                if (sleepMs <= 0) {
+                    sleepMs = 1;
+                }
+                Thread.sleep(sleepMs);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+            try {
+                Map<String, Object> snap = workflowExecutor.peekRunningStateSnapshot(executionId);
+                if (snap != null) {
+                    executionService.updateRunningExecutionSnapshot(executionId, snap);
+                }
+            } catch (Exception ex) {
+                log.debug("Execution snapshot persist skipped for {}: {}", executionId, ex.getMessage());
+            }
+        }
+    }
+
+    private Map<String, Object> executeWorkflowInternal(String executionId, String workflowId, String userId,
                                                         Map<String, Object> inputs) {
         var workflowResponse = workflowService.getWorkflow(workflowId, userId);
         var llmConfig = settingsService.getActiveLlmConfig(userId).orElse(Map.of());
-        return workflowExecutor.execute(workflowResponse, inputs, llmConfig, userId);
+        return workflowExecutor.execute(executionId, workflowResponse, inputs, llmConfig, userId, true);
     }
 }

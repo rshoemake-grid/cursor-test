@@ -36,9 +36,9 @@ public class ImportExportController {
     @GetMapping("/export/{workflowId}")
     @Operation(summary = "Export Workflow")
     public ResponseEntity<Map<String, Object>> exportWorkflow(@PathVariable String workflowId, Authentication authentication) {
-        String userId = authenticationHelper.extractUserIdRequired(authentication);
-        String exportedBy = authenticationHelper.exportedByOrDefault(authentication, userId);
-        var result = importExportService.exportWorkflowWithAuth(workflowId, userId, exportedBy);
+        String userId = authenticationHelper.extractUserIdNullable(authentication);
+        String exportedByUsername = authenticationHelper.extractUsernameNullable(authentication);
+        var result = importExportService.exportWorkflowOptionalUser(workflowId, userId, exportedByUsername);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDispositionUtils.attachmentFilename(result.filename()))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -48,7 +48,7 @@ public class ImportExportController {
     @PostMapping("/import")
     @Operation(summary = "Import Workflow from JSON")
     public ResponseEntity<WorkflowResponseV2> importWorkflow(@RequestBody Map<String, Object> body, Authentication authentication) {
-        String userId = authenticationHelper.extractUserIdRequired(authentication);
+        String userId = authenticationHelper.extractUserIdNullable(authentication);
         WorkflowResponseV2 result = importExportService.importWorkflow(body, userId);
         return ResponseEntity.status(201).body(result);
     }
@@ -56,7 +56,7 @@ public class ImportExportController {
     @PostMapping(value = "/import/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Import Workflow from File")
     public ResponseEntity<WorkflowResponseV2> importFile(@RequestParam("file") MultipartFile file, Authentication authentication) throws Exception {
-        String userId = authenticationHelper.extractUserIdRequired(authentication);
+        String userId = authenticationHelper.extractUserIdNullable(authentication);
         WorkflowResponseV2 result = importExportService.importFromFile(file, userId);
         return ResponseEntity.status(201).body(result);
     }

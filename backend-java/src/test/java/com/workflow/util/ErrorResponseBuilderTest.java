@@ -20,6 +20,7 @@ class ErrorResponseBuilderTest {
         assertNotNull(response.getBody());
 
         Map<String, Object> body = response.getBody();
+        assertEquals("Not found", body.get("detail"));
         assertTrue(body.containsKey("error"));
 
         @SuppressWarnings("unchecked")
@@ -71,6 +72,7 @@ class ErrorResponseBuilderTest {
 
     private void assertErrorBody(Map<String, Object> body, String expectedCode, String expectedMessage) {
         assertNotNull(body);
+        assertEquals(expectedMessage, body.get("detail"));
         assertTrue(body.containsKey("error"));
 
         @SuppressWarnings("unchecked")

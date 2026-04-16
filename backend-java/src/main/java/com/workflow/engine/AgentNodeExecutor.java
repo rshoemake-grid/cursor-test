@@ -2,15 +2,18 @@ package com.workflow.engine;
 
 import com.workflow.dto.AgentConfig;
 import com.workflow.dto.Node;
+import com.workflow.service.SettingsService;
 import com.workflow.util.ErrorMessages;
+import com.workflow.util.LlmConfigUtils;
 import com.workflow.util.ObjectUtils;
 import com.workflow.dto.NodeType;
-import com.workflow.util.LlmConfigUtils;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -18,7 +21,7 @@ import java.util.Optional;
  * Executes AGENT nodes - calls LLM API with system prompt and user content.
  *
  * S-L1: API key resolution order: (1) LLM config from Settings, (2) env vars OPENAI_API_KEY,
- * GEMINI_API_KEY, GOOGLE_API_KEY. Env fallback supports local/dev without storing keys in DB.
+ * ANTHROPIC_API_KEY, GEMINI_API_KEY, GOOGLE_API_KEY. Env fallback supports local/dev without storing keys in DB.
  * Validate that at least one source provides an API key before making requests.
  */
 @Component
@@ -26,10 +29,12 @@ public class AgentNodeExecutor implements NodeExecutor {
 
     private final LlmApiClient llmClient;
     private final Environment environment;
+    private final SettingsService settingsService;
 
-    public AgentNodeExecutor(LlmApiClient llmClient, Environment environment) {
+    public AgentNodeExecutor(LlmApiClient llmClient, Environment environment, SettingsService settingsService) {
         this.llmClient = llmClient;
         this.environment = environment;
+        this.settingsService = settingsService;
     }
 
     @Override
@@ -38,24 +43,65 @@ public class AgentNodeExecutor implements NodeExecutor {
     }
 
     @Override
-    public Object execute(Node node, Map<String, Object> inputs, ExecutionState state,
-                          NodeExecutionContext ctx) {
+    public Object execute(Node node, Map<String, Object> inputs, ExecutionState state, NodeExecutionContext ctx) {
         Map<String, Object> llmConfig = ObjectUtils.orEmptyMap(ObjectUtils.safeGet(ctx, NodeExecutionContext::llmConfig));
         if (llmConfig.isEmpty()) {
             throw new IllegalStateException(ErrorMessages.LLM_CONFIG_REQUIRED_AGENT);
         }
-        LlmConfigUtils.LlmRequestContext requestCtx = LlmConfigUtils.prepareRequest(llmConfig, environment);
 
         AgentConfig cfg = node.getAgentConfig();
-        String model = ObjectUtils.orDefault(ObjectUtils.safeGet(cfg, AgentConfig::getModel), requestCtx.model());
+        String agentModel = ObjectUtils.safeGet(cfg, AgentConfig::getModel);
+        String lookupModel = ObjectUtils.orDefault(agentModel, LlmConfigUtils.getModel(llmConfig));
+
+        Map<String, Object> effectiveConfig = new HashMap<>(llmConfig);
+        if (settingsService != null && ctx.userId() != null) {
+            settingsService.getProviderConfigForModel(ctx.userId(), lookupModel).ifPresent(effectiveConfig::putAll);
+        }
+
+        String model = ObjectUtils.orDefault(agentModel, LlmConfigUtils.getModel(effectiveConfig));
+        LlmConfigUtils.validateApiKey(effectiveConfig, environment);
 
         String systemPrompt = ObjectUtils.orDefault(ObjectUtils.safeGet(cfg, AgentConfig::getSystemPrompt), "");
-        List<Map<String, Object>> messages = new ArrayList<>();
-        messages.add(LlmConfigUtils.buildMessage("system", systemPrompt));
         Object userContent = InputResolver.getFirstOf(inputs, "message", "data", "output");
-        if (userContent == null) userContent = inputs.values().stream().findFirst().orElse("");
-        messages.add(LlmConfigUtils.buildMessage("user", String.valueOf(userContent)));
+        if (userContent == null) {
+            userContent = inputs.values().stream().findFirst().orElse("");
+        }
+        String userText = String.valueOf(userContent);
 
-        return llmClient.chatCompletions(requestCtx.url(), requestCtx.apiKey(), model, messages);
+        int maxTokens = Optional.ofNullable(ObjectUtils.safeGet(cfg, AgentConfig::getMaxTokens)).orElse(1024);
+        double temperature = Optional.ofNullable(ObjectUtils.safeGet(cfg, AgentConfig::getTemperature)).orElse(0.7);
+
+        String type =
+                ObjectUtils.toStringOrDefault(effectiveConfig.get("type"), "openai")
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+
+        return switch (type) {
+            case "anthropic" -> {
+                String aBase = LlmConfigUtils.getBaseUrlOrNull(effectiveConfig);
+                if (aBase == null || aBase.isBlank()) {
+                    aBase = "https://api.anthropic.com/v1";
+                }
+                String aKey = LlmConfigUtils.getApiKeyWithEnvFallback(effectiveConfig, environment);
+                yield llmClient.chatAnthropic(aBase, aKey, model, systemPrompt, userText, maxTokens, temperature);
+            }
+            case "gemini" -> {
+                String gBase = LlmConfigUtils.getBaseUrlOrNull(effectiveConfig);
+                if (gBase == null || gBase.isBlank()) {
+                    gBase = "https://generativelanguage.googleapis.com/v1beta";
+                }
+                String gKey = LlmConfigUtils.getApiKeyWithEnvFallback(effectiveConfig, environment);
+                yield llmClient.chatGemini(gBase, gKey, model, systemPrompt, userText, maxTokens, temperature);
+            }
+            default -> {
+                Map<String, Object> openaiCfg = new HashMap<>(effectiveConfig);
+                openaiCfg.put("model", model);
+                LlmConfigUtils.LlmRequestContext requestCtx = LlmConfigUtils.prepareRequest(openaiCfg, environment);
+                List<Map<String, Object>> messages = new ArrayList<>();
+                messages.add(LlmConfigUtils.buildMessage("system", systemPrompt));
+                messages.add(LlmConfigUtils.buildMessage("user", userText));
+                yield llmClient.chatCompletions(requestCtx.url(), requestCtx.apiKey(), model, messages);
+            }
+        };
     }
 }

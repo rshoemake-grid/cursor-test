@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -40,17 +40,20 @@ public class ErrorResponseBuilder {
     }
 
     /**
-     * Build error response body map (Apigee-compatible). Use for servlet responses.
+     * Build error response body map (Apigee-compatible + Python FastAPI parity: top-level {@code detail}).
+     * Use for servlet responses.
      */
     public static Map<String, Object> buildErrorBody(String code, String message, String path) {
-        Map<String, Object> error = new HashMap<>();
+        String safeMessage = Objects.requireNonNullElse(message, "");
+        Map<String, Object> error = new LinkedHashMap<>();
         error.put("code", code);
-        error.put("message", Objects.requireNonNullElse(message, ""));
+        error.put("message", safeMessage);
         error.put("timestamp", Instant.now().toString());
         if (path != null && !path.isBlank()) {
             error.put("path", path);
         }
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("detail", safeMessage);
         response.put("error", error);
         return response;
     }

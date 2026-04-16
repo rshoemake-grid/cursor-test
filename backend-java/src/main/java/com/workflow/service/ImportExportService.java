@@ -54,6 +54,18 @@ public class ImportExportService {
         return new ExportResult(export, filename);
     }
 
+    /**
+     * Export when caller may be anonymous (Python: get_optional_user) — only public workflows for null userId.
+     */
+    public ExportResult exportWorkflowOptionalUser(String workflowId, String userId, String exportedByUsername) {
+        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.workflowNotFound(workflowId));
+        ownershipService.assertCanRead(w, userId);
+        String exportedBy = exportedByUsername != null && !exportedByUsername.isBlank() ? exportedByUsername : null;
+        Map<String, Object> export = exportWorkflow(w, exportedBy);
+        String filename = getExportFilename(workflowId, w.getName());
+        return new ExportResult(export, filename);
+    }
+
     public record ExportResult(Map<String, Object> data, String filename) {}
 
     public Map<String, Object> exportWorkflow(String workflowId, String exportedBy) {

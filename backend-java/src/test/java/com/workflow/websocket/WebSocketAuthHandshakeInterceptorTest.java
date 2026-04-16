@@ -76,7 +76,7 @@ class WebSocketAuthHandshakeInterceptorTest {
     @Test
     void beforeHandshake_validTokenWrongExecutionOwner_rejectsHandshake() {
         String token = jwtUtil.generateToken("user1", "user-1-id");
-        when(ownershipChecker.isExecutionOwner("exec-123", "user-1-id")).thenReturn(false);
+        when(ownershipChecker.canOpenExecutionStream("exec-123", "user-1-id")).thenReturn(false);
 
         MockHttpServletRequest servletRequest = new MockHttpServletRequest();
         servletRequest.setRequestURI("/ws/executions/exec-123");
@@ -88,13 +88,13 @@ class WebSocketAuthHandshakeInterceptorTest {
 
         assertFalse(result);
         assertTrue(attributes.isEmpty());
-        verify(ownershipChecker).isExecutionOwner("exec-123", "user-1-id");
+        verify(ownershipChecker).canOpenExecutionStream("exec-123", "user-1-id");
     }
 
     @Test
     void beforeHandshake_executionNotFound_rejectsHandshake() {
         String token = jwtUtil.generateToken("user1", "user-1-id");
-        when(ownershipChecker.isExecutionOwner("exec-123", "user-1-id")).thenReturn(false);
+        when(ownershipChecker.canOpenExecutionStream("exec-123", "user-1-id")).thenReturn(false);
 
         MockHttpServletRequest servletRequest = new MockHttpServletRequest();
         servletRequest.setRequestURI("/ws/executions/exec-123");
@@ -111,7 +111,7 @@ class WebSocketAuthHandshakeInterceptorTest {
     @Test
     void beforeHandshake_validTokenAndOwnership_allowsHandshake() {
         String token = jwtUtil.generateToken("user1", "user-1-id");
-        when(ownershipChecker.isExecutionOwner("exec-123", "user-1-id")).thenReturn(true);
+        when(ownershipChecker.canOpenExecutionStream("exec-123", "user-1-id")).thenReturn(true);
 
         MockHttpServletRequest servletRequest = new MockHttpServletRequest();
         servletRequest.setRequestURI("/ws/executions/exec-123");
@@ -137,7 +137,7 @@ class WebSocketAuthHandshakeInterceptorTest {
         boolean result = interceptor.beforeHandshake(request, response, wsHandler, attributes);
 
         assertFalse(result);
-        verify(ownershipChecker, never()).isExecutionOwner(any(), any());
+        verify(ownershipChecker, never()).canOpenExecutionStream(any(), any());
     }
 
     private void setField(Object target, String fieldName, Object value) throws Exception {

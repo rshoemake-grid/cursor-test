@@ -64,6 +64,11 @@ public class SecurityConfig {
                 .accessDeniedHandler(accessDeniedHandler))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/health", "/metrics", "/api-docs/**", "/swagger-ui/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/settings/llm/test").permitAll()
+                .requestMatchers("/api/workflow-chat/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/import-export/export/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/import-export/import").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/import-export/import/file").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 // S-C2: Execution endpoints require authentication (ownership enforced in controller/service)
                 .requestMatchers("/api/workflows/*/execute").authenticated()

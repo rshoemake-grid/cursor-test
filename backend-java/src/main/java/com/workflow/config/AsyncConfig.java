@@ -1,5 +1,6 @@
 package com.workflow.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
@@ -28,6 +29,23 @@ public class AsyncConfig implements AsyncConfigurer {
         executor.setMaxPoolSize(MAX_POOL_SIZE);
         executor.setQueueCapacity(QUEUE_CAPACITY);
         executor.setThreadNamePrefix("workflow-exec-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initialize();
+        return executor;
+    }
+
+    /**
+     * Thread pool for parallel node execution within a single workflow run (DAG wavefront).
+     */
+    @Bean(name = "workflowParallelExecutor")
+    public ThreadPoolTaskExecutor workflowParallelExecutor(
+            @Value("${execution.parallel-threads:8}") int parallelThreads) {
+        int threads = Math.max(2, parallelThreads);
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(Math.min(threads, 4));
+        executor.setMaxPoolSize(threads);
+        executor.setQueueCapacity(500);
+        executor.setThreadNamePrefix("wf-node-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
         return executor;

@@ -22,7 +22,9 @@ public class NodeExecutorRegistry {
 
     public NodeExecutorRegistry(List<NodeExecutor> executorList, NodeTypeParser nodeTypeParser) {
         for (NodeExecutor executor : executorList) {
-            executor.getSupportedType().ifPresent(type -> executors.put(type, executor));
+            for (NodeType type : executor.getSupportedTypes()) {
+                executors.put(type, executor);
+            }
         }
         this.nodeTypeParser = nodeTypeParser;
     }

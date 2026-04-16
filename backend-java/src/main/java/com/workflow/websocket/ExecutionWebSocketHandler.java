@@ -11,6 +11,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -61,17 +63,75 @@ public class ExecutionWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    public void broadcastToExecution(String executionId, String type, Object data) {
+    /** Matches Python {@code ConnectionManager.broadcast_status}. */
+    public void broadcastStatus(String executionId, String status, Map<String, Object> data) {
+        Map<String, Object> message = new LinkedHashMap<>();
+        message.put("type", "status");
+        message.put("execution_id", executionId);
+        message.put("status", status);
+        message.put("data", data != null ? data : Map.of());
+        message.put("timestamp", websocketTimestamp());
+        broadcastMessage(executionId, message);
+    }
+
+    /** Matches Python {@code ConnectionManager.broadcast_node_update}. */
+    public void broadcastNodeUpdate(String executionId, String nodeId, Map<String, Object> nodeState) {
+        Map<String, Object> message = new LinkedHashMap<>();
+        message.put("type", "node_update");
+        message.put("execution_id", executionId);
+        message.put("node_id", nodeId);
+        message.put("node_state", nodeState != null ? nodeState : Map.of());
+        message.put("timestamp", websocketTimestamp());
+        broadcastMessage(executionId, message);
+    }
+
+    /** Matches Python {@code ConnectionManager.broadcast_log}. */
+    public void broadcastLog(String executionId, Map<String, Object> logEntry) {
+        Map<String, Object> message = new LinkedHashMap<>();
+        message.put("type", "log");
+        message.put("execution_id", executionId);
+        message.put("log", logEntry != null ? logEntry : Map.of());
+        message.put("timestamp", websocketTimestamp());
+        broadcastMessage(executionId, message);
+    }
+
+    /** Matches Python {@code ConnectionManager.broadcast_completion}. */
+    public void broadcastCompletion(String executionId, Map<String, Object> result) {
+        Map<String, Object> message = new LinkedHashMap<>();
+        message.put("type", "completion");
+        message.put("execution_id", executionId);
+        message.put("result", result != null ? result : Map.of());
+        message.put("timestamp", websocketTimestamp());
+        broadcastMessage(executionId, message);
+    }
+
+    /** Matches Python {@code ConnectionManager.broadcast_error}. */
+    public void broadcastError(String executionId, String error) {
+        Map<String, Object> message = new LinkedHashMap<>();
+        message.put("type", "error");
+        message.put("execution_id", executionId);
+        message.put("error", error != null ? error : "");
+        message.put("timestamp", websocketTimestamp());
+        broadcastMessage(executionId, message);
+    }
+
+    /**
+     * Python uses {@code str(asyncio.get_event_loop().time())} (monotonic seconds as string).
+     * We use JVM uptime seconds for a similar process-relative clock.
+     */
+    private static String websocketTimestamp() {
+        double seconds = ManagementFactory.getRuntimeMXBean().getUptime() / 1000.0;
+        return Double.toString(seconds);
+    }
+
+    private void broadcastMessage(String executionId, Map<String, Object> message) {
         Map<String, WebSocketSession> sessions = executionConnections.get(executionId);
-        if (sessions == null) return;
+        if (sessions == null) {
+            return;
+        }
         String payload;
         try {
-            payload = objectMapper.writeValueAsString(Map.of(
-                    "type", type,
-                    "execution_id", executionId,
-                    "data", ObjectUtils.orDefault(data, Map.of()),
-                    "timestamp", System.currentTimeMillis() / 1000.0
-            ));
+            payload = objectMapper.writeValueAsString(message);
         } catch (Exception e) {
             log.warn("Failed to serialize WebSocket message: {}", e.getMessage());
             return;

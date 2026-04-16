@@ -19,4 +19,6 @@ public class Edge {
     private String label;
     private String sourceHandle;
     private String targetHandle;
+    /** Branch id for condition edges (Python executor uses {@code condition} or handle). */
+    private String condition;
 }

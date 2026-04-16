@@ -1,12 +1,18 @@
 package com.workflow.engine;
 
 import com.workflow.dto.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.engine.LlmApiClient;
+import com.workflow.engine.StorageNodeExecutor;
+import com.workflow.storage.WorkflowInputSourceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.env.MockEnvironment;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,14 +25,21 @@ class WorkflowExecutorTest {
     void setUp() {
         mockLlmClient = (baseUrl, apiKey, model, messages) -> "mocked response";
         NodeTypeParser nodeTypeParser = new NodeTypeParser();
+        WorkflowInputSourceService inputSvc = new WorkflowInputSourceService("", new ObjectMapper());
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(mockLlmClient, null),
+                        new AgentNodeExecutor(mockLlmClient, null, null),
                         new ConditionNodeExecutor(),
                         new LoopNodeExecutor(),
-                        new ToolNodeExecutor()),
+                        new ToolNodeExecutor(),
+                        new StorageNodeExecutor(inputSvc)),
                 nodeTypeParser);
-        executor = new WorkflowExecutor(registry);
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setCorePoolSize(2);
+        pool.setMaxPoolSize(4);
+        pool.setQueueCapacity(20);
+        pool.initialize();
+        executor = new WorkflowExecutor(registry, pool, null);
     }
 
     @Test
@@ -63,7 +76,9 @@ class WorkflowExecutorTest {
         assertEquals("completed", state.get("status"));
         @SuppressWarnings("unchecked")
         Map<String, Object> condState = (Map<String, Object>) ((Map<?, ?>) state.get("node_states")).get("cond-1");
-        assertEquals(Map.of("branch", "true"), condState.get("output"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> out = (Map<String, Object>) condState.get("output");
+        assertEquals("true", out.get("branch"));
     }
 
     @Test
@@ -85,7 +100,9 @@ class WorkflowExecutorTest {
         assertEquals("completed", state.get("status"));
         @SuppressWarnings("unchecked")
         Map<String, Object> condState = (Map<String, Object>) ((Map<?, ?>) state.get("node_states")).get("cond-1");
-        assertEquals(Map.of("branch", "false"), condState.get("output"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> out = (Map<String, Object>) condState.get("output");
+        assertEquals("false", out.get("branch"));
     }
 
     @Test
@@ -108,7 +125,11 @@ class WorkflowExecutorTest {
         assertEquals("completed", state.get("status"));
         @SuppressWarnings("unchecked")
         Map<String, Object> loopState = (Map<String, Object>) ((Map<?, ?>) state.get("node_states")).get("loop-1");
-        assertEquals("c", loopState.get("output"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> out = (Map<String, Object>) loopState.get("output");
+        assertEquals("for_each", out.get("loop_type"));
+        assertEquals(3, out.get("total_iterations"));
+        assertEquals(List.of("a", "b", "c"), out.get("items"));
     }
 
     @Test
@@ -139,6 +160,50 @@ class WorkflowExecutorTest {
     }
 
     @Test
+    void execute_parallelIndependentTools_bothRunBeforeEnd() {
+        Node start = node("start-1", NodeType.START);
+        Node t1 = node("tool-1", NodeType.TOOL);
+        Node t2 = node("tool-2", NodeType.TOOL);
+        Node end = node("end-1", NodeType.END);
+
+        WorkflowResponse workflow = workflow("wf-parallel",
+                List.of(start, t1, t2, end),
+                List.of(
+                        edge("start-1", "tool-1"),
+                        edge("start-1", "tool-2"),
+                        edge("tool-1", "end-1"),
+                        edge("tool-2", "end-1")));
+
+        Map<String, Object> state = executor.execute(workflow, Map.of("in", "x"), Map.of(), "user-1");
+
+        assertEquals("completed", state.get("status"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> ns = (Map<String, Object>) state.get("node_states");
+        assertTrue(ns.containsKey("tool-1"));
+        assertTrue(ns.containsKey("tool-2"));
+    }
+
+    @Test
+    void execute_conditionUsesEdgeConditionField() {
+        Node start = node("start-1", NodeType.START);
+        Node cond = conditionNode("cond-1", "k", "1");
+        Node ok = node("ok-1", NodeType.TOOL);
+        Node end = node("end-1", NodeType.END);
+
+        Edge e1 = edge("start-1", "cond-1");
+        Edge eTrue = edge("cond-1", "ok-1");
+        eTrue.setCondition("true");
+        Edge eEnd = edge("ok-1", "end-1");
+
+        WorkflowResponse workflow = workflow("wf-cond-edge",
+                List.of(start, cond, ok, end),
+                List.of(e1, eTrue, eEnd));
+
+        Map<String, Object> state = executor.execute(workflow, Map.of("k", "1"), Map.of(), "user-1");
+        assertEquals("completed", state.get("status"));
+    }
+
+    @Test
     void execute_emptyWorkflow_failsWithError() {
         WorkflowResponse workflow = workflow("wf-1", List.of(), List.of());
         Map<String, Object> state = executor.execute(workflow, Map.of(), Map.of(), "user-1");
@@ -166,7 +231,9 @@ class WorkflowExecutorTest {
         assertEquals("completed", state.get("status"));
         @SuppressWarnings("unchecked")
         Map<String, Object> condState = (Map<String, Object>) ((Map<?, ?>) state.get("node_states")).get("cond-1");
-        assertEquals(Map.of("branch", "false"), condState.get("output"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> out = (Map<String, Object>) condState.get("output");
+        assertEquals("false", out.get("branch"));
     }
 
     @Test
@@ -189,7 +256,10 @@ class WorkflowExecutorTest {
         assertEquals("completed", state.get("status"));
         @SuppressWarnings("unchecked")
         Map<String, Object> loopState = (Map<String, Object>) ((Map<?, ?>) state.get("node_states")).get("loop-1");
-        assertNull(loopState.get("output"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> out = (Map<String, Object>) loopState.get("output");
+        assertEquals(0, out.get("total_iterations"));
+        assertEquals(List.of(), out.get("items"));
     }
 
     @Test
@@ -212,7 +282,10 @@ class WorkflowExecutorTest {
         assertEquals("completed", state.get("status"));
         @SuppressWarnings("unchecked")
         Map<String, Object> loopState = (Map<String, Object>) ((Map<?, ?>) state.get("node_states")).get("loop-1");
-        assertEquals("only", loopState.get("output"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> out = (Map<String, Object>) loopState.get("output");
+        assertEquals(1, out.get("total_iterations"));
+        assertEquals(List.of("only"), out.get("items"));
     }
 
     @Test
@@ -223,12 +296,17 @@ class WorkflowExecutorTest {
         NodeTypeParser nodeTypeParser = new NodeTypeParser();
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(failingClient, null),
+                        new AgentNodeExecutor(failingClient, null, null),
                         new ConditionNodeExecutor(),
                         new LoopNodeExecutor(),
                         new ToolNodeExecutor()),
                 nodeTypeParser);
-        WorkflowExecutor failingExecutor = new WorkflowExecutor(registry);
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setCorePoolSize(2);
+        pool.setMaxPoolSize(4);
+        pool.setQueueCapacity(20);
+        pool.initialize();
+        WorkflowExecutor failingExecutor = new WorkflowExecutor(registry, pool, null);
 
         Node start = node("start-1", NodeType.START);
         Node agent = agentNode("agent-1", "gpt-4o-mini", "You are helpful.");
@@ -245,7 +323,52 @@ class WorkflowExecutorTest {
 
         assertEquals("failed", state.get("status"));
         assertNotNull(state.get("error"));
-        assertEquals("Execution failed", state.get("error"));
+        assertEquals("LLM API error", state.get("error"));
+    }
+
+    @Test
+    void execute_agentNode_wallTimeout_failsWithTimeoutMessage() {
+        CountDownLatch block = new CountDownLatch(1);
+        LlmApiClient slow = (baseUrl, apiKey, model, messages) -> {
+            try {
+                block.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(e);
+            }
+            return "x";
+        };
+        NodeTypeParser nodeTypeParser = new NodeTypeParser();
+        WorkflowInputSourceService inputSvc = new WorkflowInputSourceService("", new ObjectMapper());
+        NodeExecutorRegistry registry = new NodeExecutorRegistry(
+                List.of(
+                        new AgentNodeExecutor(slow, null, null),
+                        new ConditionNodeExecutor(),
+                        new LoopNodeExecutor(),
+                        new ToolNodeExecutor(),
+                        new StorageNodeExecutor(inputSvc)),
+                nodeTypeParser);
+        ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+        pool.setCorePoolSize(2);
+        pool.setMaxPoolSize(4);
+        pool.setQueueCapacity(20);
+        pool.initialize();
+        MockEnvironment env = new MockEnvironment().withProperty("NODE_EXECUTION_TIMEOUT_SEC", "1");
+        WorkflowExecutor timedExecutor = new WorkflowExecutor(registry, pool, null, env);
+
+        Node start = node("start-1", NodeType.START);
+        Node agent = agentNode("agent-1", "gpt-4o-mini", "You are helpful.");
+        Node end = node("end-1", NodeType.END);
+        WorkflowResponse workflow = workflow(
+                "wf-1",
+                List.of(start, agent, end),
+                List.of(edge("start-1", "agent-1"), edge("agent-1", "end-1")));
+
+        Map<String, Object> state = timedExecutor.execute(workflow, Map.of(), Map.of("api_key", "sk"), "user-1");
+
+        block.countDown();
+        assertEquals("failed", state.get("status"));
+        assertTrue(String.valueOf(state.get("error")).contains("NODE_EXECUTION_TIMEOUT"));
     }
 
     private static Node node(String id, NodeType type) {

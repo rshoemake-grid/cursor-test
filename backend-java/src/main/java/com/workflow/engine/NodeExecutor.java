@@ -3,6 +3,7 @@ package com.workflow.engine;
 import com.workflow.dto.Node;
 import com.workflow.dto.NodeType;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,6 +24,13 @@ public interface NodeExecutor {
      */
     default Optional<NodeType> getSupportedType() {
         return Optional.empty();
+    }
+
+    /**
+     * Node types this executor handles. Default derives from {@link #getSupportedType()}; override for multi-type executors (e.g. storage).
+     */
+    default List<NodeType> getSupportedTypes() {
+        return getSupportedType().map(t -> List.of(t)).orElseGet(List::of);
     }
 
     /**

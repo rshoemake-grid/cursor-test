@@ -15,7 +15,7 @@ import java.io.IOException;
  * Filter to record request metrics - matches Python middleware behavior.
  */
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+@Order(Ordered.HIGHEST_PRECEDENCE + 1)
 public class MetricsFilter extends OncePerRequestFilter {
 
     private final MetricsCollector metricsCollector;

@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -26,4 +27,8 @@ public class WorkflowChatRequest {
     @Max(100)
     @JsonProperty("iteration_limit")
     private Integer iterationLimit;
+
+    /** Live canvas from the UI (optional); matches Python {@code canvas_snapshot}. */
+    @JsonProperty("canvas_snapshot")
+    private Map<String, Object> canvasSnapshot;
 }

@@ -2,6 +2,8 @@ package com.workflow.util;
 
 import org.springframework.core.env.Environment;
 
+import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -78,11 +80,32 @@ public final class LlmConfigUtils {
         String key = getApiKey(config);
         if (key != null) return key;
         if (env == null) return null;
-        key = env.getProperty("OPENAI_API_KEY");
-        if (key != null) return key;
-        key = env.getProperty("GEMINI_API_KEY");
-        if (key != null) return key;
-        return env.getProperty("GOOGLE_API_KEY");
+        String type =
+                ObjectUtils.toStringOrDefault(config != null ? config.get("type") : null, "openai")
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+        return switch (type) {
+            case "anthropic" -> firstNonBlank(env.getProperty("ANTHROPIC_API_KEY"));
+            case "gemini" ->
+                    firstNonBlank(env.getProperty("GEMINI_API_KEY"), env.getProperty("GOOGLE_API_KEY"));
+            default ->
+                    firstNonBlank(
+                            env.getProperty("OPENAI_API_KEY"),
+                            env.getProperty("GEMINI_API_KEY"),
+                            env.getProperty("GOOGLE_API_KEY"));
+        };
+    }
+
+    private static String firstNonBlank(String... candidates) {
+        if (candidates == null) {
+            return null;
+        }
+        for (String c : candidates) {
+            if (c != null && !c.isBlank()) {
+                return c;
+            }
+        }
+        return null;
     }
 
     public static String getModel(Map<String, Object> config) {
@@ -123,7 +146,10 @@ public final class LlmConfigUtils {
      * Build a chat message map for OpenAI-compatible API. DRY: Used by AgentNodeExecutor and WorkflowChatService.
      */
     public static Map<String, Object> buildMessage(String role, String content) {
-        return Map.of("role", role, "content", ObjectUtils.orDefault(content, ""));
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("role", role);
+        m.put("content", ObjectUtils.orDefault(content, ""));
+        return m;
     }
 
     /**

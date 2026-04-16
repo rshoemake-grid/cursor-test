@@ -3,6 +3,7 @@ package com.workflow.metrics;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,6 +23,7 @@ public class MetricsCollector {
     private final Map<String, AtomicInteger> endpointErrors = new ConcurrentHashMap<>();
     private final Map<Integer, AtomicInteger> statusCodes = new ConcurrentHashMap<>();
     private final Instant startTime = Instant.now();
+    private volatile Instant lastReset = Instant.now();
 
     public void recordRequest(String endpoint, int statusCode, long latencyMs) {
         requestCount.incrementAndGet();
@@ -54,17 +56,31 @@ public class MetricsCollector {
         double successRate = reqTotal > 0 ? (reqTotal - errTotal) / (double) reqTotal * 100 : 100.0;
         double rps = uptimeSeconds > 0 ? reqTotal / uptimeSeconds : 0.0;
 
-        return Map.of(
-            "requests_total", (int) reqTotal,
-            "errors_total", (int) errTotal,
-            "success_rate", Math.round(successRate * 100.0) / 100.0,
-            "average_latency_ms", Math.round(avgLatency * 100.0) / 100.0,
-            "uptime_seconds", Math.round(uptimeSeconds * 100.0) / 100.0,
-            "requests_per_second", Math.round(rps * 100.0) / 100.0,
-            "endpoints", endpoints,
-            "endpoint_errors", epErrors,
-            "status_codes", statusCodeMap,
-            "timestamp", Instant.now().toString()
-        );
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("requests_total", (int) reqTotal);
+        snapshot.put("errors_total", (int) errTotal);
+        snapshot.put("success_rate", successRate);
+        snapshot.put("average_latency_ms", Math.round(avgLatency * 100.0) / 100.0);
+        snapshot.put("uptime_seconds", Math.round(uptimeSeconds * 100.0) / 100.0);
+        snapshot.put("requests_per_second", Math.round(rps * 100.0) / 100.0);
+        snapshot.put("endpoints", endpoints);
+        snapshot.put("endpoint_errors", epErrors);
+        snapshot.put("status_codes", statusCodeMap);
+        snapshot.put("last_reset", lastReset.toString());
+        snapshot.put("timestamp", Instant.now().toString());
+        return snapshot;
+    }
+
+    /**
+     * Clears counters (matches Python {@code MetricsCollector.reset}); does not change process start time used for uptime.
+     */
+    public void reset() {
+        requestCount.set(0);
+        errorCount.set(0);
+        totalLatencyMs.set(0);
+        endpointCounts.clear();
+        endpointErrors.clear();
+        statusCodes.clear();
+        lastReset = Instant.now();
     }
 }

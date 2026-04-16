@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -127,6 +128,164 @@ class SettingsServiceTest {
 
         assertTrue(result.isPresent());
         assertEquals("gpt-4o-mini", result.get().get("model"));
+    }
+
+    @Test
+    void getActiveLlmConfig_prefersTopLevelDefaultModelWhenListedOnProvider() {
+        Map<String, Object> provider = new HashMap<>();
+        provider.put("type", "openai");
+        provider.put("enabled", true);
+        provider.put("apiKey", "sk-test");
+        provider.put("baseUrl", "https://api.openai.com/v1");
+        provider.put("defaultModel", "gpt-4o-mini");
+        provider.put("models", List.of("gpt-4o-mini", "gpt-4o"));
+        Map<String, Object> data = new HashMap<>();
+        data.put("providers", List.of(provider));
+        data.put("default_model", "gpt-4o");
+        when(settingsRepository.findById("user-1"))
+                .thenReturn(Optional.of(settingsWithData(data)));
+
+        Optional<Map<String, Object>> result = settingsService.getActiveLlmConfig("user-1");
+
+        assertTrue(result.isPresent());
+        assertEquals("gpt-4o", result.get().get("model"));
+    }
+
+    @Test
+    void getLlmConfigForWorkflowChat_usesChatAssistantModel() {
+        Map<String, Object> provider = new HashMap<>();
+        provider.put("type", "openai");
+        provider.put("enabled", true);
+        provider.put("apiKey", "sk-test");
+        provider.put("baseUrl", "https://api.openai.com/v1");
+        provider.put("defaultModel", "gpt-4o-mini");
+        provider.put("models", List.of("gpt-4o-mini", "gpt-4o"));
+        Map<String, Object> data = new HashMap<>();
+        data.put("providers", List.of(provider));
+        data.put("chat_assistant_model", "gpt-4o");
+        when(settingsRepository.findById("user-1"))
+                .thenReturn(Optional.of(settingsWithData(data)));
+
+        Optional<Map<String, Object>> result = settingsService.getLlmConfigForWorkflowChat("user-1");
+
+        assertTrue(result.isPresent());
+        assertEquals("gpt-4o", result.get().get("model"));
+    }
+
+    @Test
+    void getLlmConfigForWorkflowChat_unknownChatModel_fallsBackToActive() {
+        Map<String, Object> provider = new HashMap<>();
+        provider.put("type", "openai");
+        provider.put("enabled", true);
+        provider.put("apiKey", "sk-test");
+        provider.put("baseUrl", "https://api.openai.com/v1");
+        provider.put("defaultModel", "gpt-4o-mini");
+        provider.put("models", List.of("gpt-4o-mini", "gpt-4o"));
+        Map<String, Object> data = new HashMap<>();
+        data.put("providers", List.of(provider));
+        data.put("chat_assistant_model", "unknown-model-xyz");
+        when(settingsRepository.findById("user-1"))
+                .thenReturn(Optional.of(settingsWithData(data)));
+
+        Optional<Map<String, Object>> result = settingsService.getLlmConfigForWorkflowChat("user-1");
+
+        assertTrue(result.isPresent());
+        assertEquals("gpt-4o-mini", result.get().get("model"));
+    }
+
+    @Test
+    void getLlmConfigForWorkflowChat_emptyChatAssistantModel_usesActive() {
+        Map<String, Object> provider = new HashMap<>();
+        provider.put("type", "openai");
+        provider.put("enabled", true);
+        provider.put("apiKey", "sk-test");
+        provider.put("baseUrl", "https://api.openai.com/v1");
+        provider.put("defaultModel", "gpt-4o-mini");
+        provider.put("models", List.of("gpt-4o-mini", "gpt-4o"));
+        Map<String, Object> data = new HashMap<>();
+        data.put("providers", List.of(provider));
+        data.put("chat_assistant_model", "");
+        data.put("default_model", "gpt-4o");
+        when(settingsRepository.findById("user-1"))
+                .thenReturn(Optional.of(settingsWithData(data)));
+
+        Optional<Map<String, Object>> result = settingsService.getLlmConfigForWorkflowChat("user-1");
+
+        assertTrue(result.isPresent());
+        assertEquals("gpt-4o", result.get().get("model"));
+    }
+
+    @Test
+    void getProviderConfigForModel_blankModel_returnsEmpty() {
+        assertTrue(settingsService.getProviderConfigForModel("user-1", " ").isEmpty());
+        verifyNoInteractions(settingsRepository);
+    }
+
+    @Test
+    void getProviderConfigForModel_noSettings_returnsEmpty() {
+        when(settingsRepository.findById("user-1")).thenReturn(Optional.empty());
+
+        assertTrue(settingsService.getProviderConfigForModel("user-1", "claude-3").isEmpty());
+    }
+
+    @Test
+    void getProviderConfigForModel_findsEnabledProviderWithModel_caseInsensitive() {
+        Map<String, Object> anthropic = new HashMap<>();
+        anthropic.put("type", "anthropic");
+        anthropic.put("enabled", true);
+        anthropic.put("apiKey", "sk-ant");
+        anthropic.put("baseUrl", "https://api.anthropic.com/v1");
+        anthropic.put("models", List.of("claude-3-5-sonnet-20241022"));
+        when(settingsRepository.findById("user-1"))
+                .thenReturn(Optional.of(settingsWithData(Map.of("providers", List.of(anthropic)))));
+
+        Optional<Map<String, Object>> result =
+                settingsService.getProviderConfigForModel("user-1", "CLAUDE-3-5-SONNET-20241022");
+
+        assertTrue(result.isPresent());
+        assertEquals("anthropic", result.get().get("type"));
+        assertEquals("sk-ant", result.get().get("api_key"));
+        assertEquals("https://api.anthropic.com/v1", result.get().get("base_url"));
+        assertEquals("claude-3-5-sonnet-20241022", result.get().get("model"));
+    }
+
+    @Test
+    void getProviderConfigForModel_skipsDisabledAndMissingApiKey() {
+        Map<String, Object> disabled = new HashMap<>();
+        disabled.put("type", "anthropic");
+        disabled.put("enabled", false);
+        disabled.put("apiKey", "x");
+        disabled.put("models", List.of("claude-x"));
+        Map<String, Object> noKey = new HashMap<>();
+        noKey.put("type", "anthropic");
+        noKey.put("enabled", true);
+        noKey.put("models", List.of("claude-x"));
+        Map<String, Object> ok = new HashMap<>();
+        ok.put("type", "gemini");
+        ok.put("enabled", true);
+        ok.put("apiKey", "g-key");
+        ok.put("models", List.of("gemini-pro"));
+        when(settingsRepository.findById("user-1"))
+                .thenReturn(Optional.of(settingsWithData(Map.of("providers", List.of(disabled, noKey, ok)))));
+
+        Optional<Map<String, Object>> result = settingsService.getProviderConfigForModel("user-1", "gemini-pro");
+
+        assertTrue(result.isPresent());
+        assertEquals("gemini", result.get().get("type"));
+        assertEquals("g-key", result.get().get("api_key"));
+    }
+
+    @Test
+    void getProviderConfigForModel_noMatchingModel_returnsEmpty() {
+        Map<String, Object> p = new HashMap<>();
+        p.put("type", "openai");
+        p.put("enabled", true);
+        p.put("apiKey", "sk");
+        p.put("models", List.of("gpt-4o"));
+        when(settingsRepository.findById("user-1"))
+                .thenReturn(Optional.of(settingsWithData(Map.of("providers", List.of(p)))));
+
+        assertTrue(settingsService.getProviderConfigForModel("user-1", "gpt-5").isEmpty());
     }
 
     private static Settings settingsWithData(Map<String, Object> data) {

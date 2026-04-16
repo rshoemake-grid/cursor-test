@@ -2,12 +2,12 @@ package com.workflow.engine;
 
 import com.workflow.dto.ExecutionLogEntry;
 import com.workflow.util.JsonStateUtils;
-import com.workflow.util.ObjectUtils;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,23 +39,37 @@ public class ExecutionState {
 
     /**
      * Convert to Map for storage in Execution entity state.
+     * Mirrors Python {@code ExecutionState.model_dump(mode="json")} field coverage (snake_case keys).
      */
     public Map<String, Object> toStateMap() {
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> map = new LinkedHashMap<>();
+        if (executionId != null) {
+            map.put("execution_id", executionId);
+        }
+        if (workflowId != null) {
+            map.put("workflow_id", workflowId);
+        }
         map.put("status", status);
+        map.put("current_node", currentNode);
+        map.put("variables", new HashMap<>(variables));
         map.put("result", result);
+        if (error != null) {
+            map.put("error", error);
+        }
+        if (startedAt != null) {
+            map.put("started_at", startedAt.toString());
+        }
+        if (completedAt != null) {
+            map.put("completed_at", completedAt.toString());
+        }
         List<Map<String, Object>> logsList = new ArrayList<>();
         for (ExecutionLogEntry l : logs) {
             logsList.add(JsonStateUtils.logEntryFromDto(l));
         }
         map.put("logs", logsList);
-        Map<String, Object> nodeStatesMap = new HashMap<>();
+        Map<String, Object> nodeStatesMap = new LinkedHashMap<>();
         nodeStates.forEach((id, ns) -> nodeStatesMap.put(id, ns.toMap()));
         map.put("node_states", nodeStatesMap);
-        map.put("current_node", currentNode);
-        if (error != null) {
-            map.put("error", error);
-        }
         return map;
     }
 }

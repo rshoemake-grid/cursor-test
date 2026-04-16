@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -42,7 +43,7 @@ import static com.workflow.constants.WorkflowConstants.DEFAULT_VERSION;
  */
 @Service
 @Transactional
-public class WorkflowService {
+public class WorkflowService implements ChatChangesService {
     private static final Logger log = LoggerFactory.getLogger(WorkflowService.class);
 
     private final WorkflowRepository workflowRepository;
@@ -188,5 +189,54 @@ public class WorkflowService {
             }
         }
         return new BulkDeleteResult(deleted, failed).toMap();
+    }
+
+    /**
+     * Apply workflow-chat tool edits (Python {@code WorkflowService.apply_chat_changes}).
+     */
+    @Override
+    public Map<String, Object> applyChatChanges(
+            String workflowId,
+            List<Map<String, Object>> nodesToAdd,
+            List<Map<String, Object>> nodesToUpdate,
+            List<String> nodesToDelete,
+            List<Map<String, Object>> edgesToAdd,
+            List<Map<String, Object>> edgesToDelete,
+            Optional<String> nameUpdate,
+            boolean updateDescription,
+            String descriptionValue,
+            String userId) {
+        Workflow workflow = ownershipService.getWorkflowAndAssertOwner(workflowId, userId);
+        Map<String, Object> def = ObjectUtils.orEmptyMap(workflow.getDefinition());
+        List<Map<String, Object>> currentNodes = workflowMapper.definitionNodesAsMaps(def);
+        List<Map<String, Object>> currentEdges = workflowMapper.definitionEdgesAsMaps(def);
+
+        WorkflowChatChangesMerge.MergedGraph merged = WorkflowChatChangesMerge.merge(
+                currentNodes,
+                currentEdges,
+                nodesToAdd == null ? List.of() : nodesToAdd,
+                nodesToUpdate == null ? List.of() : nodesToUpdate,
+                nodesToDelete == null ? List.of() : nodesToDelete,
+                edgesToAdd == null ? List.of() : edgesToAdd,
+                edgesToDelete == null ? List.of() : edgesToDelete);
+
+        Map<String, Object> newDef = new HashMap<>(def);
+        newDef.put("nodes", merged.nodes());
+        newDef.put("edges", merged.edges());
+        newDef.put("variables", def.getOrDefault("variables", Map.of()));
+
+        workflow.setDefinition(newDef);
+        nameUpdate.filter(n -> n != null && !n.isBlank()).ifPresent(workflow::setName);
+        if (updateDescription) {
+            workflow.setDescription(descriptionValue);
+        }
+        workflow.setUpdatedAt(LocalDateTime.now());
+        workflowRepository.save(workflow);
+        log.info("Applied chat changes to workflow {}", workflowId);
+        return Map.of(
+                "nodes_count", merged.nodes().size(),
+                "edges_count", merged.edges().size(),
+                "final_nodes", merged.nodes(),
+                "final_edges", merged.edges());
     }
 }
