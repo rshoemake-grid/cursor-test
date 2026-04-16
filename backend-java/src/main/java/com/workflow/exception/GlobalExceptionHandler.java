@@ -91,7 +91,11 @@ public class GlobalExceptionHandler {
         String message = e.getMessage() != null && e.getMessage().contains("JSON")
                 ? ErrorMessages.INVALID_JSON
                 : ErrorMessages.INVALID_REQUEST_BODY;
-        log.debug("Bad request (malformed JSON/body): {}", message);
+        if (EnvironmentUtils.isProduction(environment)) {
+            log.debug("Bad request (malformed JSON/body): {}", message);
+        } else {
+            log.warn("Bad request (malformed JSON/body): {} — {}", message, e.getMessage());
+        }
         return ErrorResponseBuilder.badRequest(message, getRequestPath(request));
     }
 

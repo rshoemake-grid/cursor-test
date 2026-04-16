@@ -69,10 +69,13 @@ interface AgentConfig {
 - `claude-3-sonnet-20240229` - Claude 3 Sonnet
 - `claude-3-haiku-20240307` - Claude 3 Haiku
 
-**Google Gemini:**
-- `gemini-1.5-pro` - Gemini 1.5 Pro
-- `gemini-1.5-flash` - Gemini 1.5 Flash
-- `gemini-pro` - Gemini Pro
+**Google Gemini (see [Gemini models](https://ai.google.dev/gemini-api/docs/models) and [Gemini 3](https://ai.google.dev/gemini-api/docs/gemini-3) for current IDs):**
+- `gemini-3.1-pro-preview` — Gemini 3.1 Pro (preview)
+- `gemini-3-flash-preview` — Gemini 3 Flash (preview)
+- `gemini-3.1-flash-lite-preview` — Gemini 3.1 Flash-Lite (preview)
+- `gemini-3-pro-image-preview` / `gemini-3.1-flash-image-preview` — image generation (preview)
+- `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-flash-lite` — Gemini 2.5 stable line
+- Legacy: `gemini-1.5-pro`, `gemini-1.5-flash`, `gemini-pro` (prefer 2.5+ or 3.x for new work)
 
 ### Inputs
 

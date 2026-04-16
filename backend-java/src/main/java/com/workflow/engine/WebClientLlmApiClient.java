@@ -170,6 +170,13 @@ public class WebClientLlmApiClient implements LlmApiClient {
         while (b.endsWith("/")) {
             b = b.substring(0, b.length() - 1);
         }
+        // Settings may use the OpenAI-compatible base (.../v1beta/openai); :generateContent lives under v1beta only.
+        if (b.endsWith("/openai")) {
+            b = b.substring(0, b.length() - "/openai".length());
+            while (b.endsWith("/")) {
+                b = b.substring(0, b.length() - 1);
+            }
+        }
         if (b.isBlank()) {
             b = "https://generativelanguage.googleapis.com/v1beta";
         }

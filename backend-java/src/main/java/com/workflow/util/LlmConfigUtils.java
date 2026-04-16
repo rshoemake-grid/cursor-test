@@ -12,6 +12,12 @@ import java.util.Map;
 public final class LlmConfigUtils {
 
     private static final String DEFAULT_BASE_URL = "https://api.openai.com/v1";
+    /**
+     * Gemini REST API root (e.g. {@code :generateContent}). Workflow chat uses the OpenAI-compatible subpath
+     * {@code /v1beta/openai} instead of posting to non-existent {@code /v1beta/chat/completions}.
+     */
+    private static final String GEMINI_V1BETA_ROOT = "https://generativelanguage.googleapis.com/v1beta";
+    private static final String GEMINI_OPENAI_COMPAT_BASE = GEMINI_V1BETA_ROOT + "/openai";
     /** Default model when none specified. Exposed for WebClientLlmApiClient fallback. */
     public static final String DEFAULT_MODEL = "gpt-4o-mini";
 
@@ -125,6 +131,32 @@ public final class LlmConfigUtils {
     }
 
     /**
+     * Base URL for OpenAI-style {@code /chat/completions}. For Gemini, maps the standard {@code v1beta} API root
+     * to Google's OpenAI-compatible base ({@code .../v1beta/openai}).
+     */
+    public static String baseUrlForOpenAiCompatibleChat(Map<String, Object> config) {
+        String type =
+                ObjectUtils.toStringOrDefault(config != null ? config.get("type") : null, "openai")
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+        if (!"gemini".equals(type)) {
+            return getBaseUrl(ObjectUtils.orEmptyMap(config));
+        }
+        String raw = getBaseUrlRaw(config, null);
+        if (raw == null || raw.isBlank()) {
+            return GEMINI_OPENAI_COMPAT_BASE;
+        }
+        String normalized = raw.trim().replaceAll("/+$", "");
+        if (normalized.contains("/openai")) {
+            return normalized;
+        }
+        if (GEMINI_V1BETA_ROOT.equals(normalized)) {
+            return GEMINI_OPENAI_COMPAT_BASE;
+        }
+        return normalized;
+    }
+
+    /**
      * Prepared LLM request context (url, apiKey, model). DRY: Used by AgentNodeExecutor and WorkflowChatService.
      */
     public record LlmRequestContext(String url, String apiKey, String model) {
@@ -135,7 +167,7 @@ public final class LlmConfigUtils {
      */
     public static LlmRequestContext prepareRequest(Map<String, Object> config, Environment env) {
         validateApiKey(config, env);
-        String baseUrl = getBaseUrl(ObjectUtils.orEmptyMap(config));
+        String baseUrl = baseUrlForOpenAiCompatibleChat(ObjectUtils.orEmptyMap(config));
         String url = buildChatCompletionsUrl(baseUrl);
         String apiKey = getApiKeyWithEnvFallback(config, env);
         String model = getModel(config);

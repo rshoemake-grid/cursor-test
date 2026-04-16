@@ -29,7 +29,7 @@ def get_llm_fallback_config_from_env() -> Optional[Dict[str, Any]]:
             "type": "gemini",
             "api_key": gemini_key,
             "base_url": "https://generativelanguage.googleapis.com/v1beta",
-            "model": "gemini-2.5-flash",
+            "model": "gemini-3-flash-preview",
         }
 
     return None

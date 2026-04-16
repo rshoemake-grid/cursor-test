@@ -28,12 +28,19 @@ const PROVIDER_TEMPLATES = {
   gemini: {
     name: "Google Gemini",
     type: "gemini",
-    baseUrl: "https://generativelanguage.googleapis.com/v1beta",
-    defaultModel: "gemini-2.5-flash",
+    baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
+    // Default to Gemini 3 Flash preview (fast); use gemini-2.5-flash for a non-preview stable default.
+    defaultModel: "gemini-3-flash-preview",
     models: [
-      "gemini-3-pro-preview",
+      // Gemini 3.x — IDs per https://ai.google.dev/gemini-api/docs/gemini-3 (preview models evolve; check release notes).
+      "gemini-3.1-pro-preview",
       "gemini-3-flash-preview",
+      "gemini-3.1-flash-lite-preview",
+      "gemini-3.1-flash-live-preview",
+      "gemini-3.1-flash-tts-preview",
       "gemini-3-pro-image-preview",
+      "gemini-3.1-flash-image-preview",
+      // Gemini 2.5 (stable)
       "gemini-2.5-pro",
       "gemini-2.5-flash",
       "gemini-2.5-flash-lite",

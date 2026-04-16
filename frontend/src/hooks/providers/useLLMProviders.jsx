@@ -9,6 +9,7 @@ import {
   hasProviders,
 } from "../utils/providerValidation";
 import { logicalOr, logicalOrToEmptyArray } from "../utils/logicalOr";
+import { mergeGeminiProviderModelsFromTemplate } from "../utils/mergeGeminiProviderModelsFromTemplate";
 const DEFAULT_MODELS = [
   { value: "gpt-4o-mini", label: "GPT-4o Mini (OpenAI)", provider: "OpenAI" },
   { value: "gpt-4o", label: "GPT-4o (OpenAI)", provider: "OpenAI" },
@@ -88,10 +89,13 @@ function useLLMProviders({
           isValidProvidersArray(data.providers) &&
           hasProviders(data.providers)
         ) {
-          const models = extractModelsFromProviders(data.providers);
+          const mergedProviders = mergeGeminiProviderModelsFromTemplate(
+            data.providers,
+          );
+          const models = extractModelsFromProviders(mergedProviders);
           if (models.length > 0) {
             setAvailableModels(models);
-            setProviders(data.providers);
+            setProviders(mergedProviders);
             if (typeof data.iteration_limit === "number") {
               setIterationLimit(data.iteration_limit);
             }
@@ -108,7 +112,7 @@ function useLLMProviders({
                 storage.setItem(
                   STORAGE_KEYS.LLM_SETTINGS,
                   JSON.stringify({
-                    providers: logicalOrToEmptyArray(data.providers),
+                    providers: logicalOrToEmptyArray(mergedProviders),
                     iteration_limit: data.iteration_limit,
                     default_model: logicalOr(data.default_model, ""),
                     chat_assistant_model:
@@ -123,7 +127,7 @@ function useLLMProviders({
             }
             if (onLoadComplete) {
               onLoadComplete({
-                providers: data.providers,
+                providers: mergedProviders,
                 iteration_limit: data.iteration_limit,
                 default_model: data.default_model,
                 chat_assistant_model: data.chat_assistant_model,
@@ -143,10 +147,13 @@ function useLLMProviders({
         isValidProvidersArray(storedSettings.providers) &&
         hasProviders(storedSettings.providers)
       ) {
-        const models = extractModelsFromProviders(storedSettings.providers);
+        const mergedStored = mergeGeminiProviderModelsFromTemplate(
+          storedSettings.providers,
+        );
+        const models = extractModelsFromProviders(mergedStored);
         if (models.length > 0) {
           setAvailableModels(models);
-          setProviders(storedSettings.providers);
+          setProviders(mergedStored);
           if (typeof storedSettings.iteration_limit === "number") {
             setIterationLimit(storedSettings.iteration_limit);
           }
@@ -157,7 +164,10 @@ function useLLMProviders({
             setChatAssistantModel(storedSettings.chat_assistant_model);
           }
           if (onLoadComplete) {
-            onLoadComplete(storedSettings);
+            onLoadComplete({
+              ...storedSettings,
+              providers: mergedStored,
+            });
           }
           setIsLoading(false);
           return;

@@ -33,11 +33,12 @@
       "name": "Google Gemini",
       "type": "gemini",
       "apiKey": "test-gemini-key-replace-with-real-key",
-      "baseUrl": "https://generativelanguage.googleapis.com/v1",
-      "defaultModel": "gemini-pro",
+      "baseUrl": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "defaultModel": "gemini-3-flash-preview",
       "models": [
-        "gemini-pro",
-        "gemini-pro-vision"
+        "gemini-3.1-pro-preview",
+        "gemini-3-flash-preview",
+        "gemini-2.5-flash"
       ],
       "enabled": false
     }

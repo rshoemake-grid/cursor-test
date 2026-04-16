@@ -1,4 +1,26 @@
 /**
+ * Deep-clone for API payloads so React Flow / node data cannot break JSON (BigInt,
+ * circular refs, functions). Returns null if serialization fails.
+ */
+function deepCloneJsonSafe(value) {
+  try {
+    return JSON.parse(
+      JSON.stringify(value, (_key, v) => {
+        if (typeof v === "bigint") {
+          return v.toString();
+        }
+        if (typeof v === "function" || typeof v === "symbol") {
+          return undefined;
+        }
+        return v;
+      }),
+    );
+  } catch {
+    return null;
+  }
+}
+
+/**
  * FastAPI ChatMessage requires `role` and `content` (strings). `JSON.stringify` omits
  * `undefined`, so { role: "assistant", content: undefined } becomes {"role":"assistant"}
  * and Pydantic returns 422. Always emit explicit string `content`.
@@ -20,4 +42,4 @@ function mapMessagesForWorkflowChatApi(messages) {
   });
 }
 
-export { mapMessagesForWorkflowChatApi };
+export { mapMessagesForWorkflowChatApi, deepCloneJsonSafe };

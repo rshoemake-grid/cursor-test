@@ -1,5 +1,6 @@
 package com.workflow.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -14,10 +15,13 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowChatRequest {
+    @JsonProperty("workflow_id")
     private String workflowId;
     @NotBlank(message = "message is required")
     private String message;
+    @JsonProperty("conversation_history")
     private List<ChatMessage> conversationHistory;
 
     /**

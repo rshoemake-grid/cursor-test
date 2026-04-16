@@ -64,4 +64,21 @@ class WebClientLlmApiClientTest {
         assertTrue(req.getPath().contains("/models/gemini-pro:generateContent"));
         assertTrue(req.getRequestUrl().queryParameter("key").equals("gkey"));
     }
+
+    @Test
+    void chatGemini_stripsOpenAiCompatSuffixFromBaseBeforeGenerateContent() throws Exception {
+        server.enqueue(
+                new MockResponse()
+                        .setBody("{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"ok\"}]}}]}")
+                        .addHeader("Content-Type", "application/json"));
+
+        String base = server.url("/v1beta/openai").toString();
+        WebClientLlmApiClient client = new WebClientLlmApiClient(webClient);
+        String out = client.chatGemini(base, "gkey", "gemini-pro", "", "hi", 128, 0.3);
+
+        assertEquals("ok", out);
+        RecordedRequest req = server.takeRequest();
+        assertTrue(req.getPath().startsWith("/v1beta/models/gemini-pro:generateContent"));
+        assertTrue(req.getPath().contains(":generateContent"));
+    }
 }

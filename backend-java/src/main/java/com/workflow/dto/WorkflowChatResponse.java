@@ -1,5 +1,6 @@
 package com.workflow.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,6 +12,9 @@ import java.util.Map;
 @AllArgsConstructor
 public class WorkflowChatResponse {
     private String message;
-    private Map<String, Object> workflowChanges;  // nodes_to_add, nodes_to_update, etc.
+    /** Matches Python / frontend: {@code workflow_changes}. */
+    @JsonProperty("workflow_changes")
+    private Map<String, Object> workflowChanges;
+    @JsonProperty("workflow_id")
     private String workflowId;
 }

@@ -1,4 +1,7 @@
-import { mapMessagesForWorkflowChatApi } from "./workflowChatPayload";
+import {
+  mapMessagesForWorkflowChatApi,
+  deepCloneJsonSafe,
+} from "./workflowChatPayload";
 
 describe("mapMessagesForWorkflowChatApi", () => {
   it("preserves valid user and assistant messages", () => {
@@ -30,5 +33,18 @@ describe("mapMessagesForWorkflowChatApi", () => {
   it("returns empty array for non-array input", () => {
     expect(mapMessagesForWorkflowChatApi(null)).toEqual([]);
     expect(mapMessagesForWorkflowChatApi(void 0)).toEqual([]);
+  });
+});
+
+describe("deepCloneJsonSafe", () => {
+  it("clones plain objects and converts bigint to string", () => {
+    const out = deepCloneJsonSafe({ a: 1n, b: [{ x: 2 }] });
+    expect(out).toEqual({ a: "1", b: [{ x: 2 }] });
+  });
+
+  it("returns null on circular structure", () => {
+    const o = { a: 1 };
+    o.self = o;
+    expect(deepCloneJsonSafe(o)).toBe(null);
   });
 });

@@ -14,7 +14,10 @@ import {
   safeStorageSet,
 } from "../utils/storageHelpers";
 import { getChatHistoryKey } from "../config/constants";
-import { mapMessagesForWorkflowChatApi } from "./workflowChatPayload";
+import {
+  mapMessagesForWorkflowChatApi,
+  deepCloneJsonSafe,
+} from "./workflowChatPayload";
 import {
   usePushToTalk,
   isSpeechSynthesisSupported,
@@ -123,18 +126,28 @@ function WorkflowChat({
           liveCanvas !== void 0 &&
           Array.isArray(liveCanvas.nodes) === true &&
           Array.isArray(liveCanvas.edges) === true;
+        let canvasSnapshotPayload = void 0;
+        if (hasLiveCanvas === true) {
+          const nodes = deepCloneJsonSafe(liveCanvas.nodes);
+          const edges = deepCloneJsonSafe(liveCanvas.edges);
+          if (nodes !== null && edges !== null) {
+            canvasSnapshotPayload = { nodes, edges };
+          } else {
+            injectedLogger.warn(
+              "WorkflowChat: canvas_snapshot omitted (not JSON-serializable)",
+            );
+          }
+        }
         const data = await api.chat({
           workflow_id: workflowId,
           message: userMessage.content,
-          conversation_history: mapMessagesForWorkflowChatApi(messages),
+          conversation_history: mapMessagesForWorkflowChatApi([
+            ...messages,
+            userMessage,
+          ]),
           iteration_limit: clampedIterations,
-          ...(hasLiveCanvas === true
-            ? {
-                canvas_snapshot: {
-                  nodes: liveCanvas.nodes,
-                  edges: liveCanvas.edges,
-                },
-              }
+          ...(canvasSnapshotPayload !== void 0
+            ? { canvas_snapshot: canvasSnapshotPayload }
             : {}),
         });
         const assistantMessage = {
