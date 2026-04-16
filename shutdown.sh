@@ -53,14 +53,14 @@ fi
 
 echo ""
 
-# Check for any remaining Python/node processes related to the app
-REMAINING_PYTHON=$(ps aux 2>/dev/null | grep -E "python.*main.py|uvicorn.*main" | grep -v grep | awk '{print $2}' || true)
+# Optional: stop legacy Python API if anything is still bound to uvicorn (port 8000 should already be cleared above)
+REMAINING_PYTHON=$(ps aux 2>/dev/null | grep -E "uvicorn backend\.main:app" | grep -v grep | awk '{print $2}' || true)
 REMAINING_NODE=$(ps aux 2>/dev/null | grep -E "node.*vite|npm.*dev" | grep -v grep | awk '{print $2}' || true)
 
 if [ -n "$REMAINING_PYTHON" ] || [ -n "$REMAINING_NODE" ]; then
     echo "⚠️  Found additional related processes:"
     if [ -n "$REMAINING_PYTHON" ]; then
-        echo "   Python processes: $REMAINING_PYTHON"
+        echo "   Legacy Python API (uvicorn): $REMAINING_PYTHON"
         kill $REMAINING_PYTHON 2>/dev/null || true
     fi
     if [ -n "$REMAINING_NODE" ]; then

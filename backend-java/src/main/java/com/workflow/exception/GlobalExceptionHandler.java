@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -76,7 +77,14 @@ public class GlobalExceptionHandler {
         log.debug("Forbidden: {}", e.getMessage());
         return ErrorResponseBuilder.forbidden(e.getMessage(), getRequestPath(request));
     }
-    
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleBadCredentials(
+            BadCredentialsException e, HttpServletRequest request) {
+        log.debug("Bad credentials: {}", e.getMessage());
+        return ErrorResponseBuilder.unauthorized(ErrorMessages.INVALID_CREDENTIALS, getRequestPath(request));
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadable(
             HttpMessageNotReadableException e, HttpServletRequest request) {

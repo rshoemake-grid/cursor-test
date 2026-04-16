@@ -55,14 +55,13 @@ public class DevUserBootstrapRunner implements ApplicationRunner {
             return;
         }
         String username = bootstrapUsername == null ? "" : bootstrapUsername.trim();
-        String password = bootstrapPassword == null ? "" : bootstrapPassword.trim();
+        // Do not trim password — spaces/specials may be intentional; .env users should quote if needed.
+        String password = bootstrapPassword == null ? "" : bootstrapPassword;
         if (username.isEmpty() || password.isEmpty()) {
             return;
         }
 
-        User user = userRepository.findByUsername(username)
-                .or(() -> userRepository.findByEmail(username))
-                .orElse(null);
+        User user = userRepository.findByUsernameOrEmail(username).orElse(null);
 
         if (user == null) {
             String email = bootstrapEmail == null || bootstrapEmail.isBlank()

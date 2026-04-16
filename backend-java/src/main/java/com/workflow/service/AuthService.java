@@ -101,7 +101,9 @@ public class AuthService {
                 )
         );
 
-        User user = RepositoryUtils.orElseThrow(userRepository.findByUsername(loginRequest.getUsername()), ErrorMessages.USER_NOT_FOUND);
+        User user = RepositoryUtils.orElseThrow(
+                userRepository.findByUsernameOrEmail(loginRequest.getUsername()),
+                ErrorMessages.USER_NOT_FOUND);
 
         boolean rememberMe = Boolean.TRUE.equals(loginRequest.getRememberMe());
         long accessTokenExpirationMs = rememberMe ? rememberMeExpirationMs : jwtExpirationMs;

@@ -208,7 +208,7 @@ class AuthServiceTest {
         lenient().when(authentication.isAuthenticated()).thenReturn(true);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(authentication);
-        when(userRepository.findByUsername(validUserCreate.getUsername())).thenReturn(Optional.of(userEntity));
+        when(userRepository.findByUsernameOrEmail(validUserCreate.getUsername())).thenReturn(Optional.of(userEntity));
         when(userRepository.save(userEntity)).thenReturn(userEntity);
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -243,7 +243,7 @@ class AuthServiceTest {
         lenient().when(authentication.isAuthenticated()).thenReturn(true);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(authentication);
-        when(userRepository.findByUsername(validUserCreate.getUsername())).thenReturn(Optional.empty());
+        when(userRepository.findByUsernameOrEmail(validUserCreate.getUsername())).thenReturn(Optional.empty());
 
         // When/Then
         assertThrows(ResourceNotFoundException.class, () -> authService.login(validUserCreate));

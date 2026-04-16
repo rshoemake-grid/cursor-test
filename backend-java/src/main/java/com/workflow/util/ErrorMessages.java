@@ -40,6 +40,7 @@ public final class ErrorMessages {
     public static final String BULK_DELETE_AUTH_REQUIRED = AUTH_REQUIRED;
 
     public static final String USERNAME_PASSWORD_REQUIRED = "Username and password are required";
+    public static final String INVALID_CREDENTIALS = "Invalid username or password";
     public static final String INVALID_JSON = "Invalid JSON";
     public static final String INVALID_REQUEST_BODY = "Invalid request body";
     public static final String VALIDATION_FAILED = "Validation failed";

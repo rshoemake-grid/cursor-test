@@ -26,9 +26,9 @@ case "$1" in
     ;;
   
   server)
-    echo "Starting server..."
+    echo "Starting Java API (Spring Boot)..."
     echo "API: http://localhost:8000  (from repo root: $ROOT)"
-    "$PYTHON_CMD" -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+    cd "$ROOT/backend-java" && exec ./gradlew bootRun
     ;;
   
   test)

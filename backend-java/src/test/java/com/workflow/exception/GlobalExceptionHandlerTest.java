@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 
 import java.util.Map;
 
@@ -62,6 +63,21 @@ class GlobalExceptionHandlerTest {
         Map<String, Object> error = (Map<String, Object>) response.getBody().get("error");
         assertEquals("422", error.get("code"));
         assertEquals("Username is required", error.get("message"));
+    }
+
+    @Test
+    void handleBadCredentials_Returns401() {
+        BadCredentialsException ex = new BadCredentialsException("Bad credentials");
+        HttpServletRequest request = mockRequest("/api/auth/login");
+
+        ResponseEntity<Map<String, Object>> response = handler.handleBadCredentials(ex, request);
+
+        assertEquals(401, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("Invalid username or password", response.getBody().get("detail"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> error = (Map<String, Object>) response.getBody().get("error");
+        assertEquals("401", error.get("code"));
     }
 
     @Test

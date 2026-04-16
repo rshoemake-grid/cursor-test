@@ -55,8 +55,7 @@ class DevUserBootstrapRunnerTest {
     void createsUserWhenMissing() throws Exception {
         when(environment.getActiveProfiles()).thenReturn(new String[]{"development"});
         injectBootstrapFields("newuser", "pw", "");
-        when(userRepository.findByUsername("newuser")).thenReturn(Optional.empty());
-        when(userRepository.findByEmail("newuser")).thenReturn(Optional.empty());
+        when(userRepository.findByUsernameOrEmail("newuser")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("pw")).thenReturn("hash");
 
         runner.run(null);
@@ -76,7 +75,7 @@ class DevUserBootstrapRunnerTest {
         existing.setUsername("u1");
         existing.setEmail("u1@x.com");
         existing.setHashedPassword("old");
-        when(userRepository.findByUsername("u1")).thenReturn(Optional.of(existing));
+        when(userRepository.findByUsernameOrEmail("u1")).thenReturn(Optional.of(existing));
         when(passwordEncoder.encode("newpw")).thenReturn("newhash");
 
         runner.run(null);

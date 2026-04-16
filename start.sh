@@ -8,12 +8,13 @@ echo "Agentic Workflow Engine - Phase 2"
 echo "=========================================="
 echo ""
 
-# Check if backend dependencies are installed
-if [ ! -d "venv" ] && [ ! -f "requirements.txt" ]; then
-    echo "⚠️  Python dependencies not found. Please run:"
-    PYTHON_CMD=$(command -v python3 || command -v python || echo "python3")
-    PIP_CMD=$(command -v pip3 || command -v pip || echo "pip3")
-    echo "   $PIP_CMD install -r requirements.txt"
+if [ ! -x "backend-java/gradlew" ]; then
+    echo "⚠️  backend-java/gradlew not found."
+    exit 1
+fi
+
+if ! command -v java >/dev/null 2>&1; then
+    echo "⚠️  Java is not on PATH. Install JDK 17+ (Temurin recommended)."
     exit 1
 fi
 
@@ -51,22 +52,20 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-# Start backend in background
-echo "▶️  Starting backend on http://localhost:8000"
-# Use python3 if available, otherwise fall back to python
-PYTHON_CMD=$(command -v python3 || command -v python || echo "python3")
-$PYTHON_CMD -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
+# Start backend in background (Spring Boot)
+echo "▶️  Starting Java API on http://localhost:8000"
+( cd backend-java && ./gradlew bootRun ) > backend.log 2>&1 &
 BACKEND_PID=$!
 
 # Wait for backend to be ready
 echo "⏳ Waiting for backend to start..."
-for i in {1..30}; do
-    if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+for i in {1..90}; do
+    if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
         echo "✅ Backend is ready!"
         break
     fi
     sleep 1
-    if [ $i -eq 30 ]; then
+    if [ $i -eq 90 ]; then
         echo "❌ Backend failed to start. Check backend.log"
         exit 1
     fi
@@ -98,7 +97,7 @@ echo "=========================================="
 echo ""
 echo "🌐 Frontend: http://localhost:3000"
 echo "🔌 Backend:  http://localhost:8000"
-echo "📚 API Docs: http://localhost:8000/docs"
+echo "📚 API docs: http://localhost:8000/swagger-ui.html"
 echo ""
 echo "Press Ctrl+C to stop both servers"
 echo "=========================================="
@@ -106,4 +105,3 @@ echo ""
 
 # Wait for user interrupt
 wait $BACKEND_PID $FRONTEND_PID
-

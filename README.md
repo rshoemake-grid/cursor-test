@@ -47,19 +47,18 @@ Build complex multi-agent workflows where AI agents collaborate sequentially to 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
+- JDK 17+ and Java on `PATH` (for the Spring Boot API)
 - Node.js 18+ and npm
-- OpenAI API key
+- OpenAI API key (optional for some features; can also configure in the UI)
 
 ### One-Command Startup (Recommended)
 
 ```bash
 # Setup (first time only)
-pip install -r requirements.txt
 cd frontend && npm install && cd ..
-cp .env.example .env  # Then add your OpenAI API key
+cp .env.example .env  # Then add your OpenAI API key (and optional dev bootstrap vars)
 
-# Start both backend and frontend
+# Start both backend and frontend (Java API + CRA)
 ./start.sh
 ```
 
@@ -69,9 +68,10 @@ Visit `http://localhost:3000` to use the visual workflow builder!
 
 #### Terminal 1: Backend
 ```bash
-python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+cd backend-java
+./gradlew bootRun
 ```
-Backend runs at `http://localhost:8000`. (Running `python main.py` from the repo root only runs a PyCharm sample stub and does **not** start the API.)
+Backend runs at `http://localhost:8000` (OpenAPI UI: `/swagger-ui.html`). A legacy Python API still exists under `backend/` for scripts/examples but is **not** used by `./start.sh` or the Kubernetes/Docker paths documented for this app.
 
 #### Terminal 2: Frontend
 ```bash

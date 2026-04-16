@@ -4,7 +4,7 @@
 
 This guide provides step-by-step instructions for deploying the Agentic Workflow Builder application to Kubernetes. The application consists of:
 
-- **Backend**: FastAPI Python application (port 8000)
+- **Backend**: Java Spring Boot application (`backend-java`, port 8000)
 - **Frontend**: React (Create React App) static build served on port 3000 or via ingress
 - **Database**: PostgreSQL (recommended) or SQLite (development)
 
@@ -60,38 +60,27 @@ This guide provides step-by-step instructions for deploying the Agentic Workflow
 
 ### Backend Dockerfile
 
-Create `backend/Dockerfile`:
+The repo ships `backend/Dockerfile`, which builds the Spring Boot JAR from `backend-java/`:
 
 ```dockerfile
-FROM python:3.12-slim
+# Spring Boot API (backend-java). Build from the repository root:
+#   docker build -t workflow-builder-backend:latest -f backend/Dockerfile .
 
+FROM eclipse-temurin:17-jdk-alpine AS builder
+WORKDIR /build
+COPY backend-java/ .
+RUN chmod +x gradlew && ./gradlew bootJar --no-daemon -x test
+
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY backend/ ./backend/
-COPY . .
-
-# Set Python path
-ENV PYTHONPATH=/app
-
-# Expose port
+RUN apk add --no-cache curl \
+    && addgroup -S spring && adduser -S spring -G spring
+COPY --from=builder /build/build/libs/*.jar app.jar
+USER spring:spring
 EXPOSE 8000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
-
-# Run application
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
+  CMD curl -sf http://127.0.0.1:8000/health > /dev/null || exit 1
+ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
 ### Frontend Dockerfile
@@ -236,20 +225,12 @@ Get connection details:
 ```bash
 export POSTGRES_PASSWORD=$(kubectl get secret postgresql -o jsonpath="{.data.postgres-password}" | base64 -d)
 export POSTGRES_HOST=postgresql.default.svc.cluster.local
-export DATABASE_URL="postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/workflows"
+export SPRING_DATASOURCE_URL="jdbc:postgresql://${POSTGRES_HOST}:5432/workflows"
 ```
 
 ### Database Initialization
 
-The application automatically initializes database tables on first startup. For manual initialization:
-
-```bash
-kubectl exec -it <backend-pod> -- python -c "
-from backend.database.db import init_db
-import asyncio
-asyncio.run(init_db())
-"
-```
+The Spring Boot application applies the JPA schema on startup (`spring.jpa.hibernate.ddl-auto=update` by default). For manual SQL against PostgreSQL, use `psql` or your DB admin tool instead of the legacy Python `init_db` helper.
 
 ## Kubernetes Manifests
 
@@ -277,26 +258,17 @@ metadata:
   name: workflow-builder-config
   namespace: workflow-builder
 data:
-  # Database
-  DATABASE_URL: "postgresql+asyncpg://postgres:password@postgresql:5432/workflows"
-  
-  # Server
-  HOST: "0.0.0.0"
-  PORT: "8000"
-  
-  # Logging
-  LOG_LEVEL: "INFO"
-  
-  # CORS (adjust for your domain)
-  CORS_ORIGINS: '["https://yourdomain.com"]'
-  
-  # Execution
-  EXECUTION_TIMEOUT: "300"
-  MAX_CONCURRENT_EXECUTIONS: "10"
-  
-  # WebSocket
-  WEBSOCKET_PING_INTERVAL: "20"
-  WEBSOCKET_TIMEOUT: "60"
+  SPRING_PROFILES_ACTIVE: "production"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgresql:5432/workflows"
+  SPRING_DATASOURCE_USERNAME: "postgres"
+  SPRING_JPA_DATABASE_PLATFORM: "org.hibernate.dialect.PostgreSQLDialect"
+  SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
+  LOGGING_LEVEL_ROOT: "INFO"
+  CORS_ALLOWED_ORIGINS: "https://yourdomain.com"
+  EXECUTION_TIMEOUT_SECONDS: "300"
+  EXECUTION_MAX_CONCURRENT: "10"
+  WEBSOCKET_PING_INTERVAL_SECONDS: "20"
+  WEBSOCKET_TIMEOUT_SECONDS: "60"
 ```
 
 ### Secrets
@@ -363,31 +335,71 @@ spec:
         - containerPort: 8000
           name: http
         env:
-        - name: DATABASE_URL
+        - name: SPRING_PROFILES_ACTIVE
           valueFrom:
             configMapKeyRef:
               name: workflow-builder-config
-              key: DATABASE_URL
-        - name: HOST
+              key: SPRING_PROFILES_ACTIVE
+        - name: SPRING_DATASOURCE_URL
           valueFrom:
             configMapKeyRef:
               name: workflow-builder-config
-              key: HOST
-        - name: PORT
+              key: SPRING_DATASOURCE_URL
+        - name: SPRING_DATASOURCE_USERNAME
           valueFrom:
             configMapKeyRef:
               name: workflow-builder-config
-              key: PORT
-        - name: LOG_LEVEL
+              key: SPRING_DATASOURCE_USERNAME
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: workflow-builder-secrets
+              key: POSTGRES_PASSWORD
+        - name: SPRING_JPA_DATABASE_PLATFORM
           valueFrom:
             configMapKeyRef:
               name: workflow-builder-config
-              key: LOG_LEVEL
-        - name: CORS_ORIGINS
+              key: SPRING_JPA_DATABASE_PLATFORM
+        - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
           valueFrom:
             configMapKeyRef:
               name: workflow-builder-config
-              key: CORS_ORIGINS
+              key: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+        - name: LOGGING_LEVEL_ROOT
+          valueFrom:
+            configMapKeyRef:
+              name: workflow-builder-config
+              key: LOGGING_LEVEL_ROOT
+        - name: CORS_ALLOWED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: workflow-builder-config
+              key: CORS_ALLOWED_ORIGINS
+        - name: EXECUTION_TIMEOUT_SECONDS
+          valueFrom:
+            configMapKeyRef:
+              name: workflow-builder-config
+              key: EXECUTION_TIMEOUT_SECONDS
+        - name: EXECUTION_MAX_CONCURRENT
+          valueFrom:
+            configMapKeyRef:
+              name: workflow-builder-config
+              key: EXECUTION_MAX_CONCURRENT
+        - name: WEBSOCKET_PING_INTERVAL_SECONDS
+          valueFrom:
+            configMapKeyRef:
+              name: workflow-builder-config
+              key: WEBSOCKET_PING_INTERVAL_SECONDS
+        - name: WEBSOCKET_TIMEOUT_SECONDS
+          valueFrom:
+            configMapKeyRef:
+              name: workflow-builder-config
+              key: WEBSOCKET_TIMEOUT_SECONDS
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: workflow-builder-secrets
+              key: JWT_SECRET
         - name: OPENAI_API_KEY
           valueFrom:
             secretKeyRef:
@@ -587,17 +599,7 @@ spec:
 
 ### Health Check Endpoint
 
-Add to `backend/main.py` (if not exists):
-
-```python
-from fastapi import FastAPI
-
-app = FastAPI()
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "service": "workflow-builder-backend"}
-```
+The Java API exposes `GET /health` (see `HealthController` in `backend-java`). Probes in `k8s/backend-deployment.yaml` target that path on port 8000.
 
 ## Deployment Steps
 
@@ -616,6 +618,7 @@ kubectl apply -f k8s/namespace.yaml
 kubectl create secret generic workflow-builder-secrets \
     --from-literal=OPENAI_API_KEY=your-key \
     --from-literal=POSTGRES_PASSWORD=your-password \
+    --from-literal=JWT_SECRET=your-jwt-secret-min-256-bits \
     --namespace=workflow-builder
 
 # Or apply secrets.yaml (development only)
@@ -930,5 +933,5 @@ spec:
 ## Support & Resources
 
 - Kubernetes Documentation: https://kubernetes.io/docs/
-- FastAPI Deployment: https://fastapi.tiangolo.com/deployment/
+- Spring Boot on Kubernetes: https://spring.io/guides/gs/spring-boot-kubernetes/
 - Nginx Ingress: https://kubernetes.github.io/ingress-nginx/

@@ -1,30 +1,18 @@
-FROM python:3.12-slim
+# Spring Boot API (backend-java). Build from the repository root:
+#   docker build -t workflow-builder-backend:latest -f backend/Dockerfile .
 
+FROM eclipse-temurin:17-jdk-alpine AS builder
+WORKDIR /build
+COPY backend-java/ .
+RUN chmod +x gradlew && ./gradlew bootJar --no-daemon -x test
+
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-
-# Install system dependencies (g++ needed for chromadb/chroma-hnswlib)
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY backend/ ./backend/
-COPY . .
-
-# Set Python path
-ENV PYTHONPATH=/app
-
-# Expose port
+RUN apk add --no-cache curl \
+    && addgroup -S spring && adduser -S spring -G spring
+COPY --from=builder /build/build/libs/*.jar app.jar
+USER spring:spring
 EXPOSE 8000
-
-# Health check (uses stdlib, no extra deps)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
-
-# Run application
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
+  CMD curl -sf http://127.0.0.1:8000/health > /dev/null || exit 1
+ENTRYPOINT ["java", "-jar", "app.jar"]

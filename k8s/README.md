@@ -13,7 +13,7 @@ kubectl apply -f secrets.yaml
 # 1. Create namespace
 kubectl apply -f namespace.yaml
 
-# 2. Create configmap (update DATABASE_URL, CORS_ORIGINS in configmap.yaml first)
+# 2. Create configmap (update SPRING_DATASOURCE_*, CORS_ALLOWED_ORIGINS in configmap.yaml first)
 kubectl apply -f configmap.yaml
 
 # 3. Deploy backend

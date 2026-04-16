@@ -41,7 +41,7 @@ class UserDetailsServiceImplTest {
 
     @Test
     void loadUserByUsername_UserExists_ReturnsUserDetails() {
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(userRepository.findByUsernameOrEmail("testuser")).thenReturn(Optional.of(user));
 
         UserDetails result = userDetailsService.loadUserByUsername("testuser");
 
@@ -50,27 +50,37 @@ class UserDetailsServiceImplTest {
         assertEquals("hashedPassword", result.getPassword());
         assertTrue(result.isEnabled());
         assertTrue(result.getAuthorities().isEmpty());
-        verify(userRepository, times(1)).findByUsername("testuser");
+        verify(userRepository, times(1)).findByUsernameOrEmail("testuser");
     }
 
     @Test
     void loadUserByUsername_UserNotFound_ThrowsUsernameNotFoundException() {
-        when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+        when(userRepository.findByUsernameOrEmail("unknown")).thenReturn(Optional.empty());
 
         assertThrows(UsernameNotFoundException.class, () ->
                 userDetailsService.loadUserByUsername("unknown"));
 
-        verify(userRepository, times(1)).findByUsername("unknown");
+        verify(userRepository, times(1)).findByUsernameOrEmail("unknown");
     }
 
     @Test
     void loadUserByUsername_InactiveUser_ReturnsUserDetailsWithDisabled() {
         user.setIsActive(false);
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(userRepository.findByUsernameOrEmail("testuser")).thenReturn(Optional.of(user));
 
         UserDetails result = userDetailsService.loadUserByUsername("testuser");
 
         assertNotNull(result);
         assertFalse(result.isEnabled());
+    }
+
+    @Test
+    void loadUserByUsername_ResolvesEmailToSameUser() {
+        when(userRepository.findByUsernameOrEmail("test@example.com")).thenReturn(Optional.of(user));
+
+        UserDetails result = userDetailsService.loadUserByUsername("test@example.com");
+
+        assertEquals("testuser", result.getUsername());
+        verify(userRepository, times(1)).findByUsernameOrEmail("test@example.com");
     }
 }

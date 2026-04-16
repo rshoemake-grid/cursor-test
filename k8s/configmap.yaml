@@ -4,23 +4,23 @@ metadata:
   name: workflow-builder-config
   namespace: workflow-builder
 data:
-  # Database - UPDATE THIS with your database URL
-  DATABASE_URL: "postgresql+asyncpg://postgres:password@postgresql:5432/workflows"
-  
-  # Server
-  HOST: "0.0.0.0"
-  PORT: "8000"
-  
+  # Spring Boot (backend-java) — see backend-java/src/main/resources/application*.properties
+  SPRING_PROFILES_ACTIVE: "production"
+
+  # PostgreSQL (add org.postgresql driver is on the classpath; override SQLite defaults)
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgresql:5432/workflows"
+  SPRING_DATASOURCE_USERNAME: "postgres"
+  SPRING_JPA_DATABASE_PLATFORM: "org.hibernate.dialect.PostgreSQLDialect"
+  SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
+
   # Logging
-  LOG_LEVEL: "INFO"
-  
-  # CORS - UPDATE THIS with your frontend domain
-  CORS_ORIGINS: '["https://yourdomain.com"]'
-  
-  # Execution
-  EXECUTION_TIMEOUT: "300"
-  MAX_CONCURRENT_EXECUTIONS: "10"
-  
-  # WebSocket
-  WEBSOCKET_PING_INTERVAL: "20"
-  WEBSOCKET_TIMEOUT: "60"
+  LOGGING_LEVEL_ROOT: "INFO"
+
+  # CORS: comma-separated origins (matches cors.allowed-origins)
+  CORS_ALLOWED_ORIGINS: "https://yourdomain.com"
+
+  # Execution / WebSocket (matches execution.* and websocket.*)
+  EXECUTION_TIMEOUT_SECONDS: "300"
+  EXECUTION_MAX_CONCURRENT: "10"
+  WEBSOCKET_PING_INTERVAL_SECONDS: "20"
+  WEBSOCKET_TIMEOUT_SECONDS: "60"
