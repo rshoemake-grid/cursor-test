@@ -20,7 +20,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -36,7 +38,7 @@ class AgentNodeExecutorTest {
 
     @BeforeEach
     void setUp() {
-        settingsService = new SettingsService(settingsRepository);
+        settingsService = new SettingsService(settingsRepository, new MockEnvironment());
     }
 
     @Test
@@ -48,7 +50,7 @@ class AgentNodeExecutorTest {
         Map<String, Object> anthropic = new HashMap<>();
         anthropic.put("type", "anthropic");
         anthropic.put("enabled", true);
-        anthropic.put("apiKey", "sk-ant");
+        anthropic.put("apiKey", "sk-ant-integration-test-key-0001");
         anthropic.put("baseUrl", "https://api.anthropic.com/v1");
         anthropic.put("models", List.of("claude-3"));
         when(settingsRepository.findById("u1"))
@@ -67,7 +69,7 @@ class AgentNodeExecutorTest {
 
         assertEquals("anthropic-out", out);
         assertEquals("https://api.anthropic.com/v1", client.anthropicBase);
-        assertEquals("sk-ant", client.anthropicKey);
+        assertEquals("sk-ant-integration-test-key-0001", client.anthropicKey);
         assertEquals("claude-3", client.anthropicModel);
         assertEquals("Be helpful", client.anthropicSystem);
         assertEquals("user text", client.anthropicUser);
@@ -82,7 +84,7 @@ class AgentNodeExecutorTest {
         Map<String, Object> gemini = new HashMap<>();
         gemini.put("type", "gemini");
         gemini.put("enabled", true);
-        gemini.put("apiKey", "g-real");
+        gemini.put("apiKey", "gemini-api-integration-test-0001");
         gemini.put("baseUrl", "https://generativelanguage.googleapis.com/v1beta");
         gemini.put("models", List.of("gemini-pro"));
         when(settingsRepository.findById("u1"))
@@ -101,7 +103,7 @@ class AgentNodeExecutorTest {
 
         assertEquals("gemini-out", out);
         assertEquals("https://generativelanguage.googleapis.com/v1beta", client.geminiBase);
-        assertEquals("g-real", client.geminiKey);
+        assertEquals("gemini-api-integration-test-0001", client.geminiKey);
         assertEquals("gemini-pro", client.geminiModel);
     }
 
@@ -114,7 +116,7 @@ class AgentNodeExecutorTest {
         Node node = agentNode("gpt-4o-mini", "", "x");
         Map<String, Object> ctxLlm = Map.of(
                 "type", "openai",
-                "api_key", "k",
+                "api_key", "sk-openai-agent-test-key-00001",
                 "base_url", "https://api.openai.com/v1",
                 "model", "gpt-4o-mini");
         NodeExecutionContext ctx = new NodeExecutionContext(ctxLlm, null, List.of(), Map.of());
@@ -134,6 +136,40 @@ class AgentNodeExecutorTest {
                         IllegalStateException.class,
                         () -> exec.execute(node, Map.of(), new ExecutionState(), ctx));
         assertEquals(ErrorMessages.LLM_CONFIG_REQUIRED_AGENT, ex.getMessage());
+    }
+
+    @Test
+    void execute_geminiVertexAdc_usesOpenAiCompatibleCompletions() {
+        MockEnvironment env = new MockEnvironment().withProperty("GOOGLE_CLOUD_PROJECT", "vertex-proj");
+        CapturingLlmClient client = new CapturingLlmClient();
+        SettingsService svcWithVertex = new SettingsService(settingsRepository, env);
+        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, svcWithVertex);
+
+        Map<String, Object> gemini = new HashMap<>();
+        gemini.put("type", "gemini");
+        gemini.put("enabled", true);
+        gemini.put("models", List.of("gemini-pro"));
+        when(settingsRepository.findById("u1"))
+                .thenReturn(Optional.of(settingsRow("u1", Map.of("providers", List.of(gemini)))));
+
+        Node node = agentNode("gemini-pro", "sys", "n1");
+        Map<String, Object> ctxLlm = new HashMap<>();
+        ctxLlm.put("type", "openai");
+        ctxLlm.put("api_key", "sk-openai-ctx-placeholder-0001");
+        ctxLlm.put("base_url", "https://api.openai.com/v1");
+        ctxLlm.put("model", "gpt-4o-mini");
+
+        NodeExecutionContext ctx = new NodeExecutionContext(ctxLlm, "u1", List.of(), Map.of());
+
+        Object out = exec.execute(node, Map.of("message", "hello vertex"), new ExecutionState(), ctx);
+
+        assertEquals("openai-out", out);
+        assertTrue(client.completionsUrl.contains("vertex-proj"));
+        assertTrue(client.completionsUrl.contains("endpoints/openapi"));
+        assertTrue(client.completionsUrl.contains("chat/completions"));
+        assertEquals("google/gemini-pro", client.completionsModel);
+        assertNull(client.completionsKey);
+        assertNull(client.geminiBase);
     }
 
     private static Settings settingsRow(String userId, Map<String, Object> data) {
@@ -165,10 +201,16 @@ class AgentNodeExecutorTest {
         String geminiBase;
         String geminiKey;
         String geminiModel;
+        String completionsUrl;
+        String completionsKey;
+        String completionsModel;
 
         @Override
         public String chatCompletions(
                 String url, String apiKey, String model, List<Map<String, Object>> messages) {
+            this.completionsUrl = url;
+            this.completionsKey = apiKey;
+            this.completionsModel = model;
             return "openai-out";
         }
 

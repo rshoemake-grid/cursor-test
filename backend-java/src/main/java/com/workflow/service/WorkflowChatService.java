@@ -12,6 +12,7 @@ import com.workflow.repository.WorkflowRepository;
 import com.workflow.util.ErrorMessages;
 import com.workflow.util.LlmConfigUtils;
 import com.workflow.util.ObjectUtils;
+import com.workflow.util.VertexGcpErrorHints;
 import com.workflow.util.RepositoryUtils;
 import com.workflow.util.WorkflowChatContextFormatter;
 import com.workflow.util.WorkflowMapper;
@@ -141,7 +142,8 @@ public class WorkflowChatService {
             return fallbackSingleCompletion(ctx, messages, request);
         } catch (Exception e) {
             log.warn("Workflow chat failed: {}", e.getMessage());
-            throw new ValidationException(ErrorMessages.chatError(e.getMessage()));
+            String detail = VertexGcpErrorHints.augmentMessage(e.getMessage(), environment);
+            throw new ValidationException(ErrorMessages.chatError(detail));
         }
     }
 
@@ -156,7 +158,8 @@ public class WorkflowChatService {
                     null,
                     request.getWorkflowId());
         } catch (Exception e) {
-            throw new ValidationException(ErrorMessages.chatError(e.getMessage()));
+            String detail = VertexGcpErrorHints.augmentMessage(e.getMessage(), environment);
+            throw new ValidationException(ErrorMessages.chatError(detail));
         }
     }
 

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.env.MockEnvironment;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SettingsServiceTest {
 
+    private static final String K_OPENAI = "sk-openai-integration-test-01";
+    private static final String K_ANTHROPIC = "sk-ant-integration-test-key-01";
+    private static final String K_GEMINI = "gemini-api-integration-test-01";
+
     @Mock
     private SettingsRepository settingsRepository;
 
@@ -29,7 +34,7 @@ class SettingsServiceTest {
 
     @BeforeEach
     void setUp() {
-        settingsService = new SettingsService(settingsRepository);
+        settingsService = new SettingsService(settingsRepository, new MockEnvironment());
     }
 
     @Test
@@ -66,7 +71,7 @@ class SettingsServiceTest {
         Map<String, Object> provider = Map.of(
                 "type", "openai",
                 "enabled", true,
-                "apiKey", "sk-test",
+                "apiKey", K_OPENAI,
                 "baseUrl", "https://api.openai.com/v1",
                 "model", "gpt-4o-mini"
         );
@@ -77,7 +82,7 @@ class SettingsServiceTest {
 
         assertTrue(result.isPresent());
         assertEquals("openai", result.get().get("type"));
-        assertEquals("sk-test", result.get().get("api_key"));
+        assertEquals(K_OPENAI, result.get().get("api_key"));
         assertEquals("https://api.openai.com/v1", result.get().get("base_url"));
         assertEquals("gpt-4o-mini", result.get().get("model"));
     }
@@ -88,7 +93,7 @@ class SettingsServiceTest {
         Map<String, Object> enabled = Map.of(
                 "type", "anthropic",
                 "enabled", true,
-                "apiKey", "sk-ant",
+                "apiKey", K_ANTHROPIC,
                 "model", "claude-3"
         );
         when(settingsRepository.findById("user-1"))
@@ -117,7 +122,7 @@ class SettingsServiceTest {
         Map<String, Object> provider = Map.of(
                 "type", "openai",
                 "enabled", true,
-                "apiKey", "sk-test",
+                "apiKey", K_OPENAI,
                 "model", "gpt-4",
                 "defaultModel", "gpt-4o-mini"
         );
@@ -135,7 +140,7 @@ class SettingsServiceTest {
         Map<String, Object> provider = new HashMap<>();
         provider.put("type", "openai");
         provider.put("enabled", true);
-        provider.put("apiKey", "sk-test");
+        provider.put("apiKey", K_OPENAI);
         provider.put("baseUrl", "https://api.openai.com/v1");
         provider.put("defaultModel", "gpt-4o-mini");
         provider.put("models", List.of("gpt-4o-mini", "gpt-4o"));
@@ -156,7 +161,7 @@ class SettingsServiceTest {
         Map<String, Object> provider = new HashMap<>();
         provider.put("type", "openai");
         provider.put("enabled", true);
-        provider.put("apiKey", "sk-test");
+        provider.put("apiKey", K_OPENAI);
         provider.put("baseUrl", "https://api.openai.com/v1");
         provider.put("defaultModel", "gpt-4o-mini");
         provider.put("models", List.of("gpt-4o-mini", "gpt-4o"));
@@ -177,7 +182,7 @@ class SettingsServiceTest {
         Map<String, Object> provider = new HashMap<>();
         provider.put("type", "openai");
         provider.put("enabled", true);
-        provider.put("apiKey", "sk-test");
+        provider.put("apiKey", K_OPENAI);
         provider.put("baseUrl", "https://api.openai.com/v1");
         provider.put("defaultModel", "gpt-4o-mini");
         provider.put("models", List.of("gpt-4o-mini", "gpt-4o"));
@@ -198,7 +203,7 @@ class SettingsServiceTest {
         Map<String, Object> provider = new HashMap<>();
         provider.put("type", "openai");
         provider.put("enabled", true);
-        provider.put("apiKey", "sk-test");
+        provider.put("apiKey", K_OPENAI);
         provider.put("baseUrl", "https://api.openai.com/v1");
         provider.put("defaultModel", "gpt-4o-mini");
         provider.put("models", List.of("gpt-4o-mini", "gpt-4o"));
@@ -233,7 +238,7 @@ class SettingsServiceTest {
         Map<String, Object> anthropic = new HashMap<>();
         anthropic.put("type", "anthropic");
         anthropic.put("enabled", true);
-        anthropic.put("apiKey", "sk-ant");
+        anthropic.put("apiKey", K_ANTHROPIC);
         anthropic.put("baseUrl", "https://api.anthropic.com/v1");
         anthropic.put("models", List.of("claude-3-5-sonnet-20241022"));
         when(settingsRepository.findById("user-1"))
@@ -244,7 +249,7 @@ class SettingsServiceTest {
 
         assertTrue(result.isPresent());
         assertEquals("anthropic", result.get().get("type"));
-        assertEquals("sk-ant", result.get().get("api_key"));
+        assertEquals(K_ANTHROPIC, result.get().get("api_key"));
         assertEquals("https://api.anthropic.com/v1", result.get().get("base_url"));
         assertEquals("claude-3-5-sonnet-20241022", result.get().get("model"));
     }
@@ -263,7 +268,7 @@ class SettingsServiceTest {
         Map<String, Object> ok = new HashMap<>();
         ok.put("type", "gemini");
         ok.put("enabled", true);
-        ok.put("apiKey", "g-key");
+        ok.put("apiKey", K_GEMINI);
         ok.put("models", List.of("gemini-pro"));
         when(settingsRepository.findById("user-1"))
                 .thenReturn(Optional.of(settingsWithData(Map.of("providers", List.of(disabled, noKey, ok)))));
@@ -272,7 +277,7 @@ class SettingsServiceTest {
 
         assertTrue(result.isPresent());
         assertEquals("gemini", result.get().get("type"));
-        assertEquals("g-key", result.get().get("api_key"));
+        assertEquals(K_GEMINI, result.get().get("api_key"));
     }
 
     @Test
@@ -280,12 +285,87 @@ class SettingsServiceTest {
         Map<String, Object> p = new HashMap<>();
         p.put("type", "openai");
         p.put("enabled", true);
-        p.put("apiKey", "sk");
+        p.put("apiKey", K_OPENAI);
         p.put("models", List.of("gpt-4o"));
         when(settingsRepository.findById("user-1"))
                 .thenReturn(Optional.of(settingsWithData(Map.of("providers", List.of(p)))));
 
         assertTrue(settingsService.getProviderConfigForModel("user-1", "gpt-5").isEmpty());
+    }
+
+    @Test
+    void getProviderConfigForModel_geminiEmptyApiKeyWithVertexProject_resolves() {
+        MockEnvironment env = new MockEnvironment().withProperty("GOOGLE_CLOUD_PROJECT", "my-gcp");
+        SettingsService svc = new SettingsService(settingsRepository, env);
+        Map<String, Object> gemini = new HashMap<>();
+        gemini.put("type", "gemini");
+        gemini.put("enabled", true);
+        gemini.put("models", List.of("gemini-2.5-flash"));
+        when(settingsRepository.findById("user-1"))
+                .thenReturn(Optional.of(settingsWithData(Map.of("providers", List.of(gemini)))));
+
+        Optional<Map<String, Object>> result =
+                svc.getProviderConfigForModel("user-1", "gemini-2.5-flash");
+
+        assertTrue(result.isPresent());
+        assertEquals("gemini", result.get().get("type"));
+        assertEquals("", result.get().get("api_key"));
+    }
+
+    @Test
+    void getProviderConfigForModel_geminiPlaceholderKeyWithVertex_normalizesToEmptyKey() {
+        MockEnvironment env = new MockEnvironment().withProperty("GOOGLE_CLOUD_PROJECT", "proj");
+        SettingsService svc = new SettingsService(settingsRepository, env);
+        Map<String, Object> gemini = new HashMap<>();
+        gemini.put("type", "gemini");
+        gemini.put("enabled", true);
+        gemini.put("apiKey", "your-api-key-here");
+        gemini.put("models", List.of("gemini-flash"));
+        when(settingsRepository.findById("user-1"))
+                .thenReturn(Optional.of(settingsWithData(Map.of("providers", List.of(gemini)))));
+
+        Optional<Map<String, Object>> result = svc.getProviderConfigForModel("user-1", "gemini-flash");
+
+        assertTrue(result.isPresent());
+        assertEquals("", result.get().get("api_key"));
+    }
+
+    @Test
+    void getActiveLlmConfig_skipsOpenAiWithoutUsableCredential() {
+        Map<String, Object> openaiBad = new HashMap<>();
+        openaiBad.put("type", "openai");
+        openaiBad.put("enabled", true);
+        openaiBad.put("model", "gpt-4o");
+        Map<String, Object> geminiOk = new HashMap<>();
+        geminiOk.put("type", "gemini");
+        geminiOk.put("enabled", true);
+        geminiOk.put("apiKey", K_GEMINI);
+        geminiOk.put("model", "gemini-pro");
+        when(settingsRepository.findById("user-1"))
+                .thenReturn(Optional.of(settingsWithData(Map.of("providers", List.of(openaiBad, geminiOk)))));
+
+        Optional<Map<String, Object>> result = settingsService.getActiveLlmConfig("user-1");
+
+        assertTrue(result.isPresent());
+        assertEquals("gemini", result.get().get("type"));
+    }
+
+    @Test
+    void getActiveLlmConfig_geminiNoKeyWithVertex_isUsable() {
+        MockEnvironment env = new MockEnvironment().withProperty("GOOGLE_CLOUD_PROJECT", "p");
+        SettingsService svc = new SettingsService(settingsRepository, env);
+        Map<String, Object> gemini = new HashMap<>();
+        gemini.put("type", "gemini");
+        gemini.put("enabled", true);
+        gemini.put("model", "gemini-2.5-flash");
+        when(settingsRepository.findById("user-1"))
+                .thenReturn(Optional.of(settingsWithData(Map.of("providers", List.of(gemini)))));
+
+        Optional<Map<String, Object>> result = svc.getActiveLlmConfig("user-1");
+
+        assertTrue(result.isPresent());
+        assertEquals("gemini", result.get().get("type"));
+        assertEquals("", result.get().get("api_key"));
     }
 
     private static Settings settingsWithData(Map<String, Object> data) {

@@ -5,6 +5,7 @@ import com.workflow.dto.Node;
 import com.workflow.service.SettingsService;
 import com.workflow.util.ErrorMessages;
 import com.workflow.util.LlmConfigUtils;
+import com.workflow.util.LlmVertexGeminiSupport;
 import com.workflow.util.ObjectUtils;
 import com.workflow.dto.NodeType;
 import org.springframework.core.env.Environment;
@@ -86,6 +87,17 @@ public class AgentNodeExecutor implements NodeExecutor {
                 yield llmClient.chatAnthropic(aBase, aKey, model, systemPrompt, userText, maxTokens, temperature);
             }
             case "gemini" -> {
+                if (LlmVertexGeminiSupport.geminiUsesVertexAdc(effectiveConfig, environment)) {
+                    Map<String, Object> vertexGeminiCfg = new HashMap<>(effectiveConfig);
+                    vertexGeminiCfg.put("model", model);
+                    LlmConfigUtils.LlmRequestContext requestCtx =
+                            LlmConfigUtils.prepareRequest(vertexGeminiCfg, environment);
+                    List<Map<String, Object>> messages = new ArrayList<>();
+                    messages.add(LlmConfigUtils.buildMessage("system", systemPrompt));
+                    messages.add(LlmConfigUtils.buildMessage("user", userText));
+                    yield llmClient.chatCompletions(
+                            requestCtx.url(), requestCtx.apiKey(), requestCtx.model(), messages);
+                }
                 String gBase = LlmConfigUtils.getBaseUrlOrNull(effectiveConfig);
                 if (gBase == null || gBase.isBlank()) {
                     gBase = "https://generativelanguage.googleapis.com/v1beta";
@@ -100,7 +112,7 @@ public class AgentNodeExecutor implements NodeExecutor {
                 List<Map<String, Object>> messages = new ArrayList<>();
                 messages.add(LlmConfigUtils.buildMessage("system", systemPrompt));
                 messages.add(LlmConfigUtils.buildMessage("user", userText));
-                yield llmClient.chatCompletions(requestCtx.url(), requestCtx.apiKey(), model, messages);
+                yield llmClient.chatCompletions(requestCtx.url(), requestCtx.apiKey(), requestCtx.model(), messages);
             }
         };
     }

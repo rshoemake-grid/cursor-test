@@ -57,7 +57,7 @@ class WorkflowChatServiceTest {
     void setUp() {
         lenient().when(environment.getProperty(anyString())).thenReturn(null);
         workflowMapper = new WorkflowMapper(objectMapper);
-        settingsService = new SettingsService(settingsRepository);
+        settingsService = new SettingsService(settingsRepository, environment);
         ownershipService = new WorkflowOwnershipService(workflowRepository, workflowShareRepository);
     }
 
@@ -78,7 +78,7 @@ class WorkflowChatServiceTest {
         Map<String, Object> provider = Map.of(
                 "type", "openai",
                 "enabled", true,
-                "apiKey", "sk-test",
+                "apiKey", "sk-openai-workflow-chat-test-01",
                 "baseUrl", "https://api.openai.com/v1",
                 "model", "gpt-4o-mini");
         Settings s = new Settings();
@@ -92,7 +92,7 @@ class WorkflowChatServiceTest {
         Map<String, Object> provider = new HashMap<>();
         provider.put("type", "openai");
         provider.put("enabled", true);
-        provider.put("apiKey", "sk-test");
+        provider.put("apiKey", "sk-openai-workflow-chat-test-01");
         provider.put("baseUrl", "https://api.openai.com/v1");
         provider.put("defaultModel", "gpt-4o-mini");
         provider.put("models", List.of("gpt-4o-mini", "gpt-4o"));

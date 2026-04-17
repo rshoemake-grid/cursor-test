@@ -4,9 +4,12 @@ import com.workflow.entity.Settings;
 import com.workflow.repository.SettingsRepository;
 import com.workflow.util.JsonStateUtils;
 import com.workflow.util.LlmConfigUtils;
+import com.workflow.util.LlmVertexGeminiSupport;
 import com.workflow.util.ObjectUtils;
+import com.workflow.util.SettingsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,9 +31,11 @@ public class SettingsService {
     private static final String ANONYMOUS_USER_ID = "anonymous";
 
     private final SettingsRepository settingsRepository;
+    private final Environment environment;
 
-    public SettingsService(SettingsRepository settingsRepository) {
+    public SettingsService(SettingsRepository settingsRepository, Environment environment) {
         this.settingsRepository = settingsRepository;
+        this.environment = environment;
     }
 
     @Transactional(readOnly = true)
@@ -64,7 +69,7 @@ public class SettingsService {
             return Optional.empty();
         }
         return providers.stream()
-                .filter(p -> Boolean.TRUE.equals(p.get("enabled")))
+                .filter(this::isProviderEnabledAndUsable)
                 .findFirst()
                 .map(this::providerToLlmConfig);
     }
@@ -121,11 +126,7 @@ public class SettingsService {
         String targetNorm = modelName.trim().toLowerCase(Locale.ROOT);
         List<Map<String, Object>> providers = JsonStateUtils.getListOfMaps(settings.get(), "providers");
         for (Map<String, Object> provider : providers) {
-            if (!Boolean.TRUE.equals(provider.get("enabled"))) {
-                continue;
-            }
-            Object apiKey = provider.get("apiKey");
-            if (apiKey == null || apiKey.toString().isBlank()) {
+            if (!isProviderEnabledAndUsable(provider)) {
                 continue;
             }
             List<String> models = JsonStateUtils.getStringList(provider, "models");
@@ -190,10 +191,45 @@ public class SettingsService {
 
     private Map<String, Object> buildProviderLlmConfig(Map<String, Object> provider, String model) {
         Map<String, Object> config = new HashMap<>();
+        String type =
+                ObjectUtils.toStringOrDefault(provider.get("type"), "openai")
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+        Object apiKeyObj = provider.get("apiKey");
+        String rawKey = apiKeyObj != null ? apiKeyObj.toString().trim() : "";
+        Object apiKeyValue = rawKey;
+        if ("gemini".equals(type) && LlmVertexGeminiSupport.resolveProject(environment) != null) {
+            if (rawKey.isEmpty() || !SettingsUtils.isValidApiKey(rawKey)) {
+                apiKeyValue = "";
+            }
+        }
         config.put("type", provider.get("type"));
-        config.put("api_key", provider.get("apiKey"));
+        config.put("api_key", apiKeyValue);
         config.put("base_url", provider.get("baseUrl"));
         config.put("model", model);
         return config;
+    }
+
+    /**
+     * Enabled provider usable for LLM — matches Python {@code _is_provider_enabled_and_valid}:
+     * non-Gemini needs a valid API key; Gemini may use empty/placeholder key when Vertex project is configured.
+     */
+    private boolean isProviderEnabledAndUsable(Map<String, Object> provider) {
+        if (!Boolean.TRUE.equals(provider.get("enabled"))) {
+            return false;
+        }
+        String type =
+                ObjectUtils.toStringOrDefault(provider.get("type"), "openai")
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+        Object apiKeyObj = provider.get("apiKey");
+        String key = apiKeyObj != null ? apiKeyObj.toString().trim() : "";
+        if (!key.isEmpty() && SettingsUtils.isValidApiKey(key)) {
+            return true;
+        }
+        if ("gemini".equals(type) && LlmVertexGeminiSupport.resolveProject(environment) != null) {
+            return key.isEmpty() || !SettingsUtils.isValidApiKey(key);
+        }
+        return false;
     }
 }
