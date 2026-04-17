@@ -9,6 +9,23 @@ const loadDraftsFromStorage = (options) => {
 const saveDraftsToStorage = (drafts, options) => {
   setLocalStorageItem(DRAFT_STORAGE_KEY, drafts, options);
 };
+function shouldHydrateDraftFromStorage(draft, workflowId) {
+  if (!draft) {
+    return false;
+  }
+  const propWorkflowIdMissing = workflowId == null || workflowId === "";
+  const draftWorkflowId = draft.workflowId;
+  const idsMatch =
+    (propWorkflowIdMissing && (draftWorkflowId == null || draftWorkflowId === "")) ||
+    (workflowId != null &&
+      workflowId !== "" &&
+      draftWorkflowId === workflowId);
+  const restoreSavedWhilePropIdMissing =
+    propWorkflowIdMissing &&
+    draftWorkflowId != null &&
+    draftWorkflowId !== "";
+  return idsMatch || restoreSavedWhilePropIdMissing;
+}
 function useDraftManagement({
   tabDraftsRef: externalDraftsRef,
   tabId,
@@ -80,17 +97,11 @@ function useDraftManagement({
     }
     dRef.current = loadDraftsFromStorage(so);
     const draft = dRef.current[tabId];
-    const matchesCurrentWorkflow =
-      draft &&
-      ((!workflowId && !draft.workflowId) ||
-        (workflowId && draft.workflowId === workflowId));
-    if (matchesCurrentWorkflow) {
-      log.debug(
-        "[useDraftManagement] Loading draft nodes:",
-        draft.nodes.length,
-      );
-      setN(draft.nodes.map(norm));
-      setE(draft.edges);
+    if (shouldHydrateDraftFromStorage(draft, workflowId)) {
+      const nodeList = draft.nodes ?? [];
+      log.debug("[useDraftManagement] Loading draft nodes:", nodeList.length);
+      setN(nodeList.map(norm));
+      setE(draft.edges ?? []);
       setLWId(draft.workflowId);
       setLWName(draft.workflowName);
       setLWDesc(draft.workflowDescription);

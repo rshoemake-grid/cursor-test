@@ -55,6 +55,13 @@ describe("executionFilters utilities", () => {
       const result = filterByStatus(executions, []);
       expect(result).toEqual(executions);
     });
+    it("should match failed when status is enum-shaped JSON", () => {
+      const row = {
+        ...mockExecution2,
+        status: { value: "failed" },
+      };
+      expect(filterByStatus([row], ["failed"])).toEqual([row]);
+    });
   });
   describe("filterByWorkflowId", () => {
     it("should filter by workflow ID", () => {

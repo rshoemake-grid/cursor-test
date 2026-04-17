@@ -68,7 +68,12 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
     gemini_api_key: Optional[str] = None
-    
+
+    # Vertex / Gemini (loaded from .env so os.getenv is not required — see vertex_gemini.resolve_gcp_project)
+    google_cloud_project: Optional[str] = None
+    gcp_project: Optional[str] = None
+    vertex_location: Optional[str] = None
+
     # Logging
     log_level: str = "INFO"
     log_file: Optional[str] = "app.log"

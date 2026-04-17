@@ -124,6 +124,77 @@ describe("useDraftManagement", () => {
     expect(mockSetLocalWorkflowName).toHaveBeenCalledWith("Untitled Workflow");
     expect(mockSetLocalWorkflowDescription).toHaveBeenCalledWith("");
   });
+  it("should hydrate from draft when workflowId prop is null but draft is a saved workflow with nodes", () => {
+    const draft = {
+      nodes: mockNodes,
+      edges: mockEdges,
+      workflowId: "workflow-1",
+      workflowName: "From Draft",
+      workflowDescription: "Desc",
+      isUnsaved: false,
+    };
+    mockGetLocalStorageItem.mockReturnValue({
+      "tab-1": draft,
+    });
+    renderHook(() =>
+      useDraftManagement({
+        tabId: "tab-1",
+        workflowId: null,
+        nodes: [],
+        edges: [],
+        localWorkflowId: null,
+        localWorkflowName: "Untitled Workflow",
+        localWorkflowDescription: "",
+        tabIsUnsaved: false,
+        setNodes: mockSetNodes,
+        setEdges: mockSetEdges,
+        setLocalWorkflowId: mockSetLocalWorkflowId,
+        setLocalWorkflowName: mockSetLocalWorkflowName,
+        setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+        normalizeNodeForStorage: mockNormalizeNodeForStorage,
+      }),
+    );
+    expect(mockSetNodes).toHaveBeenCalledWith(mockNodes);
+    expect(mockSetEdges).toHaveBeenCalledWith(mockEdges);
+    expect(mockSetLocalWorkflowId).toHaveBeenCalledWith("workflow-1");
+    expect(mockSetLocalWorkflowName).toHaveBeenCalledWith("From Draft");
+    expect(mockSetLocalWorkflowDescription).toHaveBeenCalledWith("Desc");
+  });
+  it("should hydrate saved workflow draft when prop workflowId is null even if graph is empty", () => {
+    const draft = {
+      nodes: [],
+      edges: [],
+      workflowId: "workflow-1",
+      workflowName: "Empty Graph",
+      workflowDescription: "",
+      isUnsaved: false,
+    };
+    mockGetLocalStorageItem.mockReturnValue({
+      "tab-1": draft,
+    });
+    renderHook(() =>
+      useDraftManagement({
+        tabId: "tab-1",
+        workflowId: null,
+        nodes: [],
+        edges: [],
+        localWorkflowId: null,
+        localWorkflowName: "Untitled Workflow",
+        localWorkflowDescription: "",
+        tabIsUnsaved: false,
+        setNodes: mockSetNodes,
+        setEdges: mockSetEdges,
+        setLocalWorkflowId: mockSetLocalWorkflowId,
+        setLocalWorkflowName: mockSetLocalWorkflowName,
+        setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+        normalizeNodeForStorage: mockNormalizeNodeForStorage,
+      }),
+    );
+    expect(mockSetNodes).toHaveBeenCalledWith([]);
+    expect(mockSetEdges).toHaveBeenCalledWith([]);
+    expect(mockSetLocalWorkflowId).toHaveBeenCalledWith("workflow-1");
+    expect(mockSetLocalWorkflowName).toHaveBeenCalledWith("Empty Graph");
+  });
   it("should save draft when workflow state changes", () => {
     const { rerender } = renderHook((props) => useDraftManagement(props), {
       initialProps: {

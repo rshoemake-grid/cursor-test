@@ -298,17 +298,19 @@ function ExecutionConsole({
   });
   useEffect(() => {
     if (
-      activeExecutionId !== null &&
-      activeExecutionId !== void 0 &&
-      activeExecutionId !== "" &&
-      executions.length > 0
+      activeExecutionId == null ||
+      activeExecutionId === "" ||
+      executions.length === 0
     ) {
-      setActiveTab(activeExecutionId);
-      if (isExpanded === false) {
-        setIsExpanded(true);
-      }
+      return;
     }
-  }, [activeExecutionId, executions.length]);
+    const hasTab = executions.some((e) => e && e.id === activeExecutionId);
+    if (!hasTab) {
+      return;
+    }
+    setActiveTab(activeExecutionId);
+    setIsExpanded(true);
+  }, [activeExecutionId, executions]);
   const handleCloseExecutionTab = (e, executionId) => {
     e.stopPropagation();
     if (

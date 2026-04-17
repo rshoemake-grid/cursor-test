@@ -71,8 +71,11 @@ class GeminiProvider(ILLMProvider):
 
         from ..utils.vertex_gemini import create_vertex_async_openai_client, resolve_project_and_location
 
+        model_for_vertex = str(config.get("model") or "").strip()
         try:
-            project_id, location = resolve_project_and_location()
+            project_id, location = resolve_project_and_location(
+                model_for_vertex if model_for_vertex else None
+            )
         except RuntimeError as e:
             raise ValueError(
                 "Gemini api_key is required unless GOOGLE_CLOUD_PROJECT (or GCP_PROJECT) is set "

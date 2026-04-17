@@ -1,8 +1,22 @@
+import {
+  mapApiStatusToExecutionUiStatus,
+  normalizeApiExecutionStatusToken,
+} from "../hooks/utils/apiExecutionStatus";
+
 function filterByStatus(executions, statuses) {
   if (!statuses || statuses.length === 0) {
     return executions;
   }
-  return executions.filter((execution) => statuses.includes(execution.status));
+  return executions.filter((execution) => {
+    const ui = mapApiStatusToExecutionUiStatus(execution);
+    const raw = execution?.status;
+    const token =
+      ui ??
+      (typeof raw === "string"
+        ? raw.trim().toLowerCase()
+        : normalizeApiExecutionStatusToken(raw));
+    return token !== "" && token != null && statuses.includes(token);
+  });
 }
 function filterByWorkflowId(executions, workflowId) {
   if (!workflowId) {

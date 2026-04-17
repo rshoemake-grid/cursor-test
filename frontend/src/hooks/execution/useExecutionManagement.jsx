@@ -1,6 +1,7 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { api } from "../../api/client";
 import { logger } from "../../utils/logger";
+import { hydrateExecutionLogsIfEmpty } from "../utils/apiExecutionStatus";
 import { useExecutionPolling } from "../utils/useExecutionPolling";
 import { ExecutionStateManager } from "../utils/executionStateManager";
 import { isRealExecutionId } from "../utils/executionIdValidation";
@@ -15,25 +16,32 @@ function useExecutionManagement({
   apiClient = api,
   logger: injectedLogger = logger,
 }) {
+  tabsRef.current = tabs;
   const stateManager = useMemo(
     () => new ExecutionStateManager({ logger: injectedLogger }),
     [injectedLogger],
   );
+  const activeTabIdRef = useRef(activeTabId);
+  // Match tabsRef: update every render so synchronous onExecutionStart sees the current tab (useEffect alone runs too late).
+  activeTabIdRef.current = activeTabId;
   const handleExecutionStart = useCallback(
     (executionId) => {
+      const prevTabs = tabsRef.current;
       const updatedTabs = stateManager.handleExecutionStart(
-        tabs,
-        activeTabId,
+        prevTabs,
+        activeTabIdRef.current,
         executionId,
       );
-      if (updatedTabs !== tabs) {
-        setTabs(updatedTabs);
-        if (onExecutionStart) {
-          onExecutionStart(executionId);
-        }
+      if (updatedTabs === prevTabs) {
+        return;
+      }
+      tabsRef.current = updatedTabs;
+      setTabs(updatedTabs);
+      if (onExecutionStart) {
+        onExecutionStart(executionId);
       }
     },
-    [tabs, activeTabId, setTabs, onExecutionStart, stateManager],
+    [tabsRef, setTabs, onExecutionStart, stateManager],
   );
   const handleClearExecutions = useCallback(
     (workflowId) => {
@@ -83,12 +91,16 @@ function useExecutionManagement({
               setTimeout(r, TERMINAL_EXECUTION_REFRESH_MS),
             );
             const snapshot = await apiClient.getExecution(executionId);
+            const hydrated = await hydrateExecutionLogsIfEmpty(
+              apiClient,
+              snapshot,
+            );
             setTabs((prev) =>
               stateManager.mergeExecutionFromServer(
                 prev,
                 workflowId,
                 executionId,
-                snapshot,
+                hydrated,
               ),
             );
           } catch (err) {

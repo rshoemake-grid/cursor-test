@@ -9,6 +9,7 @@ from backend.auth import get_optional_user
 from backend.utils.logger import get_logger
 from backend.dependencies import SettingsServiceDep, LLMClientFactoryDep, WorkflowServiceDep, WorkflowOwnershipServiceDep
 from backend.utils.error_handling import INVALID_API_KEY_MSG, is_api_key_error
+from backend.utils.vertex_gemini import augment_message_for_vertex_gcp_errors
 from backend.exceptions import WorkflowForbiddenError
 
 from .models import ChatRequest, ChatResponse
@@ -69,6 +70,12 @@ async def chat_with_workflow(
         )
 
         client = llm_client_factory.create_client(user_id, llm_config=llm_config)
+        # create_client may rewrite llm_config["model"] (e.g. Vertex Gemini → google/<id> for OpenAPI).
+        if llm_config is not None:
+            cfg_model = llm_config.get("model")
+            if cfg_model is not None and str(cfg_model).strip() != "":
+                model = str(cfg_model).strip()
+
         client_canvas = (
             request.canvas_snapshot.model_dump() if request.canvas_snapshot is not None else None
         )
@@ -120,8 +127,10 @@ async def chat_with_workflow(
         logger.warning(f"Configuration error in workflow chat: {error_msg}")
         raise HTTPException(status_code=400, detail=error_msg)
     except Exception as e:
-        error_msg = str(e)
+        error_msg = augment_message_for_vertex_gcp_errors(str(e))
         logger.error(f"Error in workflow chat: {error_msg}", exc_info=True)
         if is_api_key_error(error_msg, e):
             raise HTTPException(status_code=400, detail=INVALID_API_KEY_MSG)
+        if "CONSUMER_INVALID" in str(e):
+            raise HTTPException(status_code=400, detail=f"Chat error: {error_msg}")
         raise HTTPException(status_code=500, detail=f"Chat error: {error_msg}")

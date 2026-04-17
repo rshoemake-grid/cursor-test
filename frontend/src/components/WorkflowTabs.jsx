@@ -43,9 +43,7 @@ function WorkflowTabs({
   const { tabs, setTabs, activeTabId, setActiveTabId, processedKeys } =
     useWorkflowTabs();
   const tabsRef = useRef(tabs);
-  useEffect(() => {
-    tabsRef.current = tabs;
-  }, [tabs]);
+  tabsRef.current = tabs;
   const builderRef = useRef(null);
   const { token, isAuthenticated } = useAuth();
   useEffect(() => {

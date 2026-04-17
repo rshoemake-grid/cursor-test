@@ -37,6 +37,24 @@ public final class LlmVertexGeminiSupport {
         return loc != null && !loc.isBlank() ? loc.trim() : "us-central1";
     }
 
+    /**
+     * Gemini 3.x preview models are only available on the Vertex <em>global</em> endpoint, not regional.
+     */
+    public static boolean vertexModelRequiresGlobalLocation(String model) {
+        String m = ObjectUtils.orDefault(model, "").trim().toLowerCase(Locale.ROOT);
+        if (m.startsWith("google/")) {
+            m = m.substring("google/".length());
+        }
+        return m.startsWith("gemini-3") && m.contains("preview");
+    }
+
+    public static String resolveLocationForModel(Environment env, String model) {
+        if (vertexModelRequiresGlobalLocation(model)) {
+            return "global";
+        }
+        return resolveLocation(env);
+    }
+
     public static boolean isGeminiType(Map<String, Object> config) {
         String type =
                 ObjectUtils.toStringOrDefault(config != null ? config.get("type") : null, "openai")
@@ -58,8 +76,16 @@ public final class LlmVertexGeminiSupport {
     }
 
     public static String vertexOpenAiCompatBase(Environment env) {
+        return vertexOpenAiCompatBase(env, null);
+    }
+
+    public static String vertexOpenAiCompatBase(Environment env, String model) {
         String project = resolveProject(env);
-        String location = resolveLocation(env);
+        String location = resolveLocationForModel(env, model);
+        if ("global".equals(location)) {
+            return String.format(
+                    "https://aiplatform.googleapis.com/v1/projects/%s/locations/global/endpoints/openapi", project);
+        }
         return String.format(
                 "https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/endpoints/openapi",
                 location, project, location);
@@ -67,9 +93,14 @@ public final class LlmVertexGeminiSupport {
 
     public static String vertexGenerateContentUrl(Environment env, String model) {
         String project = resolveProject(env);
-        String location = resolveLocation(env);
+        String location = resolveLocationForModel(env, model);
         String mid =
                 UriUtils.encodePathSegment(vertexGenerateContentModelId(model), StandardCharsets.UTF_8);
+        if ("global".equals(location)) {
+            return String.format(
+                    "https://aiplatform.googleapis.com/v1/projects/%s/locations/global/publishers/google/models/%s:generateContent",
+                    project, mid);
+        }
         return String.format(
                 "https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:generateContent",
                 location, project, location, mid);

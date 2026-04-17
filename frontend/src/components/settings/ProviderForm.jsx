@@ -121,7 +121,11 @@ function ProviderForm({
                     apiKey: e.target.value,
                   })
                 }
-                placeholder="sk-..."
+                placeholder={
+                  provider.type === "gemini"
+                    ? "Optional — Google AI Studio key, or leave empty for Vertex + ADC"
+                    : "sk-..."
+                }
                 $padRightForIcon
               />
               <ApiKeyRevealButton
@@ -185,11 +189,14 @@ function ProviderForm({
             onToggleModel={onToggleModel}
             isModelExpanded={isModelExpanded}
           />
-          <ProviderTestRow>
+            <ProviderTestRow>
             <SettingsTestConnectionButton
               type="button"
               onClick={() => onTestProvider(provider)}
-              disabled={!provider.apiKey || isTesting}
+              disabled={
+                isTesting ||
+                (provider.type !== "gemini" && !(provider.apiKey || "").trim())
+              }
             >
               {isTesting ? (
                 <>

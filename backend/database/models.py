@@ -50,9 +50,15 @@ class WorkflowDB(Base):
 
 
 class ExecutionDB(Base):
-    """Database model for workflow executions"""
+    """Database model for workflow executions.
+
+    Composite list indexes (user/workflow/status + started_at) are created in
+    init_db via backend.database.db._ensure_execution_list_indexes so existing
+    SQLite files get them without a full migration framework.
+    """
+
     __tablename__ = "executions"
-    
+
     id = Column(String, primary_key=True, index=True)
     workflow_id = Column(String, nullable=False, index=True)
     user_id = Column(String, ForeignKey("users.id"), nullable=True, index=True)  # Phase 4

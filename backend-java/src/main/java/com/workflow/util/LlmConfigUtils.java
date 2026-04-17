@@ -177,8 +177,9 @@ public final class LlmConfigUtils {
         String baseUrl;
         String apiKey;
         if (LlmVertexGeminiSupport.geminiUsesVertexAdc(ObjectUtils.orEmptyMap(config), env)) {
-            baseUrl = LlmVertexGeminiSupport.vertexOpenAiCompatBase(env);
-            model = LlmVertexGeminiSupport.vertexOpenAiModelId(model);
+            String rawModel = model;
+            baseUrl = LlmVertexGeminiSupport.vertexOpenAiCompatBase(env, rawModel);
+            model = LlmVertexGeminiSupport.vertexOpenAiModelId(rawModel);
             apiKey = null;
         } else {
             baseUrl = baseUrlForOpenAiCompatibleChat(ObjectUtils.orEmptyMap(config));

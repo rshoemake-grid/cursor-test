@@ -33,8 +33,9 @@ class ExecutionStateManager {
     if (!activeTab) return tabs;
     return tabs.map((tab) => {
       if (tab.id !== activeTabId) return tab;
+      const execList = tab.executions ?? [];
       if (isRealExecutionId(executionId)) {
-        const pendingExecutions = tab.executions
+        const pendingExecutions = execList
           .map((exec, idx) => ({ exec, idx }))
           .filter(
             ({ exec }) => exec && exec.id && isPendingExecutionId(exec.id),
@@ -43,7 +44,7 @@ class ExecutionStateManager {
           const oldestPending = pendingExecutions[pendingExecutions.length - 1];
           return {
             ...tab,
-            executions: tab.executions.map((exec, idx) =>
+            executions: execList.map((exec, idx) =>
               idx === oldestPending.idx
                 ? {
                     ...exec,
@@ -55,7 +56,7 @@ class ExecutionStateManager {
           };
         }
       }
-      const existingExecution = tab.executions.find(
+      const existingExecution = execList.find(
         (exec) => exec.id === executionId,
       );
       if (existingExecution) {
@@ -73,7 +74,7 @@ class ExecutionStateManager {
       };
       return {
         ...tab,
-        executions: [newExecution, ...tab.executions],
+        executions: [newExecution, ...execList],
         activeExecutionId: executionId,
       };
     });

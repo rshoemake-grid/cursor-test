@@ -221,7 +221,7 @@ describe("ProviderForm", () => {
         }),
       ).toBeInTheDocument();
     });
-    it("should disable test button when no API key", () => {
+    it("should disable test button when no API key for non-Gemini", () => {
       render(
         <ProviderForm
           {...expandedProps}
@@ -235,6 +235,26 @@ describe("ProviderForm", () => {
         name: /Test Connection/i,
       });
       expect(testButton).toBeDisabled();
+    });
+    it("should allow test connection for Gemini with empty API key (Vertex ADC)", () => {
+      render(
+        <ProviderForm
+          {...expandedProps}
+          provider={{
+            ...mockProvider,
+            type: "gemini",
+            name: "Google Gemini",
+            apiKey: "",
+            baseUrl: "",
+            defaultModel: "gemini-3-flash-preview",
+            models: ["gemini-3-flash-preview"],
+          }}
+        />,
+      );
+      const testButton = screen.getByRole("button", {
+        name: /Test Connection/i,
+      });
+      expect(testButton).not.toBeDisabled();
     });
     it("should call onTestProvider when test button is clicked", () => {
       render(<ProviderForm {...expandedProps} />);

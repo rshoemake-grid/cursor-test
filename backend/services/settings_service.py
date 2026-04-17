@@ -116,6 +116,14 @@ class ISettingsService(ABC):
         """LLM provider + model for workflow chat (chat_assistant_model or active default)."""
         pass
 
+    @abstractmethod
+    def get_gemini_studio_api_key(self, user_id: Optional[str] = None) -> Optional[str]:
+        """
+        API key from any enabled Gemini provider (Google AI Studio), regardless of model list.
+        Used when the requested model is not listed on a provider but Vertex ADC is unavailable or undesired.
+        """
+        pass
+
 
 class SettingsService(ISettingsService):
     """Implementation of settings service"""
@@ -263,19 +271,23 @@ class SettingsService(ISettingsService):
     
     def _is_provider_enabled_and_valid(self, provider: Any) -> bool:
         """
-        Check if provider is enabled and has valid API key (DRY).
-        
-        Args:
-            provider: Provider object
-            
-        Returns:
-            True if provider is enabled and has valid API key
+        Check if provider is enabled and usable for LLM resolution.
+
+        Gemini: an empty API key is allowed when Vertex AI + ADC is configured (same as
+        LLMClientFactory ignoring placeholders). Non-Gemini providers still require a valid key.
         """
-        return (
-            provider.enabled and
-            provider.apiKey and
-            is_valid_api_key(provider.apiKey)
-        )
+        if not provider.enabled:
+            return False
+        ptype = str(provider.type).lower()
+        key = (provider.apiKey or "").strip()
+        if key and is_valid_api_key(key):
+            return True
+        if ptype == "gemini":
+            from ..utils.vertex_gemini import vertex_ai_configured
+
+            if vertex_ai_configured():
+                return not key or not is_valid_api_key(key)
+        return False
     
     def _build_provider_config_with_logging(
         self,
@@ -296,9 +308,16 @@ class SettingsService(ISettingsService):
         Returns:
             Provider config dictionary
         """
+        api_key_value = provider.apiKey
+        if str(provider.type).lower() == "gemini":
+            from ..utils.vertex_gemini import vertex_ai_configured
+
+            raw = (provider.apiKey or "").strip()
+            if vertex_ai_configured() and (not raw or not is_valid_api_key(raw)):
+                api_key_value = ""
         config = build_provider_config(
             provider.type,
-            provider.apiKey,
+            api_key_value,
             provider.baseUrl,
             model_name
         )
@@ -466,6 +485,21 @@ class SettingsService(ISettingsService):
         logger.debug(f"Searching for provider for model '{model_name}' (user: {uid})")
         
         return self._find_provider_with_model(settings.providers, model_name, uid)
+
+    def get_gemini_studio_api_key(self, user_id: Optional[str] = None) -> Optional[str]:
+        uid = self._normalize_user_id(user_id)
+        settings = self._get_settings_from_cache(uid)
+        if not settings:
+            return None
+        for provider in settings.providers:
+            if not provider.enabled:
+                continue
+            if str(provider.type).lower() != "gemini":
+                continue
+            key = (provider.apiKey or "").strip()
+            if key and is_valid_api_key(key):
+                return key
+        return None
 
     def get_llm_config_for_workflow_chat(self, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """

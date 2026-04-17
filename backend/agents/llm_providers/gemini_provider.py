@@ -26,6 +26,100 @@ class GeminiProviderStrategy(ILLMProviderStrategy):
     def provider_type(self) -> str:
         return "gemini"
 
+    @staticmethod
+    def _gemini_model_requires_generate_content_api(model: str) -> bool:
+        """Models that need :generateContent (e.g. image output); not the OpenAI-compat chat API."""
+        m = (model or "").lower()
+        return any(
+            sub in m
+            for sub in ("flash-image", "pro-image", "nano-banana", "banana")
+        )
+
+    @staticmethod
+    def _user_message_ok_for_vertex_openai_chat(user_message: Any) -> bool:
+        """
+        Vertex OpenAI chat path matches workflow chat; vision with inline images still uses
+        :generateContent so we keep image resize / native Gemini multimodal behavior.
+        """
+        if not isinstance(user_message, list):
+            return True
+        for item in user_message:
+            if isinstance(item, dict) and item.get("type") == "image_url":
+                return False
+        return True
+
+    async def _execute_vertex_openai_chat(
+        self,
+        user_message: Any,
+        model: str,
+        agent_config: Any,
+    ) -> str:
+        """Vertex + ADC: same endpoint as workflow chat (OpenAI-compatible chat/completions)."""
+        from ...utils import vertex_gemini as _vertex
+
+        project_id, location = _vertex.resolve_project_and_location(model)
+        logger.info(
+            "Gemini: Vertex OpenAI-compatible chat.completions (workflow-chat parity), "
+            "project=%s location=%s model=%s",
+            project_id,
+            location,
+            model,
+        )
+        client = _vertex.create_vertex_async_openai_client(project_id, location)
+        try:
+            messages = []
+            if getattr(agent_config, "system_prompt", None):
+                messages.append(
+                    {"role": "system", "content": agent_config.system_prompt}
+                )
+            if isinstance(user_message, list):
+                messages.append({"role": "user", "content": user_message})
+            else:
+                messages.append({"role": "user", "content": user_message})
+            kwargs: Dict[str, Any] = {
+                "model": _vertex.vertex_openai_model_id(model),
+                "messages": messages,
+            }
+            if getattr(agent_config, "temperature", None) is not None:
+                kwargs["temperature"] = agent_config.temperature
+            if getattr(agent_config, "max_tokens", None) is not None:
+                kwargs["max_tokens"] = agent_config.max_tokens
+            response = await client.chat.completions.create(**kwargs)
+            if not response.choices:
+                return ""
+            msg = response.choices[0].message
+            if not msg:
+                return ""
+            content = msg.content
+            if content is None:
+                return ""
+            if isinstance(content, list):
+                # Multimodal assistant message; agent nodes expect string or image URL dict
+                parts_out = []
+                for block in content:
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        parts_out.append(block.get("text", ""))
+                    else:
+                        parts_out.append(str(block))
+                return "\n".join(parts_out)
+            return content
+        except Exception as e:
+            status = getattr(e, "status_code", None)
+            hint = ""
+            if status == 403:
+                hint = _vertex.build_vertex_http_403_remediation_hint()
+            raise RuntimeError(
+                f"Gemini (Vertex chat) request failed: {e}{hint}"
+            ) from e
+        finally:
+            try:
+                await client.close()
+            except Exception:
+                logger.debug(
+                    "Vertex OpenAI client close failed (non-fatal)",
+                    exc_info=True,
+                )
+
     async def execute(
         self,
         user_message: Any,
@@ -54,6 +148,13 @@ class GeminiProviderStrategy(ILLMProviderStrategy):
                 "(set GOOGLE_CLOUD_PROJECT or GCP_PROJECT and "
                 "gcloud auth application-default login)."
             )
+
+        if not use_studio:
+            if not self._gemini_model_requires_generate_content_api(model):
+                if self._user_message_ok_for_vertex_openai_chat(user_message):
+                    return await self._execute_vertex_openai_chat(
+                        user_message, model, agent_config
+                    )
 
         parts = []
         total_image_tokens = 0
@@ -814,12 +915,9 @@ class GeminiProviderStrategy(ILLMProviderStrategy):
                             headers={"Content-Type": "application/json"},
                             json=request_data,
                         )
-                    if (
-                        _vertex.is_gemini_auth_failure_status(response.status_code)
-                        and _vertex.vertex_ai_configured()
-                    ):
+                    if _vertex.should_fallback_studio_to_vertex(response):
                         logger.warning(
-                            "Gemini API key rejected (HTTP %s); falling back to Vertex AI with ADC",
+                            "Gemini Developer API request failed (HTTP %s); falling back to Vertex AI with ADC",
                             response.status_code,
                         )
                         use_studio = False
@@ -912,6 +1010,11 @@ class GeminiProviderStrategy(ILLMProviderStrategy):
                         if response.text
                         else "No error message"
                     )
+                    vertex_403_hint = ""
+                    if not use_studio and response.status_code == 403:
+                        vertex_403_hint = (
+                            _vertex.build_vertex_http_403_remediation_hint()
+                        )
                     try:
                         error_data = response.json()
                         if (
@@ -928,13 +1031,14 @@ class GeminiProviderStrategy(ILLMProviderStrategy):
                             )
                             raise RuntimeError(
                                 f"Gemini API error ({error_code}): "
-                                f"{error_message}"
+                                f"{error_message}{vertex_403_hint}"
                             )
                     except (ValueError, KeyError, TypeError):
                         pass
                     raise RuntimeError(
                         f"Gemini API request failed with status "
                         f"{response.status_code}: {error_text}"
+                        f"{vertex_403_hint}"
                     )
             except RuntimeError:
                 raise

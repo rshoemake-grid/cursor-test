@@ -129,6 +129,30 @@ describe("useAdvancedFilters", () => {
     expect(result.current.filteredExecutions[0].execution_id).toBe("exec-1");
     expect(result.current.filterCount).toBe(1);
   });
+  it("should keep executions without node_states when filtering by node ID", () => {
+    const noStates = {
+      execution_id: "exec-no-ns",
+      workflow_id: "workflow-1",
+      status: "failed",
+      started_at: "2024-01-03T10:00:00Z",
+      completed_at: "2024-01-03T10:00:01Z",
+      error: "boom",
+    };
+    const { result } = renderHook(() =>
+      useAdvancedFilters({
+        executions: [...mockExecutions, noStates],
+        filters: {
+          nodeIds: ["node-1"],
+        },
+      }),
+    );
+    expect(
+      result.current.filteredExecutions.some((e) => e.execution_id === "exec-no-ns"),
+    ).toBe(true);
+    expect(
+      result.current.filteredExecutions.some((e) => e.execution_id === "exec-1"),
+    ).toBe(true);
+  });
   it("should combine multiple filters", () => {
     const { result } = renderHook(() =>
       useAdvancedFilters({

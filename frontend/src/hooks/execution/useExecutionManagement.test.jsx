@@ -1687,7 +1687,7 @@ describe("useExecutionManagement", () => {
         ),
       );
     });
-    it("should verify exact logger.debug message for polling", async () => {
+    it("should poll running executions and merge API result into tabs", async () => {
       const execution = {
         id: "exec-1",
         status: "running",
@@ -1719,11 +1719,8 @@ describe("useExecutionManagement", () => {
         jest.advanceTimersByTime(2e3);
         await Promise.resolve();
       });
-      expect(mockLoggerDebug).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /\[WorkflowTabs\] Polling \d+ running execution\(s\) \(fallback\)\.\.\./,
-        ),
-      );
+      expect(mockApi.getExecution).toHaveBeenCalledWith("exec-1");
+      expect(mockSetTabs).toHaveBeenCalled();
     });
     it("should verify error handling for 404 on non-pending execution", async () => {
       const execution = {

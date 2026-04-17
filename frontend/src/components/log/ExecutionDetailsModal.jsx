@@ -15,6 +15,10 @@ import { api } from "../../api/client";
 import { logger } from "../../utils/logger";
 import { extractApiErrorMessage } from "../../hooks/utils/apiUtils";
 import {
+  hydrateExecutionLogsIfEmpty,
+  normalizeExecutionListItem,
+} from "../../hooks/utils/apiExecutionStatus";
+import {
   ExecModalStatusIconWrap,
   ExecModalRoot,
   ExecModalBackdrop,
@@ -69,8 +73,10 @@ function ExecutionDetailsModal({
     (async () => {
       try {
         const full = await apiClient.getExecution(execution.execution_id);
+        const hydrated = await hydrateExecutionLogsIfEmpty(apiClient, full);
+        const normalized = normalizeExecutionListItem(hydrated);
         if (!cancelled) {
-          setDetail(full);
+          setDetail(normalized);
         }
       } catch (err) {
         logger.error("Failed to load execution details:", err);

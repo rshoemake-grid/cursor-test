@@ -3,6 +3,7 @@ Unified LLM Agent - Supports OpenAI, Anthropic, Gemini, and Custom providers.
 Uses provider strategy pattern (OCP) and injectable provider resolution (DIP).
 """
 import asyncio
+import os
 from typing import Any, Awaitable, Callable, Dict, Optional
 
 from .base import BaseAgent
@@ -70,7 +71,34 @@ class UnifiedLLMAgent(BaseAgent):
         )
         from ..services.settings_service import SettingsService
         return SettingsService().get_provider_for_model(model_name, lookup_user_id)
-    
+
+    def _resolve_gemini_studio_api_key(self) -> Optional[str]:
+        """
+        Google AI Studio key only if it passes placeholder checks — same idea as LLMClientFactory:
+        invalid/placeholder keys are omitted so execution uses Vertex + ADC like chat.
+        """
+        from ..utils.settings_utils import is_valid_api_key
+
+        key = (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or "").strip()
+        if key and is_valid_api_key(key):
+            return key
+        try:
+            from ..config import get_settings
+
+            gk = (get_settings().gemini_api_key or "").strip()
+            if gk and is_valid_api_key(gk):
+                return gk
+        except Exception:
+            pass
+        if self._settings_service is not None:
+            try:
+                k = self._settings_service.get_gemini_studio_api_key(self.user_id)
+                if k:
+                    return k.strip()
+            except Exception:
+                pass
+        return None
+
     def _validate_api_key(self, api_key: str) -> None:
         """Validate that API key is not a placeholder - only flag obvious placeholders"""
         from ..utils.settings_utils import is_valid_api_key
@@ -148,26 +176,34 @@ class UnifiedLLMAgent(BaseAgent):
             # Use the provider that owns this model
             provider_type = model_provider_config["type"]
             
-            # Validate the API key from the model-specific provider
+            # Validate the API key from the model-specific provider (Gemini may use Vertex + ADC with no key)
             api_key = model_provider_config.get("api_key", "")
-            if not api_key:
-                raise ValueError(
-                    f"Provider '{provider_type}' for model '{model}' has no API key configured. "
-                    "Please go to Settings, add a valid API key for this provider, enable it, and click 'Sync Now'."
-                )
-            
-            # P2-4: Log provider/model only; never log API key fragments
-            logger.debug(f"Using API key from provider '{provider_type}' for model '{model}'")
-            
-            # Validate API key (should already be filtered, but double-check)
-            try:
-                self._validate_api_key(api_key)
-            except ValueError as e:
-                logger.error(f"API key validation failed for provider '{provider_type}': {str(e)}")
-                raise ValueError(
-                    f"Provider '{provider_type}' for model '{model}' has an invalid API key. "
-                    "Please go to Settings, update the API key for this provider with a valid key, enable it, and click 'Sync Now'."
-                ) from e
+            ptype = str(provider_type).lower()
+            if not api_key or not str(api_key).strip():
+                if ptype == "gemini":
+                    from ..utils import vertex_gemini as _vx_gem
+
+                    if not _vx_gem.vertex_ai_configured():
+                        raise ValueError(
+                            f"Provider '{provider_type}' for model '{model}' has no API key configured. "
+                            "Add a Gemini API key, or set GOOGLE_CLOUD_PROJECT / GCP_PROJECT and "
+                            "Application Default Credentials for Vertex AI."
+                        )
+                else:
+                    raise ValueError(
+                        f"Provider '{provider_type}' for model '{model}' has no API key configured. "
+                        "Please go to Settings, add a valid API key for this provider, enable it, and click 'Sync Now'."
+                    )
+            else:
+                logger.debug(f"Using API key from provider '{provider_type}' for model '{model}'")
+                try:
+                    self._validate_api_key(api_key)
+                except ValueError as e:
+                    logger.error(f"API key validation failed for provider '{provider_type}': {str(e)}")
+                    raise ValueError(
+                        f"Provider '{provider_type}' for model '{model}' has an invalid API key. "
+                        "Please go to Settings, update the API key for this provider with a valid key, enable it, and click 'Sync Now'."
+                    ) from e
             
             # Update llm_config to use the correct provider's config
             self.llm_config = {
@@ -200,32 +236,92 @@ class UnifiedLLMAgent(BaseAgent):
             
             # If we have a model-specific provider suggestion, warn if using different provider
             if suggested_provider and provider_type != suggested_provider:
-                logger.warning(f"Model '{model}' suggests {suggested_provider} provider, but using {provider_type} provider")
-                logger.warning(f"   This may cause errors. Please configure a {suggested_provider} provider with model '{model}' in Settings.")
-                raise ValueError(
-                    f"Model '{model}' not found in any enabled provider. "
-                    f"This model appears to be a {suggested_provider} model, but no {suggested_provider} provider "
-                    f"with this model is configured. Please go to Settings, add a {suggested_provider} provider "
-                    f"with model '{model}' in its models list, enable it, and click 'Sync Now'."
-                )
+                if suggested_provider == "gemini":
+                    from ..utils import vertex_gemini as _vertex_gemini
+                    from ..utils.provider_utils import build_provider_config
+
+                    studio_key = self._resolve_gemini_studio_api_key()
+                    if studio_key:
+                        logger.info(
+                            "Model '%s' is not listed on a provider's model list; "
+                            "using Gemini API key from env/settings (AI Studio), same as workflow chat.",
+                            model,
+                        )
+                        provider_type = "gemini"
+                        self.llm_config = {
+                            **self.llm_config,
+                            **build_provider_config("gemini", studio_key, None, model),
+                        }
+                    elif _vertex_gemini.vertex_ai_configured():
+                        logger.info(
+                            "Model '%s' is not listed on an enabled Gemini provider in Settings; "
+                            "using Vertex AI with Application Default Credentials.",
+                            model,
+                        )
+                        provider_type = "gemini"
+                        self.llm_config = {
+                            **self.llm_config,
+                            **build_provider_config("gemini", "", None, model),
+                        }
+                    else:
+                        logger.warning(
+                            "Model '%s' suggests gemini provider, but using %s provider",
+                            model,
+                            provider_type,
+                        )
+                        logger.warning(
+                            "Vertex AI is not configured: set GOOGLE_CLOUD_PROJECT (or GCP_PROJECT), "
+                            "or ensure Application Default Credentials yield a project "
+                            "(e.g. gcloud auth application-default login). "
+                            "Alternatively configure a Gemini API key in Settings.",
+                        )
+                        raise ValueError(
+                            f"Model '{model}' not found in any enabled provider. "
+                            f"This model appears to be a gemini model, but no gemini provider "
+                            f"with this model is configured. Please go to Settings, add a gemini provider "
+                            f"with model '{model}' in its models list, enable it, and click 'Sync Now'."
+                        )
+                else:
+                    logger.warning(
+                        f"Model '{model}' suggests {suggested_provider} provider, but using {provider_type} provider"
+                    )
+                    logger.warning(
+                        f"   This may cause errors. Please configure a {suggested_provider} provider with model '{model}' in Settings."
+                    )
+                    raise ValueError(
+                        f"Model '{model}' not found in any enabled provider. "
+                        f"This model appears to be a {suggested_provider} model, but no {suggested_provider} provider "
+                        f"with this model is configured. Please go to Settings, add a {suggested_provider} provider "
+                        f"with model '{model}' in its models list, enable it, and click 'Sync Now'."
+                    )
             
-            # Validate the API key from the default provider
+            # Validate the API key from the default provider (Gemini may use empty key + Vertex ADC)
             api_key = self.llm_config.get("api_key", "")
-            if not api_key:
+            if (
+                provider_type == "gemini"
+                and (not api_key or not str(api_key).strip())
+            ):
+                from ..utils import vertex_gemini as _vertex_gemini
+
+                if not _vertex_gemini.vertex_ai_configured():
+                    raise ValueError(
+                        "Gemini model has no API key and Vertex AI is not configured "
+                        "(set GOOGLE_CLOUD_PROJECT or GCP_PROJECT, or ADC with a resolvable project, "
+                        "e.g. gcloud auth application-default login), or add a Gemini API key in Settings."
+                    )
+            elif not api_key:
                 raise ValueError(
                     f"Default provider '{provider_type}' has no API key configured. "
                     "Please go to Settings, add a valid API key for this provider, enable it, and click 'Sync Now'."
                 )
-            
-            # Validate API key (should already be filtered, but double-check)
-            try:
-                self._validate_api_key(api_key)
-            except ValueError as e:
-                # Provide more helpful error message
-                raise ValueError(
-                    f"Default provider '{provider_type}' has an invalid API key. "
-                    "Please go to Settings, update the API key for this provider with a valid key, enable it, and click 'Sync Now'."
-                ) from e
+            else:
+                try:
+                    self._validate_api_key(api_key)
+                except ValueError as e:
+                    raise ValueError(
+                        f"Default provider '{provider_type}' has an invalid API key. "
+                        "Please go to Settings, update the API key for this provider with a valid key, enable it, and click 'Sync Now'."
+                    ) from e
             
             logger.warning(f"No provider found for model '{model}', using default provider: {provider_type}")
         

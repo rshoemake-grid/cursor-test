@@ -33,6 +33,7 @@ const PROVIDER_TEMPLATES = {
     defaultModel: "gemini-3-flash-preview",
     models: [
       // Gemini 3.x — IDs per https://ai.google.dev/gemini-api/docs/gemini-3 (preview models evolve; check release notes).
+      "gemini-3-pro-preview",
       "gemini-3.1-pro-preview",
       "gemini-3-flash-preview",
       "gemini-3.1-flash-lite-preview",

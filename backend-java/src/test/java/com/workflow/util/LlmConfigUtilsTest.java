@@ -77,4 +77,19 @@ class LlmConfigUtilsTest {
         assertNull(ctx.apiKey());
         assertEquals("google/gemini-2.5-flash", ctx.model());
     }
+
+    @Test
+    void prepareRequest_gemini_3_preview_usesGlobalVertexEndpoint() {
+        MockEnvironment env = new MockEnvironment()
+                .withProperty("GOOGLE_CLOUD_PROJECT", "p-test")
+                .withProperty("VERTEX_LOCATION", "us-central1");
+        Map<String, Object> cfg = Map.of(
+                "type", "gemini",
+                "model", "gemini-3.1-pro-preview",
+                "baseUrl", "https://generativelanguage.googleapis.com/v1beta");
+        LlmConfigUtils.LlmRequestContext ctx = LlmConfigUtils.prepareRequest(cfg, env);
+        assertTrue(ctx.url().startsWith("https://aiplatform.googleapis.com/v1/projects/p-test/locations/global/"));
+        assertTrue(ctx.url().endsWith("/endpoints/openapi/chat/completions"));
+        assertEquals("google/gemini-3.1-pro-preview", ctx.model());
+    }
 }

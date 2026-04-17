@@ -1,4 +1,8 @@
-import { mapApiStatusToExecutionUiStatus } from "./apiExecutionStatus";
+import {
+  mapApiStatusToExecutionUiStatus,
+  normalizeExecutionListItem,
+  hydrateExecutionLogsIfEmpty,
+} from "./apiExecutionStatus";
 
 describe("mapApiStatusToExecutionUiStatus", () => {
   it("returns null when execution is nullish", () => {
@@ -44,5 +48,54 @@ describe("mapApiStatusToExecutionUiStatus", () => {
 
   it("returns null for unknown status without completed_at", () => {
     expect(mapApiStatusToExecutionUiStatus({ status: "unknown" })).toBeNull();
+  });
+});
+
+describe("normalizeExecutionListItem", () => {
+  it("coerces enum-shaped status to a string", () => {
+    const row = normalizeExecutionListItem({
+      execution_id: "e1",
+      status: { value: "failed" },
+      workflow_id: "w1",
+      started_at: "2026-01-01T00:00:00Z",
+    });
+    expect(row.status).toBe("failed");
+  });
+});
+
+describe("hydrateExecutionLogsIfEmpty", () => {
+  it("fetches logs when detail payload has none but execution failed", async () => {
+    const apiClient = {
+      getExecutionLogs: jest.fn().mockResolvedValue({
+        logs: [{ level: "ERROR", message: "x", timestamp: "2026-01-01T00:00:00Z" }],
+      }),
+    };
+    const snapshot = {
+      execution_id: "e1",
+      workflow_id: "w1",
+      status: "failed",
+      started_at: "2026-01-01T00:00:00Z",
+      completed_at: "2026-01-01T00:00:01Z",
+      error: "boom",
+      logs: [],
+    };
+    const out = await hydrateExecutionLogsIfEmpty(apiClient, snapshot);
+    expect(apiClient.getExecutionLogs).toHaveBeenCalledWith("e1", {
+      limit: 10000,
+      offset: 0,
+    });
+    expect(out.logs).toHaveLength(1);
+  });
+
+  it("skips fetch when logs already present", async () => {
+    const apiClient = { getExecutionLogs: jest.fn() };
+    const snapshot = {
+      execution_id: "e1",
+      status: "failed",
+      logs: [{ level: "INFO", message: "ok", timestamp: "2026-01-01T00:00:00Z" }],
+    };
+    const out = await hydrateExecutionLogsIfEmpty(apiClient, snapshot);
+    expect(apiClient.getExecutionLogs).not.toHaveBeenCalled();
+    expect(out).toBe(snapshot);
   });
 });

@@ -110,8 +110,14 @@ class LLMClientFactory(ILLMClientFactory):
             from ..utils.vertex_gemini import create_vertex_async_openai_client, resolve_project_and_location
             from ..utils.vertex_gemini import vertex_openai_model_id
 
+            model_for_vertex = ""
+            if llm_config is not None and llm_config.get("model"):
+                model_for_vertex = str(llm_config.get("model")).strip()
+
             try:
-                project_id, location = resolve_project_and_location()
+                project_id, location = resolve_project_and_location(
+                    model_for_vertex if model_for_vertex else None
+                )
             except RuntimeError as e:
                 raise ValueError(
                     "Gemini API key not configured and Vertex AI is not available. "
@@ -120,8 +126,12 @@ class LLMClientFactory(ILLMClientFactory):
                 ) from e
 
             if llm_config is not None and llm_config.get("model"):
-                llm_config["model"] = vertex_openai_model_id(str(llm_config.get("model")))
-            logger.info("Gemini: using Vertex AI OpenAI-compatible endpoint with ADC (project=%s)", project_id)
+                llm_config["model"] = vertex_openai_model_id(model_for_vertex)
+            logger.info(
+                "Gemini: using Vertex AI OpenAI-compatible endpoint with ADC (project=%s location=%s)",
+                project_id,
+                location,
+            )
             return create_vertex_async_openai_client(project_id, location)
 
         if not api_key:

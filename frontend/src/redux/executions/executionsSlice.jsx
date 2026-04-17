@@ -1,39 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { normalizeExecutionListItem } from "../../hooks/utils/apiExecutionStatus";
 import { fetchExecutionsRequested } from "./executionsActions";
-
-/** Normalize status for list UI (API may use enums or mixed casing). */
-function normalizeExecutionListItem(raw) {
-  if (!raw || typeof raw !== "object") {
-    return raw;
-  }
-  let status = raw.status;
-  if (typeof status !== "string") {
-    if (status && typeof status === "object" && status.value != null) {
-      status = String(status.value);
-    } else {
-      status = String(status ?? "");
-    }
-  }
-  let s = status.toLowerCase().trim();
-  if (s === "canceled") {
-    s = "cancelled";
-  }
-  if (!s) {
-    const err =
-      raw.error != null && String(raw.error).trim() !== "";
-    const done =
-      raw.completed_at != null && String(raw.completed_at).trim() !== "";
-    if (err && done) {
-      s = "failed";
-    } else {
-      s = "pending";
-    }
-  }
-  return {
-    ...raw,
-    status: s,
-  };
-}
 
 const initialState = {
   status: "idle",

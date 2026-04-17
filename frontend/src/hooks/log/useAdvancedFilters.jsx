@@ -46,8 +46,12 @@ function useAdvancedFilters({ executions, filters }) {
     }
     if (filters.nodeIds && filters.nodeIds.length > 0) {
       result = result.filter((execution) => {
-        if (!execution.node_states) {
-          return false;
+        if (
+          execution.node_states == null ||
+          typeof execution.node_states !== "object"
+        ) {
+          // List API often omits node_states; do not hide executions (e.g. failed runs).
+          return true;
         }
         return filters.nodeIds.some(
           (nodeId) => nodeId in execution.node_states,
