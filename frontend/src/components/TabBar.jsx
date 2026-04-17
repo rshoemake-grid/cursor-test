@@ -10,6 +10,7 @@ import {
   TabBarCloseTab,
   TabBarActions,
   TabBarGhostBtn,
+  TabBarSaveBtn,
   TabBarClearBtn,
   TabBarExecuteBtn,
   TabBarPublishBtn,
@@ -80,9 +81,9 @@ function TabBar({ tabs, tabState, tabActions, inputProps, workflowActions }) {
         ))}
       </TabBarScroll>
       <TabBarActions>
-        <TabBarGhostBtn type="button" onClick={onSave} title="Save workflow">
+        <TabBarSaveBtn type="button" onClick={onSave} title="Save workflow">
           Save
-        </TabBarGhostBtn>
+        </TabBarSaveBtn>
         <TabBarClearBtn
           type="button"
           onClick={onClear}

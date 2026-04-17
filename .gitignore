@@ -19,6 +19,9 @@ ENV/
 *.secret
 *secret*.key
 *secret*.pem
+# Local / generated data (not versioned)
+/data/
+
 .DS_Store
 .idea/
 .vscode/

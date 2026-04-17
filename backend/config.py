@@ -10,7 +10,7 @@ from functools import lru_cache
 from typing import List, Optional
 
 from pydantic import Field, model_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Self
 
 from sqlalchemy.engine.url import make_url
@@ -45,7 +45,14 @@ _SENSITIVE_FIELDS = frozenset({
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
-    
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
     # Database (relative SQLite paths are resolved to _PROJECT_ROOT / file — see _normalize_sqlite_database_path)
     database_url: str = "sqlite+aiosqlite:///./workflows.db"
 
@@ -92,11 +99,6 @@ class Settings(BaseSettings):
     # WebSocket
     websocket_ping_interval: int = 20  # seconds
     websocket_timeout: int = 60  # seconds
-    
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
 
     @model_validator(mode="after")
     def _normalize_sqlite_database_path(self) -> Self:

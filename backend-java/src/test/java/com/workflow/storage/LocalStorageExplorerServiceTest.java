@@ -29,4 +29,13 @@ class LocalStorageExplorerServiceTest {
         Path outside = tmp.getParent().resolve("outside-" + System.nanoTime());
         assertThrows(IllegalArgumentException.class, () -> svc.listDirectory(outside.toString()));
     }
+
+    @Test
+    void unrestrictedListsAnyDirectoryAndAllowsGoUpWhenParentExists(@TempDir Path tmp) throws Exception {
+        Files.createFile(tmp.resolve("x.txt"));
+        LocalStorageExplorerService svc = new LocalStorageExplorerService("");
+        LocalStorageExplorerService.LocalListDirectoryResult r = svc.listDirectory(tmp.toString());
+        assertTrue(r.canGoUp());
+        assertEquals(1, r.objects().size());
+    }
 }

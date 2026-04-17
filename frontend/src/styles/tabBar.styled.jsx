@@ -152,16 +152,16 @@ export const TabBarGhostBtn = styled.button`
   }
 `;
 
-export const TabBarClearBtn = styled.button`
-  padding: 0.25rem 0.75rem;
-  border-radius: 0.5rem;
-  border: 1px solid ${c.amber200};
-  background: ${c.amber50};
+/** Same chrome as ghost; bold label (used for Save only — Export stays regular ghost). */
+export const TabBarSaveBtn = styled(TabBarGhostBtn)`
+  font-weight: 700;
+`;
+
+/** White button with amber accent; bold label (matches Save / ghost weight). */
+export const TabBarClearBtn = styled(TabBarGhostBtn)`
+  font-weight: 700;
   color: ${c.amber900};
-  font-size: 0.875rem;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
+  border-color: ${c.amber200};
   ${focusRingAmber}
 
   &:hover {

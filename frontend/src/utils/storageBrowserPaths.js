@@ -82,13 +82,20 @@ function browseDirectoryFromFilePath(filePath) {
 }
 
 function parentLocalDirectory(absoluteDir) {
-  const t = (absoluteDir || "").replace(/\/+$/, "");
+  let t = (absoluteDir || "").replace(/\\/g, "/");
+  if (!t) {
+    return "";
+  }
+  t = t.replace(/\/+$/, "");
   if (!t) {
     return "";
   }
   const i = t.lastIndexOf("/");
-  if (i <= 0) {
+  if (i < 0) {
     return "";
+  }
+  if (i === 0) {
+    return "/";
   }
   return t.slice(0, i);
 }

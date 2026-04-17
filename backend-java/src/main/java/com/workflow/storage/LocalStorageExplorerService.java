@@ -34,7 +34,13 @@ public class LocalStorageExplorerService {
         if (!Files.isDirectory(current)) {
             throw new IllegalArgumentException("Not a directory: " + current);
         }
-        boolean canGoUp = !current.normalize().equals(base.normalize());
+        boolean canGoUp;
+        if (restrictedBase.isPresent()) {
+            canGoUp = !current.normalize().equals(base.normalize());
+        } else {
+            Path parent = current.normalize().getParent();
+            canGoUp = parent != null;
+        }
 
         List<String> prefixes = new ArrayList<>();
         List<Map<String, Object>> objects = new ArrayList<>();

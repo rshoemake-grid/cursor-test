@@ -37,6 +37,10 @@ describe("storageBrowserPaths", () => {
       expect(parentLocalDirectory("/home/user/proj")).toBe("/home/user");
       expect(parentLocalDirectory("/")).toBe("");
     });
+    it("returns root when current folder is one segment under root (e.g. /Users)", () => {
+      expect(parentLocalDirectory("/Users")).toBe("/");
+      expect(parentLocalDirectory("/var")).toBe("/");
+    });
   });
   describe("fileBasenameFromPath", () => {
     it("returns the last segment", () => {

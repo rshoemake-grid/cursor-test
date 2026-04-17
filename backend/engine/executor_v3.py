@@ -215,24 +215,43 @@ class WorkflowExecutorV3:
             
             # Collect nodes that can be executed in parallel
             parallel_batch = []
-            
-            for node_id in queue[:]:
-                node = node_map[node_id]
-                
-                # Skip START and END nodes in execution
-                if node.type in [NodeType.START, NodeType.END]:
-                    await self._broadcaster.log("INFO", None, f"Skipping {node.type.value} node: {node_id}")
+
+            # START/END are skipped without running executors; skipping can append
+            # successors to the queue. A single `for node_id in queue[:]` pass only
+            # sees the snapshot at loop start, so the successor would be missed until
+            # the next outer `while` iteration — incorrectly tripping the deadlock
+            # detector (parallel_batch empty, queue non-empty, in_progress empty).
+            while True:
+                skip_pass_made_progress = False
+                for node_id in list(queue):
+                    node = node_map[node_id]
+                    if node.type not in [NodeType.START, NodeType.END]:
+                        continue
+                    skip_pass_made_progress = True
+                    await self._broadcaster.log(
+                        "INFO", None, f"Skipping {node.type.value} node: {node_id}"
+                    )
                     queue.remove(node_id)
                     completed.add(node_id)
-                    
-                    for neighbor_id in adjacency[node_id]:
-                        dependencies = [n for n, neighbors in adjacency.items() if neighbor_id in neighbors]
+
+                    for neighbor_id in adjacency.get(node_id, []):
+                        dependencies = [
+                            n for n, neighbors in adjacency.items() if neighbor_id in neighbors
+                        ]
                         if all(dep in completed for dep in dependencies):
                             if neighbor_id not in queue and neighbor_id not in in_progress:
-                                await self._broadcaster.log("INFO", None, f"Adding neighbor {neighbor_id} to queue")
+                                await self._broadcaster.log(
+                                    "INFO", None, f"Adding neighbor {neighbor_id} to queue"
+                                )
                                 queue.append(neighbor_id)
+                if not skip_pass_made_progress:
+                    break
+
+            for node_id in list(queue):
+                node = node_map[node_id]
+                if node.type in [NodeType.START, NodeType.END]:
                     continue
-                
+
                 # Check if dependencies are met
                 dependencies = [n for n, neighbors in adjacency.items() if node_id in neighbors]
                 await self._broadcaster.log("INFO", None, f"Node {node_id} dependencies: {dependencies}, all met: {all(dep in completed for dep in dependencies)}")

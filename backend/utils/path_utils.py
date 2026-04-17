@@ -16,6 +16,22 @@ def get_local_file_base_path() -> Path:
     return Path(os.getcwd()).resolve()
 
 
+def is_local_file_path_restricted() -> bool:
+    """True when LOCAL_FILE_BASE_PATH is set (sandbox active for listing and reads)."""
+    return bool(os.getenv("LOCAL_FILE_BASE_PATH", "").strip())
+
+
+def compute_local_browser_can_go_up(current: Path, base: Path) -> bool:
+    """
+    Whether the storage browser may offer a parent directory.
+    When restricted, stop at base. When unrestricted, allow up to filesystem root.
+    """
+    if is_local_file_path_restricted():
+        return current.resolve() != base.resolve()
+    cur = current.resolve()
+    return cur.parent != cur
+
+
 def validate_path_within_base(resolved_path: Path, base_path: Optional[Path] = None) -> None:
     """
     Ensure resolved_path is within base_path (prevents path traversal).
@@ -23,7 +39,7 @@ def validate_path_within_base(resolved_path: Path, base_path: Optional[Path] = N
     Raises ValueError if path escapes base.
     """
     base = base_path or get_local_file_base_path()
-    if not os.getenv("LOCAL_FILE_BASE_PATH"):
+    if not is_local_file_path_restricted():
         return
     resolved = resolved_path.resolve()
     try:

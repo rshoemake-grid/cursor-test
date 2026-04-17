@@ -129,12 +129,13 @@ export const PropertyPanelHeaderActions = styled.div`
 export const PropertyPanelSaveBtn = styled.button.attrs({ type: "button" })`
   padding: 0.375rem 0.75rem;
   font-size: 0.875rem;
+  font-weight: 700;
   border-radius: 0.5rem;
   border: none;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font: inherit;
+  font-family: inherit;
   cursor: pointer;
   transition:
     background-color 0.15s ease,

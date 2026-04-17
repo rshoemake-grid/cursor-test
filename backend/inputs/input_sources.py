@@ -33,7 +33,11 @@ except ImportError:
     AWS_AVAILABLE = False
 
 from ..utils.logger import get_logger
-from ..utils.path_utils import get_local_file_base_path, validate_path_within_base
+from ..utils.path_utils import (
+    compute_local_browser_can_go_up,
+    get_local_file_base_path,
+    validate_path_within_base,
+)
 from .gcp_auth import (
     gcp_client_with_adc_retry,
     get_google_credentials_with_scopes_for_http,
@@ -844,7 +848,7 @@ class LocalFileSystemHandler(InputSourceHandler):
         validate_path_within_base(current)
         if not current.is_dir():
             raise ValueError(f"Not a directory: {current}")
-        can_go_up = current.resolve() != base.resolve()
+        can_go_up = compute_local_browser_can_go_up(current, base)
 
         prefixes_out: List[str] = []
         objects_out: List[Dict[str, Any]] = []
