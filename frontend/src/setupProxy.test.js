@@ -46,7 +46,7 @@ describe("setupProxy", () => {
     );
     const payload = JSON.parse(res.end.mock.calls[0][0]);
     expect(payload.detail).toMatch(/127\.0\.0\.1:8000/);
-    expect(payload.detail).toMatch(/gradlew bootRun/);
+    expect(payload.detail).toMatch(/uvicorn/);
   });
 
   it("registers /ws proxy toward API origin only (avoids /ws/ws path doubling on upgrade)", () => {

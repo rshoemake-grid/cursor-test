@@ -22,7 +22,7 @@ function makeProxyErrorHandler(origin, label) {
       });
       res.end(
         JSON.stringify({
-          detail: `Cannot reach API at ${origin} (${code}). Start the Java API from backend-java: ./gradlew bootRun (default port 8000). For a different API URL, set PROXY_TARGET (see frontend/README.md).`,
+          detail: `Cannot reach API at ${origin} (${code}). Start FastAPI from the repo root: python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload. For Java instead: cd backend-java && ./gradlew bootRun. For another URL, set PROXY_TARGET (see frontend/README.md).`,
         }),
       );
     }

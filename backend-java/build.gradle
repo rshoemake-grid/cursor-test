@@ -79,6 +79,7 @@ dependencies {
     implementation platform('com.google.cloud:libraries-bom:26.50.0')
     implementation 'com.google.cloud:google-cloud-storage'
     implementation 'com.google.cloud:google-cloud-pubsub'
+    implementation 'com.google.auth:google-auth-library-oauth2-http'
 
     implementation platform('software.amazon.awssdk:bom:2.25.56')
     implementation 'software.amazon.awssdk:s3'

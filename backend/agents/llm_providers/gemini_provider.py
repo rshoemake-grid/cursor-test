@@ -44,7 +44,16 @@ class GeminiProviderStrategy(ILLMProviderStrategy):
         base_url = config.get(
             "base_url", "https://generativelanguage.googleapis.com/v1beta"
         )
-        api_key = config["api_key"]
+        from ...utils import vertex_gemini as _vertex
+
+        studio_key = (config.get("api_key") or config.get("apiKey") or "").strip()
+        use_studio = bool(studio_key)
+        if not use_studio and not _vertex.vertex_ai_configured():
+            raise RuntimeError(
+                "Gemini api_key is missing and Vertex AI is not configured "
+                "(set GOOGLE_CLOUD_PROJECT or GCP_PROJECT and "
+                "gcloud auth application-default login)."
+            )
 
         parts = []
         total_image_tokens = 0
@@ -797,118 +806,136 @@ class GeminiProviderStrategy(ILLMProviderStrategy):
 
         for attempt in range(max_retries):
             try:
-                async with httpx.AsyncClient(timeout=300.0) as client:
-                    response = await client.post(
-                        f"{base_url}/models/{model}:generateContent?key={api_key}",
-                        headers={"Content-Type": "application/json"},
-                        json=request_data,
+                response = None
+                if use_studio:
+                    async with httpx.AsyncClient(timeout=300.0) as client:
+                        response = await client.post(
+                            f"{base_url}/models/{model}:generateContent?key={studio_key}",
+                            headers={"Content-Type": "application/json"},
+                            json=request_data,
+                        )
+                    if (
+                        _vertex.is_gemini_auth_failure_status(response.status_code)
+                        and _vertex.vertex_ai_configured()
+                    ):
+                        logger.warning(
+                            "Gemini API key rejected (HTTP %s); falling back to Vertex AI with ADC",
+                            response.status_code,
+                        )
+                        use_studio = False
+                        response = await _vertex.post_vertex_generate_content(
+                            model, request_data
+                        )
+                else:
+                    response = await _vertex.post_vertex_generate_content(
+                        model, request_data
                     )
 
-                    if response.status_code == 200:
-                        try:
-                            data = response.json()
-                            break
-                        except Exception as e:
-                            logger.error(
-                                f"Failed to parse Gemini API response as JSON: "
-                                f"{e}"
+                if response.status_code == 200:
+                    try:
+                        data = response.json()
+                        break
+                    except Exception as e:
+                        logger.error(
+                            f"Failed to parse Gemini API response as JSON: "
+                            f"{e}"
+                        )
+                        logger.error(
+                            f"Response status: {response.status_code}, "
+                            f"Response text: {response.text[:500]}"
+                        )
+                        raise RuntimeError(
+                            f"Failed to parse Gemini API response: {e}"
+                        )
+
+                if response.status_code == 429:
+                    try:
+                        error_data = response.json()
+                        retry_info = None
+                        if (
+                            "error" in error_data
+                            and "details" in error_data["error"]
+                        ):
+                            for detail in error_data["error"]["details"]:
+                                if (
+                                    detail.get("@type")
+                                    == "type.googleapis.com/google.rpc.RetryInfo"
+                                ):
+                                    retry_info = detail.get("retryDelay")
+                                    if retry_info:
+                                        delay_str = retry_info.replace(
+                                            "s", ""
+                                        )
+                                        try:
+                                            retry_delay = float(
+                                                delay_str
+                                            )
+                                        except ValueError:
+                                            retry_delay = 2.0
+                        else:
+                            retry_delay = 2.0 * (2**attempt)
+
+                        if attempt < max_retries - 1:
+                            logger.warning(
+                                f"Rate limit exceeded (429), retrying in "
+                                f"{retry_delay:.1f}s "
+                                f"(attempt {attempt + 1}/{max_retries})..."
                             )
-                            logger.error(
-                                f"Response status: {response.status_code}, "
-                                f"Response text: {response.text[:500]}"
+                            await asyncio.sleep(retry_delay)
+                            continue
+                        else:
+                            raise RuntimeError(
+                                f"Gemini API rate limit exceeded after "
+                                f"{max_retries} attempts. "
+                                "Please wait and try again later. "
+                                f"Error: {response.text}"
+                            )
+                    except (ValueError, KeyError) as e:
+                        if attempt < max_retries - 1:
+                            retry_delay = 2.0 * (2**attempt)
+                            logger.warning(
+                                f"Rate limit exceeded (429), retrying in "
+                                f"{retry_delay:.1f}s "
+                                f"(attempt {attempt + 1}/{max_retries})..."
+                            )
+                            await asyncio.sleep(retry_delay)
+                            continue
+                        else:
+                            raise RuntimeError(
+                                f"Gemini API request failed with status "
+                                f"{response.status_code}: {response.text}"
+                            )
+
+                if response.status_code != 200:
+                    error_text = (
+                        response.text[:500]
+                        if response.text
+                        else "No error message"
+                    )
+                    try:
+                        error_data = response.json()
+                        if (
+                            "error" in error_data
+                            and isinstance(
+                                error_data["error"], dict
+                            )
+                        ):
+                            error_message = error_data["error"].get(
+                                "message", error_text
+                            )
+                            error_code = error_data["error"].get(
+                                "code", response.status_code
                             )
                             raise RuntimeError(
-                                f"Failed to parse Gemini API response: {e}"
+                                f"Gemini API error ({error_code}): "
+                                f"{error_message}"
                             )
-
-                    if response.status_code == 429:
-                        try:
-                            error_data = response.json()
-                            retry_info = None
-                            if (
-                                "error" in error_data
-                                and "details" in error_data["error"]
-                            ):
-                                for detail in error_data["error"]["details"]:
-                                    if (
-                                        detail.get("@type")
-                                        == "type.googleapis.com/google.rpc.RetryInfo"
-                                    ):
-                                        retry_info = detail.get("retryDelay")
-                                        if retry_info:
-                                            delay_str = retry_info.replace(
-                                                "s", ""
-                                            )
-                                            try:
-                                                retry_delay = float(
-                                                    delay_str
-                                                )
-                                            except ValueError:
-                                                retry_delay = 2.0
-                            else:
-                                retry_delay = 2.0 * (2**attempt)
-
-                            if attempt < max_retries - 1:
-                                logger.warning(
-                                    f"Rate limit exceeded (429), retrying in "
-                                    f"{retry_delay:.1f}s "
-                                    f"(attempt {attempt + 1}/{max_retries})..."
-                                )
-                                await asyncio.sleep(retry_delay)
-                                continue
-                            else:
-                                raise RuntimeError(
-                                    f"Gemini API rate limit exceeded after "
-                                    f"{max_retries} attempts. "
-                                    "Please wait and try again later. "
-                                    f"Error: {response.text}"
-                                )
-                        except (ValueError, KeyError) as e:
-                            if attempt < max_retries - 1:
-                                retry_delay = 2.0 * (2**attempt)
-                                logger.warning(
-                                    f"Rate limit exceeded (429), retrying in "
-                                    f"{retry_delay:.1f}s "
-                                    f"(attempt {attempt + 1}/{max_retries})..."
-                                )
-                                await asyncio.sleep(retry_delay)
-                                continue
-                            else:
-                                raise RuntimeError(
-                                    f"Gemini API request failed with status "
-                                    f"{response.status_code}: {response.text}"
-                                )
-
-                    if response.status_code != 200:
-                        error_text = (
-                            response.text[:500]
-                            if response.text
-                            else "No error message"
-                        )
-                        try:
-                            error_data = response.json()
-                            if (
-                                "error" in error_data
-                                and isinstance(
-                                    error_data["error"], dict
-                                )
-                            ):
-                                error_message = error_data["error"].get(
-                                    "message", error_text
-                                )
-                                error_code = error_data["error"].get(
-                                    "code", response.status_code
-                                )
-                                raise RuntimeError(
-                                    f"Gemini API error ({error_code}): "
-                                    f"{error_message}"
-                                )
-                        except (ValueError, KeyError, TypeError):
-                            pass
-                        raise RuntimeError(
-                            f"Gemini API request failed with status "
-                            f"{response.status_code}: {error_text}"
-                        )
+                    except (ValueError, KeyError, TypeError):
+                        pass
+                    raise RuntimeError(
+                        f"Gemini API request failed with status "
+                        f"{response.status_code}: {error_text}"
+                    )
             except RuntimeError:
                 raise
             except Exception as e:

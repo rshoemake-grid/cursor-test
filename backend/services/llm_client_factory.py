@@ -72,33 +72,65 @@ class LLMClientFactory(ILLMClientFactory):
         provider_type = "openai"
         
         if llm_config:
-            api_key = llm_config.get("api_key")
+            api_key = llm_config.get("api_key") or llm_config.get("apiKey")
             base_url = llm_config.get("base_url")
             provider_type = llm_config.get("type", "openai")
             
             logger.info(f"Using LLM config from settings: type={provider_type}, model={llm_config.get('model')}")
             
-            # Validate API key is not a placeholder
             if api_key and self._is_placeholder_api_key(api_key):
-                raise ValueError(
-                    "Invalid API key detected. Please go to Settings, add an LLM provider with a valid API key, "
-                    "enable it, and click 'Sync Now'."
-                )
+                if str(provider_type).lower() == "gemini":
+                    from ..utils.vertex_gemini import vertex_ai_configured
+
+                    if vertex_ai_configured():
+                        logger.info("Gemini placeholder API key ignored; using Vertex AI with ADC")
+                        api_key = None
+                    else:
+                        raise ValueError(
+                            "Invalid API key detected. Please go to Settings, add an LLM provider with a valid API key, "
+                            "enable it, and click 'Sync Now'."
+                        )
+                else:
+                    raise ValueError(
+                        "Invalid API key detected. Please go to Settings, add an LLM provider with a valid API key, "
+                        "enable it, and click 'Sync Now'."
+                    )
         
-        # Fallback to environment variable
+        provider_type_lower = str(provider_type).lower() if provider_type else "openai"
+
         if not api_key:
-            api_key = os.getenv("OPENAI_API_KEY")
+            if provider_type_lower == "gemini":
+                api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                api_key = os.getenv("OPENAI_API_KEY")
             if api_key:
                 logger.warning("Using API key from environment variable")
-        
+
+        if provider_type_lower == "gemini" and (not api_key or not str(api_key).strip()):
+            from ..utils.vertex_gemini import create_vertex_async_openai_client, resolve_project_and_location
+            from ..utils.vertex_gemini import vertex_openai_model_id
+
+            try:
+                project_id, location = resolve_project_and_location()
+            except RuntimeError as e:
+                raise ValueError(
+                    "Gemini API key not configured and Vertex AI is not available. "
+                    "Set GEMINI_API_KEY or GOOGLE_API_KEY, or set GOOGLE_CLOUD_PROJECT (or GCP_PROJECT) "
+                    "and run: gcloud auth application-default login"
+                ) from e
+
+            if llm_config is not None and llm_config.get("model"):
+                llm_config["model"] = vertex_openai_model_id(str(llm_config.get("model")))
+            logger.info("Gemini: using Vertex AI OpenAI-compatible endpoint with ADC (project=%s)", project_id)
+            return create_vertex_async_openai_client(project_id, location)
+
         if not api_key:
             raise ValueError(
                 "OpenAI API key not configured. Please go to Settings, add an LLM provider with a valid API key, "
                 "enable it, and click 'Sync Now'."
             )
         
-        # Use provider strategy to create client
-        provider = self.provider_factory.get_provider(provider_type)
+        provider = self.provider_factory.get_provider(provider_type_lower)
         config = {
             "api_key": api_key,
             "base_url": base_url,

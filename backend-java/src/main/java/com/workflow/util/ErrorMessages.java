@@ -56,7 +56,10 @@ public final class ErrorMessages {
     public static final String CHAT_ERROR_PREFIX = "Chat error";
 
     public static final String INVALID_WORKFLOW_DEFINITION = "Invalid workflow definition: must contain 'nodes' and 'edges'";
-    public static final String NO_LLM_API_KEY = "No LLM API key configured. Set api_key in Settings or one of OPENAI_API_KEY, GEMINI_API_KEY, GOOGLE_API_KEY env vars.";
+    public static final String NO_LLM_API_KEY =
+            "No LLM API key configured. Set api_key in Settings or one of OPENAI_API_KEY, GEMINI_API_KEY, "
+                    + "GOOGLE_API_KEY env vars. For Gemini without an API key, set GOOGLE_CLOUD_PROJECT (or GCP_PROJECT) "
+                    + "and use Application Default Credentials (gcloud auth application-default login).";
     public static final String EXECUTION_CANCELLED_BY_USER = "Execution cancelled by user";
     public static final String EXECUTION_FAILED = "Execution failed";
     public static final String UNEXPECTED_ERROR = "An unexpected error occurred";

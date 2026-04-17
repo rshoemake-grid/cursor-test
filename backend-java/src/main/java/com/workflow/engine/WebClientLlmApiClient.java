@@ -2,12 +2,15 @@ package com.workflow.engine;
 
 import com.workflow.util.ErrorMessages;
 import com.workflow.util.LlmConfigUtils;
+import com.workflow.util.LlmVertexGeminiSupport;
 import com.workflow.util.ObjectUtils;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -21,9 +24,11 @@ import java.util.Map;
 public class WebClientLlmApiClient implements LlmApiClient {
 
     private final WebClient webClient;
+    private final Environment environment;
 
-    public WebClientLlmApiClient(WebClient webClient) {
+    public WebClientLlmApiClient(WebClient webClient, Environment environment) {
         this.webClient = webClient;
+        this.environment = environment;
     }
 
     @Override
@@ -95,7 +100,16 @@ public class WebClientLlmApiClient implements LlmApiClient {
             String userText,
             int maxOutputTokens,
             double temperature) {
-        String url = geminiGenerateContentUrl(baseUrl, model, apiKey);
+        String url;
+        boolean bearerVertex = false;
+        if (apiKey != null && !apiKey.isBlank()) {
+            url = geminiGenerateContentUrl(baseUrl, model, apiKey);
+        } else if (environment != null && LlmVertexGeminiSupport.resolveProject(environment) != null) {
+            url = LlmVertexGeminiSupport.vertexGenerateContentUrl(environment, model);
+            bearerVertex = true;
+        } else {
+            url = geminiGenerateContentUrl(baseUrl, model, apiKey);
+        }
         Map<String, Object> body = new LinkedHashMap<>();
         if (systemPrompt != null && !systemPrompt.isBlank()) {
             body.put("systemInstruction", Map.of("parts", List.of(Map.of("text", systemPrompt))));
@@ -113,14 +127,20 @@ public class WebClientLlmApiClient implements LlmApiClient {
         gen.put("maxOutputTokens", Math.max(1, maxOutputTokens));
         body.put("generationConfig", gen);
 
-        Map<?, ?> response = webClient
-                .post()
-                .uri(url)
-                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(Map.class)
-                .block();
+        var req =
+                webClient
+                        .post()
+                        .uri(url)
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .bodyValue(body);
+        if (bearerVertex) {
+            try {
+                req = req.header("Authorization", "Bearer " + LlmVertexGeminiSupport.getAccessToken());
+            } catch (IOException e) {
+                throw new IllegalStateException("Vertex AI: failed to obtain access token from ADC", e);
+            }
+        }
+        Map<?, ?> response = req.retrieve().bodyToMono(Map.class).block();
 
         return ObjectUtils.toStringOrDefault(parseGeminiText(response), "");
     }
@@ -142,9 +162,10 @@ public class WebClientLlmApiClient implements LlmApiClient {
             body.put("tool_choice", "auto");
         }
 
+        String bearer = resolveAuthorizationBearer(url, apiKey);
         Map<?, ?> response = webClient.post()
                 .uri(url)
-                .header("Authorization", "Bearer " + ObjectUtils.orDefault(apiKey, ""))
+                .header("Authorization", bearer)
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .retrieve()
@@ -152,6 +173,20 @@ public class WebClientLlmApiClient implements LlmApiClient {
                 .block();
 
         return parseChatResponse(response);
+    }
+
+    private String resolveAuthorizationBearer(String requestUrl, String apiKey) {
+        if (apiKey != null && !apiKey.isBlank()) {
+            return "Bearer " + apiKey;
+        }
+        if (requestUrl != null && requestUrl.contains("aiplatform.googleapis.com")) {
+            try {
+                return "Bearer " + LlmVertexGeminiSupport.getAccessToken();
+            } catch (IOException e) {
+                throw new IllegalStateException("Vertex AI: failed to obtain access token from ADC", e);
+            }
+        }
+        return "Bearer " + ObjectUtils.orDefault(apiKey, "");
     }
 
     private static String anthropicMessagesUrl(String baseUrl) {
@@ -185,10 +220,11 @@ public class WebClientLlmApiClient implements LlmApiClient {
                         + UriUtils.encodePathSegment(
                                 ObjectUtils.orDefault(model, LlmConfigUtils.DEFAULT_MODEL), StandardCharsets.UTF_8)
                         + ":generateContent";
-        return UriComponentsBuilder.fromUriString(b + path)
-                .queryParam("key", apiKey)
-                .build()
-                .toUriString();
+        UriComponentsBuilder ub = UriComponentsBuilder.fromUriString(b + path);
+        if (apiKey != null && !apiKey.isBlank()) {
+            ub.queryParam("key", apiKey);
+        }
+        return ub.build().toUriString();
     }
 
     private static String parseAnthropicText(Map<?, ?> response) {

@@ -36,7 +36,7 @@ class WebClientLlmApiClientTest {
                         .addHeader("Content-Type", "application/json"));
 
         String base = server.url("/v1").toString();
-        WebClientLlmApiClient client = new WebClientLlmApiClient(webClient);
+        WebClientLlmApiClient client = new WebClientLlmApiClient(webClient, null);
         String out = client.chatAnthropic(base, "secret", "claude-3", "sys", "user-msg", 256, 0.2);
 
         assertEquals("from-claude", out);
@@ -55,7 +55,7 @@ class WebClientLlmApiClientTest {
                         .addHeader("Content-Type", "application/json"));
 
         String base = server.url("/v1beta").toString();
-        WebClientLlmApiClient client = new WebClientLlmApiClient(webClient);
+        WebClientLlmApiClient client = new WebClientLlmApiClient(webClient, null);
         String out = client.chatGemini(base, "gkey", "gemini-pro", "sys", "hello", 512, 0.5);
 
         assertEquals("from-gemini", out);
@@ -73,7 +73,7 @@ class WebClientLlmApiClientTest {
                         .addHeader("Content-Type", "application/json"));
 
         String base = server.url("/v1beta/openai").toString();
-        WebClientLlmApiClient client = new WebClientLlmApiClient(webClient);
+        WebClientLlmApiClient client = new WebClientLlmApiClient(webClient, null);
         String out = client.chatGemini(base, "gkey", "gemini-pro", "", "hi", 128, 0.3);
 
         assertEquals("ok", out);

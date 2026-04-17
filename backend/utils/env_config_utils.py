@@ -32,4 +32,13 @@ def get_llm_fallback_config_from_env() -> Optional[Dict[str, Any]]:
             "model": "gemini-3-flash-preview",
         }
 
+    project = (os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT") or "").strip()
+    if project:
+        return {
+            "type": "gemini",
+            "api_key": "",
+            "base_url": "https://generativelanguage.googleapis.com/v1beta",
+            "model": "gemini-2.5-flash",
+        }
+
     return None

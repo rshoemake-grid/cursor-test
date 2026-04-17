@@ -83,17 +83,38 @@ async def test_anthropic(base_url: str, api_key: str, model: str) -> Dict[str, s
 
 
 async def test_gemini(base_url: str, api_key: str, model: str) -> Dict[str, str]:
-    """Test Google Gemini API connection."""
-    url = (base_url or "https://generativelanguage.googleapis.com/v1beta") + f"/models/{model}:generateContent?key={api_key}"
-    return await _do_http_post(
-        url,
-        headers={"Content-Type": "application/json"},
-        body={
-            "contents": [{"parts": [{"text": "Hello"}]}],
-            "generationConfig": {"maxOutputTokens": 5},
-        },
-        url_display=base_url or "Gemini API",
-    )
+    """Test Google Gemini API connection (AI Studio key) or Vertex :generateContent with ADC when key is empty."""
+    body = {
+        "contents": [{"parts": [{"text": "Hello"}]}],
+        "generationConfig": {"maxOutputTokens": 5},
+    }
+    if (api_key or "").strip():
+        url = (base_url or "https://generativelanguage.googleapis.com/v1beta") + f"/models/{model}:generateContent?key={api_key}"
+        return await _do_http_post(
+            url,
+            headers={"Content-Type": "application/json"},
+            body=body,
+            url_display=base_url or "Gemini API",
+        )
+    try:
+        from ..utils.vertex_gemini import post_vertex_generate_content, vertex_ai_configured
+    except Exception as e:
+        return {"status": "error", "message": f"Vertex AI not available: {e}"}
+    if not vertex_ai_configured():
+        return {
+            "status": "error",
+            "message": "No Gemini API key and Vertex AI is not configured (set GOOGLE_CLOUD_PROJECT or GCP_PROJECT).",
+        }
+    try:
+        resp = await post_vertex_generate_content(model, body, timeout=30.0)
+    except Exception as e:
+        return {"status": "error", "message": f"Vertex AI (ADC) error: {e}"}
+    if resp.status_code == 200:
+        return {"status": "success", "message": "Connected successfully (Vertex AI with ADC)"}
+    return {
+        "status": "error",
+        "message": f"Vertex AI returned status {resp.status_code}: {(resp.text or '')[:200]}",
+    }
 
 
 async def test_custom(base_url: str, api_key: str, model: str) -> Dict[str, str]:

@@ -62,14 +62,23 @@ class GeminiProvider(ILLMProvider):
     DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
     
     def create_client(self, config: Dict[str, Any]) -> AsyncOpenAI:
-        """Create Gemini client (OpenAI-compatible)"""
-        api_key = config.get("api_key")
-        if not api_key:
-            raise ValueError("api_key is required for Gemini provider")
-        
+        """Create Gemini client (OpenAI-compatible) or Vertex OpenAI-compat with ADC."""
+        api_key = (config.get("api_key") or config.get("apiKey") or "").strip()
         base_url = config.get("base_url", self.DEFAULT_BASE_URL)
-        
-        return AsyncOpenAI(api_key=api_key, base_url=base_url)
+
+        if api_key:
+            return AsyncOpenAI(api_key=api_key, base_url=base_url)
+
+        from ..utils.vertex_gemini import create_vertex_async_openai_client, resolve_project_and_location
+
+        try:
+            project_id, location = resolve_project_and_location()
+        except RuntimeError as e:
+            raise ValueError(
+                "Gemini api_key is required unless GOOGLE_CLOUD_PROJECT (or GCP_PROJECT) is set "
+                "for Vertex AI with Application Default Credentials."
+            ) from e
+        return create_vertex_async_openai_client(project_id, location)
 
 
 class ProviderFactory:

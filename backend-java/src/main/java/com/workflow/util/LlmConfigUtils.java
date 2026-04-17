@@ -55,6 +55,9 @@ public final class LlmConfigUtils {
      * Validate that an API key is available; throw if not.
      */
     public static void validateApiKey(Map<String, Object> config, Environment env) {
+        if (LlmVertexGeminiSupport.geminiUsesVertexAdc(ObjectUtils.orEmptyMap(config), env)) {
+            return;
+        }
         String key = getApiKeyWithEnvFallback(ObjectUtils.orEmptyMap(config), env);
         if (key == null || key.isBlank()) {
             throw new IllegalStateException(ErrorMessages.NO_LLM_API_KEY);
@@ -66,6 +69,9 @@ public final class LlmConfigUtils {
      * Use for pre-execution validation (e.g. ExecutionOrchestratorService).
      */
     public static boolean hasAnyApiKey(Map<String, Object> config, Environment env) {
+        if (LlmVertexGeminiSupport.geminiUsesVertexAdc(ObjectUtils.orEmptyMap(config), env)) {
+            return true;
+        }
         String key = getApiKeyWithEnvFallback(ObjectUtils.orEmptyMap(config), env);
         return key != null && !key.isBlank();
     }
@@ -167,10 +173,18 @@ public final class LlmConfigUtils {
      */
     public static LlmRequestContext prepareRequest(Map<String, Object> config, Environment env) {
         validateApiKey(config, env);
-        String baseUrl = baseUrlForOpenAiCompatibleChat(ObjectUtils.orEmptyMap(config));
-        String url = buildChatCompletionsUrl(baseUrl);
-        String apiKey = getApiKeyWithEnvFallback(config, env);
         String model = getModel(config);
+        String baseUrl;
+        String apiKey;
+        if (LlmVertexGeminiSupport.geminiUsesVertexAdc(ObjectUtils.orEmptyMap(config), env)) {
+            baseUrl = LlmVertexGeminiSupport.vertexOpenAiCompatBase(env);
+            model = LlmVertexGeminiSupport.vertexOpenAiModelId(model);
+            apiKey = null;
+        } else {
+            baseUrl = baseUrlForOpenAiCompatibleChat(ObjectUtils.orEmptyMap(config));
+            apiKey = getApiKeyWithEnvFallback(config, env);
+        }
+        String url = buildChatCompletionsUrl(baseUrl);
         return new LlmRequestContext(url, apiKey, model);
     }
 

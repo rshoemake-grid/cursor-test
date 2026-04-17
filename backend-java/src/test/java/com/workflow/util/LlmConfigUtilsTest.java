@@ -65,4 +65,16 @@ class LlmConfigUtilsTest {
         assertEquals(
                 "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", ctx.url());
     }
+
+    @Test
+    void prepareRequest_gemini_noApiKey_usesVertexOpenAiBaseWhenProjectSet() {
+        MockEnvironment env = new MockEnvironment().withProperty("GOOGLE_CLOUD_PROJECT", "p-test");
+        Map<String, Object> cfg =
+                Map.of("type", "gemini", "model", "gemini-2.5-flash", "baseUrl", "https://generativelanguage.googleapis.com/v1beta");
+        LlmConfigUtils.LlmRequestContext ctx = LlmConfigUtils.prepareRequest(cfg, env);
+        assertTrue(ctx.url().contains("aiplatform.googleapis.com"));
+        assertTrue(ctx.url().endsWith("/endpoints/openapi/chat/completions"));
+        assertNull(ctx.apiKey());
+        assertEquals("google/gemini-2.5-flash", ctx.model());
+    }
 }
