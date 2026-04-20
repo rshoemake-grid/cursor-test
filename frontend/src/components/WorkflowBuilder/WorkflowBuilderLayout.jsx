@@ -48,6 +48,7 @@ function WorkflowBuilderLayout({
     onExecutionStatusUpdate,
     onExecutionNodeUpdate,
     onRemoveExecution,
+    onActiveExecutionChange,
   } = executionConsole;
   return (
     <WorkflowLayoutRow>
@@ -106,6 +107,7 @@ function WorkflowBuilderLayout({
             onExecutionStatusUpdate,
             onExecutionNodeUpdate,
             onRemoveExecution,
+            onActiveExecutionChange,
           }}
         />
       </WorkflowLayoutCenter>
@@ -162,6 +164,7 @@ WorkflowBuilderLayout.propTypes = {
     onExecutionStatusUpdate: PropTypes.func,
     onExecutionNodeUpdate: PropTypes.func,
     onRemoveExecution: PropTypes.func,
+    onActiveExecutionChange: PropTypes.func,
   }).isRequired,
   propertyPanel: PropTypes.shape({
     onSaveWorkflow: PropTypes.func.isRequired,

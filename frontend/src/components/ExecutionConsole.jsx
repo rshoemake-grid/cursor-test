@@ -101,6 +101,7 @@ function ExecutionConsole({
     onExecutionStatusUpdate,
     onExecutionNodeUpdate,
     onRemoveExecution,
+    onActiveExecutionChange,
   } = executionCallbacks;
   const {
     documentAdapter = defaultAdapters.createDocumentAdapter(),
@@ -115,6 +116,8 @@ function ExecutionConsole({
   const startY = useRef(0);
   const startHeight = useRef(0);
   const activeWorkflowIdRef = useRef(activeWorkflowId);
+  const executionsRef = useRef(executions);
+  const lastSyncedParentExecutionIdRef = useRef(undefined);
   const activeExecutionIdRef = useRef(activeExecutionId);
   const onExecutionStatusUpdateRef = useRef(onExecutionStatusUpdate);
   const onExecutionLogUpdateRef = useRef(onExecutionLogUpdate);
@@ -153,6 +156,7 @@ function ExecutionConsole({
     return activeExecution?.status;
   }, [activeExecutionId, executions, activeExecution]);
   activeWorkflowIdRef.current = activeWorkflowId;
+  executionsRef.current = executions;
   activeExecutionIdRef.current = activeExecutionId;
   onExecutionStatusUpdateRef.current = onExecutionStatusUpdate;
   onExecutionLogUpdateRef.current = onExecutionLogUpdate;
@@ -297,20 +301,21 @@ function ExecutionConsole({
     },
   });
   useEffect(() => {
-    if (
-      activeExecutionId == null ||
-      activeExecutionId === "" ||
-      executions.length === 0
-    ) {
+    const id = activeExecutionId;
+    if (id == null || id === "") {
       return;
     }
-    const hasTab = executions.some((e) => e && e.id === activeExecutionId);
-    if (!hasTab) {
+    const list = executionsRef.current;
+    if (!list.some((e) => e && e.id === id)) {
       return;
     }
-    setActiveTab(activeExecutionId);
+    if (lastSyncedParentExecutionIdRef.current === id) {
+      return;
+    }
+    lastSyncedParentExecutionIdRef.current = id;
+    setActiveTab(id);
     setIsExpanded(true);
-  }, [activeExecutionId, executions]);
+  }, [activeExecutionId]);
   const handleCloseExecutionTab = (e, executionId) => {
     e.stopPropagation();
     if (
@@ -387,6 +392,13 @@ function ExecutionConsole({
                     setIsExpanded(true);
                   }
                   setActiveTab(tab.id);
+                  if (
+                    tab.type === "execution" &&
+                    onActiveExecutionChange != null &&
+                    typeof onActiveExecutionChange === "function"
+                  ) {
+                    onActiveExecutionChange(tab.id);
+                  }
                 }}
               >
                 {tab.type === "chat" ? (
@@ -552,6 +564,7 @@ ExecutionConsole.propTypes = {
     onExecutionStatusUpdate: PropTypes.func,
     onExecutionNodeUpdate: PropTypes.func,
     onRemoveExecution: PropTypes.func,
+    onActiveExecutionChange: PropTypes.func,
   }).isRequired,
   environment: PropTypes.shape({
     documentAdapter: PropTypes.object,

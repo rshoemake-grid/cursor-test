@@ -58,6 +58,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
     onExecutionStatusUpdate,
     onExecutionNodeUpdate,
     onRemoveExecution,
+    onActiveExecutionChange,
   } = callbacks;
   const [nodes, setNodes, onNodesChangeBase] = useNodesState([]);
   const [edges, setEdges, onEdgesChangeBase] = useEdgesState([]);
@@ -402,6 +403,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
           onExecutionStatusUpdate,
           onExecutionNodeUpdate,
           onRemoveExecution,
+          onActiveExecutionChange,
         }}
         propertyPanel={{
           onSaveWorkflow: saveWorkflow,
@@ -488,6 +490,7 @@ WorkflowBuilder.propTypes = {
     onExecutionStatusUpdate: PropTypes.func,
     onExecutionNodeUpdate: PropTypes.func,
     onRemoveExecution: PropTypes.func,
+    onActiveExecutionChange: PropTypes.func,
   }),
 };
 

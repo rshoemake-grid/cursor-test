@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { waitForWithTimeoutFakeTimers } from "../test/utils/waitForWithTimeout";
 import { AuthProvider } from "../contexts/AuthContext";
@@ -88,6 +89,7 @@ describe("ExecutionConsole - Additional Coverage", () => {
       onExecutionStatusUpdate = mockOnExecutionStatusUpdate,
       onExecutionNodeUpdate = mockOnExecutionNodeUpdate,
       onRemoveExecution = mockOnRemoveExecution,
+      onActiveExecutionChange,
       documentAdapter,
     } = p;
     const props = {
@@ -103,6 +105,7 @@ describe("ExecutionConsole - Additional Coverage", () => {
         onExecutionStatusUpdate,
         onExecutionNodeUpdate,
         onRemoveExecution,
+        onActiveExecutionChange,
       },
     };
     if (documentAdapter !== undefined) {
@@ -180,6 +183,128 @@ describe("ExecutionConsole - Additional Coverage", () => {
           {...ec({ activeWorkflowId: "workflow-1", executions: executions, activeExecutionId: null })}
         />,      );
       expect(screen.getByText("Chat")).toBeInTheDocument();
+    });
+    it("calls onActiveExecutionChange when an execution tab is selected", () => {
+      const onActiveExecutionChange = jest.fn();
+      const execFirst = {
+        ...mockExecution,
+        id: "exec-11111111",
+        logs: [
+          {
+            level: "INFO",
+            message: "log-first",
+            timestamp: 1,
+            node_id: "",
+          },
+        ],
+      };
+      const execSecond = {
+        ...mockExecution,
+        id: "exec-22222222",
+        logs: [
+          {
+            level: "INFO",
+            message: "log-second",
+            timestamp: 1,
+            node_id: "",
+          },
+        ],
+      };
+      renderWithAuth(
+        <ExecutionConsole
+          {...ec({
+            activeWorkflowId: "workflow-1",
+            executions: [execFirst, execSecond],
+            activeExecutionId: "exec-11111111",
+            onActiveExecutionChange,
+          })}
+        />,
+      );
+      const secondTabLabel = execSecond.id.slice(0, 8);
+      fireEvent.click(screen.getByText(secondTabLabel));
+      expect(onActiveExecutionChange).toHaveBeenCalledWith("exec-22222222");
+    });
+    it("keeps the selected execution tab when the executions list updates", async () => {
+      const firstExecId = "exec-11111111";
+      const secondExecId = "exec-22222222";
+      const secondTabLabel = secondExecId.slice(0, 8);
+      function ExecutionTabFocusHarness() {
+        const execFirst = {
+          ...mockExecution,
+          id: firstExecId,
+          status: "completed",
+          logs: [
+            {
+              level: "INFO",
+              message: "log-first",
+              timestamp: 1,
+              node_id: "",
+            },
+          ],
+        };
+        const execSecond = {
+          ...mockExecution,
+          id: secondExecId,
+          status: "completed",
+          logs: [
+            {
+              level: "INFO",
+              message: "log-second-unique",
+              timestamp: 1,
+              node_id: "",
+            },
+          ],
+        };
+        const [executions, setExecutions] = useState([execFirst, execSecond]);
+        const [activeExecutionId, setActiveExecutionId] =
+          useState(firstExecId);
+        return (
+          <>
+            <ExecutionConsole
+              {...ec({
+                activeWorkflowId: "workflow-1",
+                executions,
+                activeExecutionId,
+                onActiveExecutionChange: setActiveExecutionId,
+              })}
+            />
+            <button
+              type="button"
+              data-testid="append-log-selected-exec"
+              onClick={() =>
+                setExecutions((prev) =>
+                  prev.map((e) =>
+                    e.id === secondExecId
+                      ? {
+                          ...e,
+                          logs: [
+                            ...(e.logs || []),
+                            {
+                              level: "INFO",
+                              message: "appended-for-second",
+                              timestamp: 2,
+                              node_id: "",
+                            },
+                          ],
+                        }
+                      : e,
+                  ),
+                )
+              }
+            >
+              bump
+            </button>
+          </>
+        );
+      }
+      renderWithAuth(<ExecutionTabFocusHarness />);
+      fireEvent.click(screen.getByText(secondTabLabel));
+      expect(screen.getByText("log-second-unique")).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId("append-log-selected-exec"));
+      await waitForWithTimeout(() => {
+        expect(screen.getByText("appended-for-second")).toBeInTheDocument();
+      });
+      expect(screen.getByText("log-second-unique")).toBeInTheDocument();
     });
   });
   describe("Console Expand/Collapse", () => {

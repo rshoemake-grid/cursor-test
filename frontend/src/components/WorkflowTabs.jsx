@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { createNewTab } from "../hooks/utils/tabUtils";
 import { Plus } from "lucide-react";
@@ -102,6 +102,18 @@ function WorkflowTabs({
     handleExecutionStatusUpdate,
     handleExecutionNodeUpdate,
   } = executionManagement;
+  const handleActiveExecutionChange = useCallback(
+    (executionId) => {
+      setTabs((prev) =>
+        prev.map((t) =>
+          t.id === activeTabId
+            ? { ...t, activeExecutionId: executionId }
+            : t,
+        ),
+      );
+    },
+    [activeTabId, setTabs],
+  );
   const activeTab = tabs.find((t) => t.id === activeTabId);
   const marketplacePublishing = useMarketplacePublishing({
     activeTab: activeTab
@@ -234,6 +246,7 @@ function WorkflowTabs({
               onExecutionStatusUpdate: handleExecutionStatusUpdate,
               onExecutionNodeUpdate: handleExecutionNodeUpdate,
               onRemoveExecution: handleRemoveExecution,
+              onActiveExecutionChange: handleActiveExecutionChange,
             }}
           />
         </WorkflowBuilderMain>
