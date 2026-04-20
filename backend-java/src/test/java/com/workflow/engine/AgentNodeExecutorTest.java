@@ -45,7 +45,7 @@ class AgentNodeExecutorTest {
     void execute_routesAnthropicWhenProviderResolved() {
         MockEnvironment env = new MockEnvironment().withProperty("ANTHROPIC_API_KEY", "fallback-ant");
         CapturingLlmClient client = new CapturingLlmClient();
-        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, settingsService);
+        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, settingsService, new com.fasterxml.jackson.databind.ObjectMapper());
 
         Map<String, Object> anthropic = new HashMap<>();
         anthropic.put("type", "anthropic");
@@ -79,7 +79,7 @@ class AgentNodeExecutorTest {
     void execute_routesGeminiWhenProviderResolved() {
         MockEnvironment env = new MockEnvironment().withProperty("GEMINI_API_KEY", "fallback-g");
         CapturingLlmClient client = new CapturingLlmClient();
-        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, settingsService);
+        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, settingsService, new com.fasterxml.jackson.databind.ObjectMapper());
 
         Map<String, Object> gemini = new HashMap<>();
         gemini.put("type", "gemini");
@@ -111,7 +111,7 @@ class AgentNodeExecutorTest {
     void execute_skipsSettingsLookupWhenUserIdNull() {
         MockEnvironment env = new MockEnvironment();
         CapturingLlmClient client = new CapturingLlmClient();
-        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, settingsService);
+        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, settingsService, new com.fasterxml.jackson.databind.ObjectMapper());
 
         Node node = agentNode("gpt-4o-mini", "", "x");
         Map<String, Object> ctxLlm = Map.of(
@@ -128,7 +128,8 @@ class AgentNodeExecutorTest {
 
     @Test
     void execute_throwsWhenLlmConfigEmpty() {
-        AgentNodeExecutor exec = new AgentNodeExecutor(new CapturingLlmClient(), new MockEnvironment(), null);
+        AgentNodeExecutor exec = new AgentNodeExecutor(new CapturingLlmClient(), new MockEnvironment(), null,
+                new com.fasterxml.jackson.databind.ObjectMapper());
         Node node = agentNode("m", "", "x");
         NodeExecutionContext ctx = new NodeExecutionContext(Map.of(), "u", List.of(), Map.of());
         IllegalStateException ex =
@@ -143,7 +144,8 @@ class AgentNodeExecutorTest {
         MockEnvironment env = new MockEnvironment().withProperty("GOOGLE_CLOUD_PROJECT", "vertex-proj");
         CapturingLlmClient client = new CapturingLlmClient();
         SettingsService svcWithVertex = new SettingsService(settingsRepository, env);
-        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, svcWithVertex);
+        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, svcWithVertex,
+                new com.fasterxml.jackson.databind.ObjectMapper());
 
         Map<String, Object> gemini = new HashMap<>();
         gemini.put("type", "gemini");

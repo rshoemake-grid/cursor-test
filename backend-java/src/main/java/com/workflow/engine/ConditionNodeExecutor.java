@@ -1,8 +1,10 @@
 package com.workflow.engine;
 
 import com.workflow.constants.WorkflowConstants;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.dto.ConditionConfig;
 import com.workflow.dto.Node;
+import com.workflow.util.NodeConfigUtils;
 import com.workflow.util.ObjectUtils;
 import com.workflow.dto.NodeType;
 
@@ -19,6 +21,12 @@ public class ConditionNodeExecutor implements NodeExecutor {
 
     private static final String BRANCH_KEY = "branch";
 
+    private final ObjectMapper objectMapper;
+
+    public ConditionNodeExecutor(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     @Override
     public Optional<NodeType> getSupportedType() {
         return Optional.of(NodeType.CONDITION);
@@ -27,7 +35,7 @@ public class ConditionNodeExecutor implements NodeExecutor {
     @Override
     public Object execute(Node node, Map<String, Object> inputs, ExecutionState state,
                           NodeExecutionContext ctx) {
-        ConditionConfig cfg = node.getConditionConfig();
+        ConditionConfig cfg = NodeConfigUtils.resolveConditionConfig(node, objectMapper);
         if (cfg == null) {
             throw new IllegalStateException("Node " + node.getId() + " requires condition_config");
         }

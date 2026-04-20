@@ -36,12 +36,13 @@ class WorkflowExecutorPersistPeekTest {
         };
 
         NodeTypeParser nodeTypeParser = new NodeTypeParser();
-        WorkflowInputSourceService inputSvc = new WorkflowInputSourceService("", new ObjectMapper());
+        ObjectMapper om = new ObjectMapper();
+        WorkflowInputSourceService inputSvc = new WorkflowInputSourceService("", om);
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(blockingClient, null, null),
-                        new ConditionNodeExecutor(),
-                        new LoopNodeExecutor(),
+                        new AgentNodeExecutor(blockingClient, null, null, om),
+                        new ConditionNodeExecutor(om),
+                        new LoopNodeExecutor(om),
                         new ToolNodeExecutor(),
                         new StorageNodeExecutor(inputSvc)),
                 nodeTypeParser);

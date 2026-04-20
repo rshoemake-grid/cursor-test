@@ -6,7 +6,9 @@ import com.workflow.service.SettingsService;
 import com.workflow.util.ErrorMessages;
 import com.workflow.util.LlmConfigUtils;
 import com.workflow.util.LlmVertexGeminiSupport;
+import com.workflow.util.NodeConfigUtils;
 import com.workflow.util.ObjectUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.dto.NodeType;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -31,11 +33,14 @@ public class AgentNodeExecutor implements NodeExecutor {
     private final LlmApiClient llmClient;
     private final Environment environment;
     private final SettingsService settingsService;
+    private final ObjectMapper objectMapper;
 
-    public AgentNodeExecutor(LlmApiClient llmClient, Environment environment, SettingsService settingsService) {
+    public AgentNodeExecutor(LlmApiClient llmClient, Environment environment, SettingsService settingsService,
+                             ObjectMapper objectMapper) {
         this.llmClient = llmClient;
         this.environment = environment;
         this.settingsService = settingsService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -50,7 +55,11 @@ public class AgentNodeExecutor implements NodeExecutor {
             throw new IllegalStateException(ErrorMessages.LLM_CONFIG_REQUIRED_AGENT);
         }
 
-        AgentConfig cfg = node.getAgentConfig();
+        AgentConfig cfg = NodeConfigUtils.resolveAgentConfig(node, objectMapper);
+        if (cfg == null) {
+            throw new IllegalStateException(
+                    "Node " + node.getId() + " requires agent_config. Please configure the agent settings in the node properties.");
+        }
         String agentModel = ObjectUtils.safeGet(cfg, AgentConfig::getModel);
         String lookupModel = ObjectUtils.orDefault(agentModel, LlmConfigUtils.getModel(llmConfig));
 

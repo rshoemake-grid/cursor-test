@@ -1,5 +1,6 @@
 package com.workflow.engine;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.dto.LoopConfig;
 import com.workflow.dto.Node;
 import com.workflow.dto.NodeType;
@@ -11,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class LoopNodeExecutorTest {
 
-    private final LoopNodeExecutor executor = new LoopNodeExecutor();
+    private final LoopNodeExecutor executor = new LoopNodeExecutor(new ObjectMapper());
 
     @Test
     void whileLoopReturnsInitializedState() {

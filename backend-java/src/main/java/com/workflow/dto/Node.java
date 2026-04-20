@@ -21,8 +21,11 @@ public class Node {
     private NodeType type;
     private String name;
     private String description;
+    @JsonProperty("agent_config")
     private AgentConfig agentConfig;
+    @JsonProperty("condition_config")
     private ConditionConfig conditionConfig;
+    @JsonProperty("loop_config")
     private LoopConfig loopConfig;
     @JsonProperty("input_config")
     private Map<String, Object> inputConfig;

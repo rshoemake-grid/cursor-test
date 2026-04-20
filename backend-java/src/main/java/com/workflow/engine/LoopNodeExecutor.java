@@ -3,6 +3,7 @@ package com.workflow.engine;
 import com.workflow.dto.LoopConfig;
 import com.workflow.dto.Node;
 import com.workflow.dto.NodeType;
+import com.workflow.util.NodeConfigUtils;
 import com.workflow.util.ObjectUtils;
 
 import org.springframework.stereotype.Component;
@@ -22,7 +23,11 @@ import java.util.Optional;
 @Component
 public class LoopNodeExecutor implements NodeExecutor {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    public LoopNodeExecutor(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public Optional<NodeType> getSupportedType() {
@@ -32,8 +37,11 @@ public class LoopNodeExecutor implements NodeExecutor {
     @Override
     public Object execute(Node node, Map<String, Object> inputs, ExecutionState state,
                           NodeExecutionContext ctx) {
-        LoopConfig cfg = node.getLoopConfig();
-        String loopType = cfg != null && cfg.getLoopType() != null ? cfg.getLoopType() : "for_each";
+        LoopConfig cfg = NodeConfigUtils.resolveLoopConfig(node, objectMapper);
+        if (cfg == null) {
+            cfg = new LoopConfig();
+        }
+        String loopType = cfg.getLoopType() != null ? cfg.getLoopType() : "for_each";
 
         return switch (loopType) {
             case "while" -> Map.of(
@@ -54,7 +62,7 @@ public class LoopNodeExecutor implements NodeExecutor {
         };
     }
 
-    private static Map<String, Object> forEachResult(LoopConfig cfg, Map<String, Object> inputs) {
+    private Map<String, Object> forEachResult(LoopConfig cfg, Map<String, Object> inputs) {
         List<?> items = resolveItems(cfg, inputs);
         int max = cfg != null && cfg.getMaxIterations() != null && cfg.getMaxIterations() > 0
                 ? Math.min(items.size(), cfg.getMaxIterations())
@@ -70,7 +78,7 @@ public class LoopNodeExecutor implements NodeExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    private static List<?> resolveItems(LoopConfig cfg, Map<String, Object> inputs) {
+    private List<?> resolveItems(LoopConfig cfg, Map<String, Object> inputs) {
         if (cfg != null && cfg.getItemsSource() != null && !cfg.getItemsSource().isBlank()) {
             Object v = inputs.get(cfg.getItemsSource());
             return normalizeList(v);
@@ -86,7 +94,7 @@ public class LoopNodeExecutor implements NodeExecutor {
         return Collections.emptyList();
     }
 
-    private static List<?> normalizeList(Object itemsObj) {
+    private List<?> normalizeList(Object itemsObj) {
         if (itemsObj == null) {
             return Collections.emptyList();
         }
@@ -97,7 +105,7 @@ public class LoopNodeExecutor implements NodeExecutor {
             String t = s.trim();
             if (t.startsWith("[") || t.startsWith("{")) {
                 try {
-                    Object parsed = MAPPER.readValue(t, new TypeReference<Object>() {
+                    Object parsed = objectMapper.readValue(t, new TypeReference<Object>() {
                     });
                     if (parsed instanceof List) {
                         return (List<?>) parsed;

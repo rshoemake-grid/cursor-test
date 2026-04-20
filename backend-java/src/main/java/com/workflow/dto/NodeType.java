@@ -1,5 +1,8 @@
 package com.workflow.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * NodeType enum - matches Python NodeType enum.
  * OCP-4: Provides behavior methods (isStart, isEnd, isSkip, isCondition) for type checks.
@@ -22,8 +25,30 @@ public enum NodeType {
         this.value = value;
     }
 
+    @JsonValue
     public String getValue() {
         return value;
+    }
+
+    /**
+     * Wire format uses snake_case strings (e.g. {@code gcp_bucket}) matching the Python API and frontend.
+     */
+    @JsonCreator
+    public static NodeType fromWire(String key) {
+        if (key == null || key.isBlank()) {
+            return null;
+        }
+        String s = key.trim();
+        for (NodeType t : values()) {
+            if (t.value.equalsIgnoreCase(s)) {
+                return t;
+            }
+        }
+        try {
+            return NodeType.valueOf(s.toUpperCase().replace("-", "_"));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Unknown node type: " + key);
+        }
     }
 
     /**

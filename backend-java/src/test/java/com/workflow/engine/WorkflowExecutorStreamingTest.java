@@ -56,12 +56,13 @@ class WorkflowExecutorStreamingTest {
         recording = new RecordingBroadcaster();
         LlmApiClient mockLlmClient = (baseUrl, apiKey, model, messages) -> "mocked response";
         NodeTypeParser nodeTypeParser = new NodeTypeParser();
-        WorkflowInputSourceService inputSvc = new WorkflowInputSourceService("", new ObjectMapper());
+        ObjectMapper om = new ObjectMapper();
+        WorkflowInputSourceService inputSvc = new WorkflowInputSourceService("", om);
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(mockLlmClient, null, null),
-                        new ConditionNodeExecutor(),
-                        new LoopNodeExecutor(),
+                        new AgentNodeExecutor(mockLlmClient, null, null, om),
+                        new ConditionNodeExecutor(om),
+                        new LoopNodeExecutor(om),
                         new ToolNodeExecutor(),
                         new StorageNodeExecutor(inputSvc)),
                 nodeTypeParser);

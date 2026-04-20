@@ -28,9 +28,9 @@ class WorkflowExecutorTest {
         WorkflowInputSourceService inputSvc = new WorkflowInputSourceService("", new ObjectMapper());
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(mockLlmClient, null, null),
-                        new ConditionNodeExecutor(),
-                        new LoopNodeExecutor(),
+                        new AgentNodeExecutor(mockLlmClient, null, null, new ObjectMapper()),
+                        new ConditionNodeExecutor(new ObjectMapper()),
+                        new LoopNodeExecutor(new ObjectMapper()),
                         new ToolNodeExecutor(),
                         new StorageNodeExecutor(inputSvc)),
                 nodeTypeParser);
@@ -296,9 +296,9 @@ class WorkflowExecutorTest {
         NodeTypeParser nodeTypeParser = new NodeTypeParser();
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(failingClient, null, null),
-                        new ConditionNodeExecutor(),
-                        new LoopNodeExecutor(),
+                        new AgentNodeExecutor(failingClient, null, null, new ObjectMapper()),
+                        new ConditionNodeExecutor(new ObjectMapper()),
+                        new LoopNodeExecutor(new ObjectMapper()),
                         new ToolNodeExecutor()),
                 nodeTypeParser);
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
@@ -342,9 +342,9 @@ class WorkflowExecutorTest {
         WorkflowInputSourceService inputSvc = new WorkflowInputSourceService("", new ObjectMapper());
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(slow, null, null),
-                        new ConditionNodeExecutor(),
-                        new LoopNodeExecutor(),
+                        new AgentNodeExecutor(slow, null, null, new ObjectMapper()),
+                        new ConditionNodeExecutor(new ObjectMapper()),
+                        new LoopNodeExecutor(new ObjectMapper()),
                         new ToolNodeExecutor(),
                         new StorageNodeExecutor(inputSvc)),
                 nodeTypeParser);
