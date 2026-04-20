@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { waitForWithTimeoutFakeTimers } from "../test/utils/waitForWithTimeout";
 import { AuthProvider } from "../contexts/AuthContext";
@@ -305,6 +305,35 @@ describe("ExecutionConsole - Additional Coverage", () => {
         expect(screen.getByText("appended-for-second")).toBeInTheDocument();
       });
       expect(screen.getByText("log-second-unique")).toBeInTheDocument();
+    });
+    it("shows the execution logs once the run appears in the list with an unchanged parent id", async () => {
+      const realId = "exec-appears-late-1";
+      function DeferredListHarness() {
+        const [executions, setExecutions] = useState([]);
+        useEffect(() => {
+          setExecutions([
+            {
+              ...mockExecution,
+              id: realId,
+              status: "completed",
+            },
+          ]);
+        }, []);
+        return (
+          <ExecutionConsole
+            {...ec({
+              activeWorkflowId: "workflow-1",
+              executions,
+              activeExecutionId: realId,
+            })}
+          />
+        );
+      }
+      renderWithAuth(<DeferredListHarness />);
+      await waitForWithTimeout(() => {
+        expect(screen.queryByText("Execution not found")).not.toBeInTheDocument();
+        expect(screen.getByText("Test log message")).toBeInTheDocument();
+      });
     });
   });
   describe("Console Expand/Collapse", () => {

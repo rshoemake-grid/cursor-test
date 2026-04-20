@@ -130,20 +130,45 @@ function ExecutionConsole({
         type: "chat",
       },
       ...executions.map((exec) => ({
-        id: exec.id,
-        name: exec.id.slice(0, 8),
+        id: String(exec.id),
+        name: String(exec.id).slice(0, 8),
         type: "execution",
         execution: exec,
       })),
     ],
     [executions],
   );
+  /** Changes when execution rows are added/removed, not when logs/status mutate (avoids effect churn). */
+  const executionIdsKey = useMemo(() => {
+    const ids = executions
+      .map((e) => (e && e.id != null ? String(e.id) : ""))
+      .filter(Boolean);
+    return [...new Set(ids)].sort().join("|");
+  }, [executions]);
   const activeTabData = useMemo(
     () => allTabs.find((t) => t.id === activeTab),
     [allTabs, activeTab],
   );
   const activeExecution =
     activeTabData?.type === "execution" ? activeTabData.execution : null;
+  const resolvedExecution = useMemo(() => {
+    if (activeExecution) {
+      return activeExecution;
+    }
+    if (
+      activeTab !== "chat" &&
+      activeExecutionId != null &&
+      activeExecutionId !== "" &&
+      String(activeTab) === String(activeExecutionId)
+    ) {
+      return (
+        executions.find(
+          (e) => e && String(e.id) === String(activeExecutionId),
+        ) ?? null
+      );
+    }
+    return null;
+  }, [activeExecution, activeTab, activeExecutionId, executions]);
   const activeExecutionStatus = useMemo(() => {
     if (
       activeExecutionId !== null &&
@@ -303,19 +328,20 @@ function ExecutionConsole({
   useEffect(() => {
     const id = activeExecutionId;
     if (id == null || id === "") {
+      lastSyncedParentExecutionIdRef.current = undefined;
       return;
     }
     const list = executionsRef.current;
-    if (!list.some((e) => e && e.id === id)) {
+    if (!list.some((e) => e && String(e.id) === String(id))) {
       return;
     }
     if (lastSyncedParentExecutionIdRef.current === id) {
       return;
     }
     lastSyncedParentExecutionIdRef.current = id;
-    setActiveTab(id);
+    setActiveTab(String(id));
     setIsExpanded(true);
-  }, [activeExecutionId]);
+  }, [activeExecutionId, executionIdsKey]);
   const handleCloseExecutionTab = (e, executionId) => {
     e.stopPropagation();
     if (
@@ -326,7 +352,7 @@ function ExecutionConsole({
       activeWorkflowId !== ""
     ) {
       onRemoveExecution(activeWorkflowId, executionId);
-      if (activeTab === executionId) {
+      if (String(activeTab) === String(executionId)) {
         setActiveTab("chat");
       }
     }
@@ -397,7 +423,12 @@ function ExecutionConsole({
                     onActiveExecutionChange != null &&
                     typeof onActiveExecutionChange === "function"
                   ) {
-                    onActiveExecutionChange(tab.id);
+                    const raw = executions.find(
+                      (e) => String(e?.id) === String(tab.id),
+                    );
+                    onActiveExecutionChange(
+                      raw != null && raw.id != null ? raw.id : tab.id,
+                    );
                   }
                 }}
               >
@@ -469,35 +500,35 @@ function ExecutionConsole({
               getCanvasSnapshot={getWorkflowChatCanvasSnapshot}
               chatClearNonce={workflowChatClearNonce}
             />
-          ) : activeExecution ? (
+          ) : resolvedExecution ? (
             <ConsoleLogScroll>
               <ConsoleLogStack>
                 <ConsoleLogHeaderRow>
                   <div>
                     <ConsoleLogTitle>
-                      Execution {activeExecution.id.slice(0, 8)}...
+                      Execution {resolvedExecution.id.slice(0, 8)}...
                     </ConsoleLogTitle>
                     <ConsoleLogMeta>
                       Started:{" "}
-                      {new Date(activeExecution.startedAt).toLocaleString()}
+                      {new Date(resolvedExecution.startedAt).toLocaleString()}
                     </ConsoleLogMeta>
                   </div>
-                  <ExecutionStatusBadge status={activeExecution.status} />
+                  <ExecutionStatusBadge status={resolvedExecution.status} />
                 </ConsoleLogHeaderRow>
-                {activeExecution.status === "failed" ? (
+                {resolvedExecution.status === "failed" ? (
                   <ConsoleExecutionErrorPanel role="alert">
                     <ConsoleExecutionErrorLabel>
                       Failure reason
                     </ConsoleExecutionErrorLabel>
-                    {resolveExecutionFailureDetail(activeExecution) ||
+                    {resolveExecutionFailureDetail(resolvedExecution) ||
                       "No error message was reported. Check ERROR-level lines in the log below, or open this run in the Logs page for full details."}
                   </ConsoleExecutionErrorPanel>
                 ) : null}
-                {activeExecution.logs !== null &&
-                activeExecution.logs !== void 0 &&
-                activeExecution.logs.length > 0 ? (
+                {resolvedExecution.logs !== null &&
+                resolvedExecution.logs !== void 0 &&
+                resolvedExecution.logs.length > 0 ? (
                   <ConsoleLogEntries>
-                    {activeExecution.logs.map((log, index) => (
+                    {resolvedExecution.logs.map((log, index) => (
                       <ConsoleLogEntry
                         key={index}
                         $tone={getLogLevelTone(
