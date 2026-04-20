@@ -45,6 +45,11 @@ function maybeEnhanceNetworkFailureMessage(message) {
   return message;
 }
 
+/** True when the API client attached an HTTP 401 (expired or invalid token). */
+function isUnauthorizedApiError(error) {
+  return error?.response?.status === 401;
+}
+
 function extractApiErrorMessage(error, defaultMessage = "An error occurred") {
   if (typeof error === "string") {
     return maybeEnhanceNetworkFailureMessage(error);
@@ -87,5 +92,6 @@ export {
   buildUploadHeaders,
   extractApiErrorMessage,
   isApiResponseOk,
+  isUnauthorizedApiError,
   parseJsonResponse,
 };

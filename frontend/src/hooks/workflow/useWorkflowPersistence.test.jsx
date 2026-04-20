@@ -196,11 +196,11 @@ describe("useWorkflowPersistence", () => {
           setIsSaving: mockSetIsSaving,
         }),
       );
+      let savedId;
       await act(async () => {
-        try {
-          await result.current.saveWorkflow();
-        } catch (e) {}
+        savedId = await result.current.saveWorkflow();
       });
+      expect(savedId).toBeNull();
       expect(mockShowError).toHaveBeenCalledWith(
         "Failed to save workflow: Save failed",
       );
@@ -209,6 +209,38 @@ describe("useWorkflowPersistence", () => {
         error,
       );
       expect(mockSetIsSaving).toHaveBeenCalledWith(false);
+    });
+    it("should show session-expired message on 401 without throwing", async () => {
+      const error = new Error("Could not validate credentials");
+      error.response = { status: 401, data: { detail: "Could not validate credentials" } };
+      mockApi.createWorkflow.mockRejectedValue(error);
+      const { result } = renderHook(() =>
+        useWorkflowPersistence({
+          isAuthenticated: true,
+          localWorkflowId: null,
+          localWorkflowName: "Test",
+          localWorkflowDescription: "",
+          nodes: defaultNodes,
+          edges: defaultEdges,
+          variables: {},
+          setLocalWorkflowId: mockSetLocalWorkflowId,
+          onWorkflowSaved: mockOnWorkflowSaved,
+          isSaving: false,
+          setIsSaving: mockSetIsSaving,
+        }),
+      );
+      let savedId;
+      await act(async () => {
+        savedId = await result.current.saveWorkflow();
+      });
+      expect(savedId).toBeNull();
+      expect(mockShowError).toHaveBeenCalledWith(
+        "Your session has expired. Please log in again to save your work.",
+      );
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "Failed to save workflow:",
+        error,
+      );
     });
     it("should call setIsSaving(true) before saving", async () => {
       mockApi.createWorkflow.mockResolvedValue({ id: "new-id" });

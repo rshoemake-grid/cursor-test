@@ -8,7 +8,10 @@ import { logger as defaultLogger } from "../../utils/logger";
 import { createWorkflowDefinition } from "../../utils/workflowFormat";
 import { nullishCoalesce } from "../utils/nullishCoalescing";
 import { logicalOr } from "../utils/logicalOr";
-import { extractApiErrorMessage } from "../utils/apiUtils";
+import {
+  extractApiErrorMessage,
+  isUnauthorizedApiError,
+} from "../utils/apiUtils";
 function useWorkflowPersistence({
   isAuthenticated,
   localWorkflowId,
@@ -60,12 +63,13 @@ function useWorkflowPersistence({
         return created.id;
       }
     } catch (error) {
-      const errorMessage =
-        "Failed to save workflow: " +
-        extractApiErrorMessage(error, "Unknown error");
-      showError(errorMessage);
+      const detail = extractApiErrorMessage(error, "Unknown error");
+      const message = isUnauthorizedApiError(error)
+        ? "Your session has expired. Please log in again to save your work."
+        : "Failed to save workflow: " + detail;
+      showError(message);
       logger.error("Failed to save workflow:", error);
-      throw new Error(errorMessage);
+      return null;
     } finally {
       setIsSaving(false);
     }

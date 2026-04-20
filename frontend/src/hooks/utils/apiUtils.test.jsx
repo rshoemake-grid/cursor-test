@@ -5,6 +5,7 @@ import {
   buildUploadHeaders,
   extractApiErrorMessage,
   isApiResponseOk,
+  isUnauthorizedApiError,
   parseJsonResponse,
 } from "./apiUtils";
 describe("apiUtils", () => {
@@ -254,6 +255,21 @@ describe("apiUtils", () => {
     it("should return true for 202 status (accepted)", () => {
       const response = { ok: true, status: 202 };
       expect(isApiResponseOk(response)).toBe(true);
+    });
+  });
+  describe("isUnauthorizedApiError", () => {
+    it("should return true for 401 response", () => {
+      const err = new Error("nope");
+      err.response = { status: 401 };
+      expect(isUnauthorizedApiError(err)).toBe(true);
+    });
+    it("should return false for other status", () => {
+      const err = new Error("nope");
+      err.response = { status: 403 };
+      expect(isUnauthorizedApiError(err)).toBe(false);
+    });
+    it("should return false when response missing", () => {
+      expect(isUnauthorizedApiError(new Error("x"))).toBe(false);
     });
   });
   describe("parseJsonResponse", () => {
