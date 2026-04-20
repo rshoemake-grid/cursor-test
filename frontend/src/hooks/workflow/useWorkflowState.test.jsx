@@ -105,6 +105,33 @@ describe("useWorkflowState", () => {
     );
     expect(result2.current.localWorkflowName).toBe("Untitled Workflow");
   });
+  it("resets description and variables when switching tabId (same builder instance)", async () => {
+    const { result, rerender } = renderHook(
+      (p) => useWorkflowState(p),
+      {
+        initialProps: {
+          workflowId: null,
+          tabName: "Tab A",
+          tabId: "tab-a",
+        },
+      },
+    );
+    act(() => {
+      result.current.setVariables({ x: 1 });
+      result.current.setLocalWorkflowDescription("keep me only on A");
+    });
+    rerender({
+      workflowId: "workflow-b",
+      tabName: "Tab B",
+      tabId: "tab-b",
+    });
+    await waitForWithTimeout(() => {
+      expect(result.current.variables).toEqual({});
+      expect(result.current.localWorkflowDescription).toBe("");
+      expect(result.current.localWorkflowId).toBe("workflow-b");
+      expect(result.current.localWorkflowName).toBe("Tab B");
+    });
+  });
   it("should handle null workflowId", () => {
     const { result } = renderHook(() =>
       useWorkflowState({

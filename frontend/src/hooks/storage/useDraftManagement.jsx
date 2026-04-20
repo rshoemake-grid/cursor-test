@@ -130,7 +130,7 @@ function useDraftManagement({
     };
   }, [tabId, draftsRef]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!hydratedRef.current) {
       return;
     }

@@ -71,6 +71,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
   const workflowState = useWorkflowState({
     workflowId,
     tabName,
+    tabId,
   });
   const {
     localWorkflowId,

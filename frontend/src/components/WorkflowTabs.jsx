@@ -207,7 +207,6 @@ function WorkflowTabs({
       {activeTab && (
         <WorkflowBuilderMain>
           <WorkflowBuilder
-            key={activeTab.id}
             ref={builderRef}
             tab={{
               tabId: activeTab.id,
