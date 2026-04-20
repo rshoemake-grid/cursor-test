@@ -28,7 +28,14 @@ def get_node_config(
     if not config and hasattr(node, "data") and node.data and isinstance(node.data, dict):
         config = node.data.get(config_key)
 
-    if config and config_class and isinstance(config, dict):
+    if isinstance(config, dict) and config_class:
+        if len(config) == 0:
+            # Empty {} must become model defaults for agent/loop; ConditionConfig rejects {}.
+            from ..models.schemas import AgentConfig, LoopConfig
+
+            if config_class in (AgentConfig, LoopConfig):
+                return config_class(**config)
+            return None
         return config_class(**config)
 
     return config
