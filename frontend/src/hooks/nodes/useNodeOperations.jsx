@@ -22,14 +22,16 @@ function useNodeOperations({
   const handleUpdate = useCallback(
     (field, value) => {
       if (!selectedNode) return;
-      const updatedData = { ...selectedNode.data, [field]: value };
-      if (field === "name") {
-        updatedData.label = value;
-      }
+      const nodeId = selectedNode.id;
       setNodes((nodes) =>
-        nodes.map((node) =>
-          node.id === selectedNode.id ? { ...node, data: updatedData } : node,
-        ),
+        nodes.map((node) => {
+          if (node.id !== nodeId) return node;
+          const updatedData = { ...node.data, [field]: value };
+          if (field === "name") {
+            updatedData.label = value;
+          }
+          return { ...node, data: updatedData };
+        }),
       );
     },
     [selectedNode, setNodes],
@@ -37,20 +39,24 @@ function useNodeOperations({
   const handleConfigUpdate = useCallback(
     (configField, field, value) => {
       if (!selectedNode) return;
-      const currentConfig = logicalOrToEmptyObject(
-        selectedNode.data[configField],
-      );
-      const updatedData = {
-        ...selectedNode.data,
-        [configField]: {
-          ...currentConfig,
-          [field]: value,
-        },
-      };
+      const nodeId = selectedNode.id;
       setNodes((nodes) =>
-        nodes.map((node) =>
-          node.id === selectedNode.id ? { ...node, data: updatedData } : node,
-        ),
+        nodes.map((node) => {
+          if (node.id !== nodeId) return node;
+          const currentConfig = logicalOrToEmptyObject(
+            node.data[configField],
+          );
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              [configField]: {
+                ...currentConfig,
+                [field]: value,
+              },
+            },
+          };
+        }),
       );
     },
     [selectedNode, setNodes],

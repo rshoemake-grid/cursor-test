@@ -277,6 +277,46 @@ describe("useNodeOperations", () => {
       });
       expect(mockSetNodes).not.toHaveBeenCalled();
     });
+    it("merges sequential input_config updates without losing prior keys (property panel)", () => {
+      const node = {
+        id: "node-1",
+        data: {
+          name: "GCP",
+          label: "GCP",
+          inputs: [],
+        },
+      };
+      const { result } = renderHook(() =>
+        useNodeOperations({
+          selectedNode: node,
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
+      );
+      act(() => {
+        result.current.handleConfigUpdate(
+          "input_config",
+          "project_id",
+          "my-gcp-project",
+        );
+      });
+      act(() => {
+        result.current.handleConfigUpdate(
+          "input_config",
+          "bucket_name",
+          "sysco-smarter-catalog-ce-batch-job-dev",
+        );
+      });
+      expect(mockSetNodes).toHaveBeenCalledTimes(2);
+      const firstUpdater = mockSetNodes.mock.calls[0][0];
+      const secondUpdater = mockSetNodes.mock.calls[1][0];
+      const nodesAfterFirst = firstUpdater([node]);
+      const finalNodes = secondUpdater(nodesAfterFirst);
+      const updated = finalNodes.find((n) => n.id === "node-1");
+      expect(updated.data.input_config).toEqual({
+        project_id: "my-gcp-project",
+        bucket_name: "sysco-smarter-catalog-ce-batch-job-dev",
+      });
+    });
   });
   describe("handleDelete", () => {
     it("should delete node after confirmation", async () => {

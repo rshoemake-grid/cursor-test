@@ -1,6 +1,7 @@
 package com.workflow.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,7 @@ public class Node {
     private AgentConfig agentConfig;
     private ConditionConfig conditionConfig;
     private LoopConfig loopConfig;
+    @JsonProperty("input_config")
     private Map<String, Object> inputConfig;
     private List<InputMapping> inputs;
     private Map<String, Double> position;

@@ -5,6 +5,7 @@ import com.workflow.dto.Node;
 import com.workflow.dto.NodeType;
 import com.workflow.storage.WorkflowInputSourceService;
 import com.workflow.util.ConfigVariableResolver;
+import com.workflow.util.NodeInputConfigUtils;
 import com.workflow.util.ObjectUtils;
 import org.springframework.stereotype.Component;
 
@@ -43,7 +44,7 @@ public class StorageNodeExecutor implements NodeExecutor {
     @Override
     public Object execute(Node node, Map<String, Object> inputs, ExecutionState state, NodeExecutionContext ctx) {
         Map<String, Object> inputConfig = ConfigVariableResolver.resolve(
-                new LinkedHashMap<>(ObjectUtils.orEmptyMap(node.getInputConfig())),
+                new LinkedHashMap<>(NodeInputConfigUtils.getMergedInputConfig(node)),
                 state.getVariables());
         String mode = ObjectUtils.toStringOrDefault(inputConfig.get("mode"), "read");
         boolean nodeHasInputs = node.getInputs() != null && !node.getInputs().isEmpty();
