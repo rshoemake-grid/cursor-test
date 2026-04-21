@@ -4,7 +4,7 @@
 
 **How to use:** When you change either backend, update the relevant row and bump **Last reviewed**. For **Partial** / **Gap** items, link a PR or issue in the Notes column (optional).
 
-**Last reviewed:** 2026-04-16
+**Last reviewed:** 2026-04-21
 
 **Maintainers:** Update this file when adding or changing API routes, executors, or workflow-chat behavior on either backend. Prefer linking to the PR that closed a **Gap** or promoted **Partial → Match**.
 
@@ -87,7 +87,7 @@
 |-------|--------|------|--------|-------|
 | Request size limit / gzip / security headers | `main.py` middleware | `ApigeeFilter` + `server.compression` + Tomcat | Match | Filter order fixed (`ApigeeFilter` before `MetricsFilter`); 413 uses `ErrorResponseBuilder` (`detail` + `error`) |
 | Structured errors | FastAPI handlers (`detail` + `error` object) | `ErrorResponseBuilder` / `GlobalExceptionHandler` | Match | Top-level `detail` string mirrors Python alongside nested `error` |
-| OpenAPI | Auto | Springdoc (`/api-docs`) | Match | Contract guard: `OpenApiContractTest` asserts OpenAPI 3.x + core paths (`/api/workflows`, executions, workflow-chat, settings, auth, health, metrics) |
+| OpenAPI | Auto | Springdoc (`/api-docs`) | Match | `OpenApiContractTest`: OpenAPI 3.x + core paths. **`OpenApiParityTest`**: loads committed `python-openapi-paths.json` (from `backend/scripts/export_openapi_paths.py`) and asserts every FastAPI path template exists on Java after camelCase→snake_case normalization |
 
 ---
 
@@ -106,5 +106,6 @@
 | 2026-04-16 | LLM provider matrix: `SettingsService.getProviderConfigForModel`, `AgentNodeExecutor` routes `openai`/`custom` vs `anthropic` vs `gemini`; `WebClientLlmApiClient` Messages + `generateContent`; `LlmConfigUtils` `ANTHROPIC_API_KEY` / type-aware env fallback. Tests: `SettingsServiceTest`, `AgentNodeExecutorTest`, `WebClientLlmApiClientTest`, `LlmConfigUtilsTest`. |
 | 2026-04-16 | Workflow chat LLM resolution: `SettingsService.getLlmConfigForWorkflowChat` (`chat_assistant_model`); `getActiveLlmConfig` prefers top-level `default_model` / `defaultModel` when that model exists on an enabled provider. `WorkflowChatService.chat` uses `getLlmConfigForWorkflowChat`. Tests: `SettingsServiceTest`, `WorkflowChatServiceTest`. |
 | 2026-04-16 | OpenAPI parity guard: `OpenApiContractTest` validates Springdoc `/api-docs` (OpenAPI 3.x + required path templates). |
+| 2026-04-21 | **Automated path parity:** `python-openapi-paths.json` snapshot + `OpenApiParityTest` (full FastAPI path list vs Springdoc, param name normalization). Regenerate snapshot with `python backend/scripts/export_openapi_paths.py`. |
 | 2026-04-16 | Cloud input sources: `CloudInputSourceReadSupport` (GCS 404 → `FileNotFoundException`, list cap 10k; S3 pagination + cap, `NoSuchKey` mapping; Pub/Sub catch not-found → empty list). Tests: `CloudInputSourceReadSupportTest`. |
 | 2026-04-16 | DAG executor: parallel batch awaits all futures before applying state (Python `gather`); `NodeExecutionTimeout` + env `NODE_EXECUTION_TIMEOUT_SEC` / property `workflow.node-execution-timeout-sec`. Tests: `NodeExecutionTimeoutTest`, `WorkflowExecutorTest`. |
