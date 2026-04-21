@@ -70,12 +70,13 @@ public class AuthController {
     public ResponseEntity<TokenResponse> token(
             @RequestParam String username,
             @RequestParam String password) {
-        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+        String u = username == null ? "" : username.trim();
+        if (u.isEmpty() || password == null || password.isBlank()) {
             throw new ValidationException(ErrorMessages.USERNAME_PASSWORD_REQUIRED);
         }
-        log.debug("POST /api/auth/token - OAuth2 login for user: {}", username);
+        log.debug("POST /api/auth/token - OAuth2 login for user: {}", u);
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setUsername(username);
+        loginRequest.setUsername(u);
         loginRequest.setPassword(password);
         loginRequest.setRememberMe(false);
         TokenResponse response = authService.login(loginRequest);

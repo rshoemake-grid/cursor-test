@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import {
   AuthGradientShell,
@@ -10,6 +10,7 @@ import {
   AuthLead,
   AuthFormStack,
   AuthErrorBanner,
+  AuthNoticeBanner,
   AuthFieldLabel,
   AuthTextInput,
   AuthPasswordFieldWrap,
@@ -38,15 +39,22 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const sessionExpired = location.state?.sessionExpired === true;
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
       if (isLogin) {
-        await login(username, password, rememberMe);
+        await login(username.trim(), password, rememberMe);
       } else {
-        await register(username, email, password, fullName);
+        await register(
+          username.trim(),
+          email.trim(),
+          password,
+          fullName.trim(),
+        );
       }
       navigate("/");
     } catch (err) {
@@ -69,6 +77,11 @@ function AuthPage() {
           </AuthLead>
         </AuthHeroBlock>
         <AuthFormStack onSubmit={handleSubmit}>
+          {sessionExpired && (
+            <AuthNoticeBanner role="status">
+              Your session has expired. Please sign in again.
+            </AuthNoticeBanner>
+          )}
           {error && <AuthErrorBanner>{error}</AuthErrorBanner>}
           <div>
             <AuthFieldLabel htmlFor="auth-username">Username</AuthFieldLabel>

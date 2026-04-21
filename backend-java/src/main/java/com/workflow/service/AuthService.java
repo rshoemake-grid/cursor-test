@@ -20,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -60,6 +61,9 @@ public class AuthService {
     }
 
     public UserResponse register(UserCreate userCreate) {
+        ValidationUtils.requireNonNull(userCreate, "User data");
+        userCreate.setUsername(ValidationUtils.normalizeLoginIdentifier(userCreate.getUsername()));
+        userCreate.setEmail(ValidationUtils.normalizeEmail(userCreate.getEmail()));
         validateUserCreate(userCreate);
 
         log.info("Registering new user: {}", userCreate.getUsername());
@@ -67,7 +71,7 @@ public class AuthService {
         if (userRepository.existsByUsername(userCreate.getUsername())) {
             throw new ValidationException(ErrorMessages.USERNAME_ALREADY_EXISTS);
         }
-        if (userRepository.existsByEmail(userCreate.getEmail())) {
+        if (userRepository.existsByEmailIgnoreCase(userCreate.getEmail())) {
             throw new ValidationException(ErrorMessages.EMAIL_ALREADY_EXISTS);
         }
 
@@ -88,21 +92,25 @@ public class AuthService {
     }
 
     public TokenResponse login(LoginRequest loginRequest) {
-        if (loginRequest == null || loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
+        if (loginRequest == null || loginRequest.getPassword() == null) {
+            throw new ValidationException(ErrorMessages.USERNAME_PASSWORD_REQUIRED);
+        }
+        String loginId = ValidationUtils.normalizeLoginIdentifier(loginRequest.getUsername());
+        if (!StringUtils.hasText(loginId)) {
             throw new ValidationException(ErrorMessages.USERNAME_PASSWORD_REQUIRED);
         }
 
-        log.info("Login attempt for user: {}", loginRequest.getUsername());
+        log.info("Login attempt for user: {}", loginId);
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
+                        loginId,
                         loginRequest.getPassword()
                 )
         );
 
         User user = RepositoryUtils.orElseThrow(
-                userRepository.findByUsernameOrEmail(loginRequest.getUsername()),
+                userRepository.findByUsernameOrEmail(loginId),
                 ErrorMessages.USER_NOT_FOUND);
 
         boolean rememberMe = Boolean.TRUE.equals(loginRequest.getRememberMe());
@@ -122,7 +130,8 @@ public class AuthService {
 
     public TokenResponse login(UserCreate loginRequest) {
         LoginRequest req = new LoginRequest();
-        req.setUsername(loginRequest.getUsername());
+        req.setUsername(
+                loginRequest.getUsername() == null ? null : ValidationUtils.normalizeLoginIdentifier(loginRequest.getUsername()));
         req.setPassword(loginRequest.getPassword());
         req.setRememberMe(false);
         return login(req);

@@ -7,6 +7,7 @@ import com.workflow.repository.PasswordResetTokenRepository;
 import com.workflow.util.EnvironmentUtils;
 import com.workflow.util.ErrorMessages;
 import com.workflow.util.RepositoryUtils;
+import com.workflow.util.ValidationUtils;
 import com.workflow.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -53,7 +54,11 @@ public class PasswordResetService {
 
     @Transactional
     public Map<String, Object> forgotPassword(String email) {
-        User user = userRepository.findByEmail(email).orElse(null);
+        String normalized = ValidationUtils.normalizeEmail(email);
+        if (normalized.isEmpty()) {
+            return Map.of("message", ErrorMessages.PASSWORD_RESET_EMAIL_SENT);
+        }
+        User user = userRepository.findByEmailIgnoreCase(normalized).orElse(null);
 
         if (user == null) {
             return Map.of("message", ErrorMessages.PASSWORD_RESET_EMAIL_SENT);

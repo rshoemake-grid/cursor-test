@@ -121,7 +121,7 @@ class AuthServiceTest {
     void register_Success() {
         // Given
         when(userRepository.existsByUsername(validUserCreate.getUsername())).thenReturn(false);
-        when(userRepository.existsByEmail(validUserCreate.getEmail())).thenReturn(false);
+        when(userRepository.existsByEmailIgnoreCase(validUserCreate.getEmail())).thenReturn(false);
         when(passwordEncoder.encode(validUserCreate.getPassword())).thenReturn("hashedPassword");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User u = invocation.getArgument(0);
@@ -138,7 +138,7 @@ class AuthServiceTest {
         assertEquals("user-id", result.getId());
         assertEquals("testuser", result.getUsername());
         verify(userRepository, times(1)).existsByUsername(validUserCreate.getUsername());
-        verify(userRepository, times(1)).existsByEmail(validUserCreate.getEmail());
+        verify(userRepository, times(1)).existsByEmailIgnoreCase(validUserCreate.getEmail());
         verify(passwordEncoder, times(1)).encode(validUserCreate.getPassword());
         verify(userRepository, times(1)).save(any(User.class));
     }
@@ -157,7 +157,7 @@ class AuthServiceTest {
     void register_EmailExists_ThrowsValidationException() {
         // Given
         when(userRepository.existsByUsername(validUserCreate.getUsername())).thenReturn(false);
-        when(userRepository.existsByEmail(validUserCreate.getEmail())).thenReturn(true);
+        when(userRepository.existsByEmailIgnoreCase(validUserCreate.getEmail())).thenReturn(true);
 
         // When/Then
         assertThrows(ValidationException.class, () -> authService.register(validUserCreate));
@@ -335,7 +335,7 @@ class AuthServiceTest {
 
     @Test
     void forgotPassword_UserNotFound_ReturnsStandardMessage() {
-        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase("unknown@example.com")).thenReturn(Optional.empty());
 
         Map<String, Object> result = authService.forgotPassword("unknown@example.com");
 
@@ -345,7 +345,7 @@ class AuthServiceTest {
 
     @Test
     void forgotPassword_UserExists_SavesTokenAndReturnsMessage() {
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(userEntity));
+        when(userRepository.findByEmailIgnoreCase("test@example.com")).thenReturn(Optional.of(userEntity));
         when(passwordResetTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Map<String, Object> result = authService.forgotPassword("test@example.com");

@@ -83,4 +83,13 @@ class UserDetailsServiceImplTest {
         assertEquals("testuser", result.getUsername());
         verify(userRepository, times(1)).findByUsernameOrEmail("test@example.com");
     }
+
+    @Test
+    void loadUserByUsername_TrimsWhitespace() {
+        when(userRepository.findByUsernameOrEmail("testuser")).thenReturn(Optional.of(user));
+
+        userDetailsService.loadUserByUsername("  testuser  ");
+
+        verify(userRepository, times(1)).findByUsernameOrEmail("testuser");
+    }
 }

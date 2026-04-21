@@ -1,8 +1,9 @@
 package com.workflow.util;
 
 import com.workflow.exception.ValidationException;
-import com.workflow.util.ErrorMessages;
 import org.springframework.util.StringUtils;
+
+import java.util.Locale;
 
 /**
  * DRY-16: Shared validation helpers to avoid duplicated null/empty checks.
@@ -10,6 +11,23 @@ import org.springframework.util.StringUtils;
 public final class ValidationUtils {
 
     private ValidationUtils() {
+    }
+
+    /**
+     * Trims login input (username or email typed in the username field). Password is never trimmed.
+     */
+    public static String normalizeLoginIdentifier(String raw) {
+        return raw == null ? "" : raw.trim();
+    }
+
+    /**
+     * Normalizes email for storage and lookup (trim + lowercase ASCII per RFC 5321 local-part conventions for case-insensitive domains).
+     */
+    public static String normalizeEmail(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        return raw.trim().toLowerCase(Locale.ROOT);
     }
 
     /**

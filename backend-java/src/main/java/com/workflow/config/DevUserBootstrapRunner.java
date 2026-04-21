@@ -13,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.workflow.util.ValidationUtils;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -66,7 +68,7 @@ public class DevUserBootstrapRunner implements ApplicationRunner {
         if (user == null) {
             String email = bootstrapEmail == null || bootstrapEmail.isBlank()
                     ? defaultDevEmail(username)
-                    : bootstrapEmail.trim();
+                    : ValidationUtils.normalizeEmail(bootstrapEmail);
             user = new User();
             user.setId(UUID.randomUUID().toString());
             user.setUsername(username);

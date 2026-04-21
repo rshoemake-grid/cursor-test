@@ -58,7 +58,7 @@ class PasswordResetServiceTest {
 
     @Test
     void forgotPassword_userNotFound_returnsStandardMessage() {
-        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase("unknown@example.com")).thenReturn(Optional.empty());
 
         Map<String, Object> result = passwordResetService.forgotPassword("unknown@example.com");
 
@@ -67,8 +67,27 @@ class PasswordResetServiceTest {
     }
 
     @Test
+    void forgotPassword_blankEmail_doesNotQueryRepository() {
+        Map<String, Object> result = passwordResetService.forgotPassword("   ");
+
+        assertEquals("If an account with that email exists, a password reset link has been sent.", result.get("message"));
+        verify(userRepository, never()).findByEmailIgnoreCase(any());
+        verify(passwordResetTokenRepository, never()).save(any());
+    }
+
+    @Test
+    void forgotPassword_emailDifferentCase_findsUser() {
+        when(userRepository.findByEmailIgnoreCase("test@example.com")).thenReturn(Optional.of(userEntity));
+        when(passwordResetTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        passwordResetService.forgotPassword("TEST@EXAMPLE.COM");
+
+        verify(userRepository, times(1)).findByEmailIgnoreCase("test@example.com");
+    }
+
+    @Test
     void forgotPassword_userExists_savesTokenAndReturnsMessage() {
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(userEntity));
+        when(userRepository.findByEmailIgnoreCase("test@example.com")).thenReturn(Optional.of(userEntity));
         when(passwordResetTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Map<String, Object> result = passwordResetService.forgotPassword("test@example.com");
@@ -80,7 +99,7 @@ class PasswordResetServiceTest {
     @Test
     void forgotPassword_withReturnToken_returnsTokenInResponse() {
         ReflectionTestUtils.setField(passwordResetService, "passwordResetReturnToken", true);
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(userEntity));
+        when(userRepository.findByEmailIgnoreCase("test@example.com")).thenReturn(Optional.of(userEntity));
         when(passwordResetTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Map<String, Object> result = passwordResetService.forgotPassword("test@example.com");
