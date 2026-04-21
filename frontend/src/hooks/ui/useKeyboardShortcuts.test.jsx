@@ -48,7 +48,7 @@ describe("useKeyboardShortcuts", () => {
       selectedNodeId: null,
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,
@@ -65,7 +65,7 @@ describe("useKeyboardShortcuts", () => {
       selectedNodeId: null,
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,
@@ -84,7 +84,7 @@ describe("useKeyboardShortcuts", () => {
       selectedNodeId: "node1",
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,
@@ -107,7 +107,7 @@ describe("useKeyboardShortcuts", () => {
       selectedNodeId: "node1",
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,
@@ -119,7 +119,10 @@ describe("useKeyboardShortcuts", () => {
     event.preventDefault = jest.fn();
     window.dispatchEvent(event);
     expect(event.preventDefault).toHaveBeenCalled();
-    expect(mockOnCopy).toHaveBeenCalledWith(selectedNode);
+    expect(mockOnCopy).toHaveBeenCalledWith({
+      nodes: [selectedNode],
+      edges: [],
+    });
   });
   it("should handle Copy shortcut (Cmd+C on Mac)", () => {
     const selectedNode = { id: "node1", selected: true };
@@ -128,7 +131,7 @@ describe("useKeyboardShortcuts", () => {
       selectedNodeId: "node1",
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,
@@ -140,18 +143,24 @@ describe("useKeyboardShortcuts", () => {
     event.preventDefault = jest.fn();
     window.dispatchEvent(event);
     expect(event.preventDefault).toHaveBeenCalled();
-    expect(mockOnCopy).toHaveBeenCalledWith(selectedNode);
+    expect(mockOnCopy).toHaveBeenCalledWith({
+      nodes: [selectedNode],
+      edges: [],
+    });
   });
-  it("should not copy if multiple nodes are selected", () => {
-    mockGetNodes.mockReturnValue([
-      { id: "node1", selected: true },
-      { id: "node2", selected: true },
+  it("should copy multiple selected nodes and internal edges", () => {
+    const n1 = { id: "node1", selected: true };
+    const n2 = { id: "node2", selected: true };
+    mockGetNodes.mockReturnValue([n1, n2]);
+    mockGetEdges.mockReturnValue([
+      { id: "e1", source: "node1", target: "node2" },
+      { id: "e2", source: "node0", target: "node1" },
     ]);
     renderHookWithProvider({
       selectedNodeId: "node1",
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,
@@ -160,8 +169,13 @@ describe("useKeyboardShortcuts", () => {
       key: "c",
       ctrlKey: true,
     });
+    event.preventDefault = jest.fn();
     window.dispatchEvent(event);
-    expect(mockOnCopy).not.toHaveBeenCalled();
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(mockOnCopy).toHaveBeenCalledWith({
+      nodes: [n1, n2],
+      edges: [{ id: "e1", source: "node1", target: "node2" }],
+    });
   });
   it("should handle Cut shortcut (Ctrl+X)", () => {
     const selectedNode = { id: "node1", selected: true };
@@ -170,7 +184,7 @@ describe("useKeyboardShortcuts", () => {
       selectedNodeId: "node1",
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,
@@ -182,15 +196,17 @@ describe("useKeyboardShortcuts", () => {
     event.preventDefault = jest.fn();
     window.dispatchEvent(event);
     expect(event.preventDefault).toHaveBeenCalled();
-    expect(mockOnCut).toHaveBeenCalledWith(selectedNode);
+    expect(mockOnCut).toHaveBeenCalledWith({
+      nodes: [selectedNode],
+      edges: [],
+    });
   });
   it("should handle Paste shortcut (Ctrl+V)", () => {
-    const clipboardNode = { id: "node1", type: "agent" };
     renderHookWithProvider({
       selectedNodeId: null,
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode,
+      clipboardHasContent: true,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,
@@ -209,7 +225,7 @@ describe("useKeyboardShortcuts", () => {
       selectedNodeId: null,
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,
@@ -235,7 +251,7 @@ describe("useKeyboardShortcuts", () => {
       selectedNodeId: "node1",
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,
@@ -263,7 +279,7 @@ describe("useKeyboardShortcuts", () => {
       selectedNodeId: "node1",
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,
@@ -284,7 +300,7 @@ describe("useKeyboardShortcuts", () => {
       selectedNodeId: null,
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,
@@ -304,7 +320,7 @@ describe("useKeyboardShortcuts", () => {
       // Different node selected
       setSelectedNodeId: mockSetSelectedNodeId,
       notifyModified: mockNotifyModified,
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
       onPaste: mockOnPaste,

@@ -78,7 +78,7 @@ jest.mock("../../hooks/execution", () => ({
 }));
 jest.mock("../../hooks/ui", () => ({
   useClipboard: () => ({
-    clipboardNode: null,
+    clipboardHasContent: false,
     copy: jest.fn(),
     cut: jest.fn(),
     paste: jest.fn(),

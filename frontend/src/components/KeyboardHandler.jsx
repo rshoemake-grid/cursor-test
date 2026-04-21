@@ -3,12 +3,12 @@ import { nullableString } from "../utils/propTypes";
 import { useKeyboardShortcuts } from "../hooks/ui";
 function KeyboardHandler({ selection, keyboard }) {
   const { selectedNodeId, setSelectedNodeId, notifyModified } = selection;
-  const { clipboardNode, onCopy, onCut, onPaste } = keyboard;
+  const { clipboardHasContent, onCopy, onCut, onPaste } = keyboard;
   useKeyboardShortcuts({
     selectedNodeId,
     setSelectedNodeId,
     notifyModified,
-    clipboardNode,
+    clipboardHasContent,
     onCopy,
     onCut,
     onPaste,
@@ -23,7 +23,7 @@ KeyboardHandler.propTypes = {
     notifyModified: PropTypes.func,
   }).isRequired,
   keyboard: PropTypes.shape({
-    clipboardNode: PropTypes.object,
+    clipboardHasContent: PropTypes.bool,
     onCopy: PropTypes.func,
     onCut: PropTypes.func,
     onPaste: PropTypes.func,

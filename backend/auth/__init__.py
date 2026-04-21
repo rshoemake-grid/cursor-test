@@ -6,7 +6,7 @@ from .auth import (
     get_current_user,
     get_current_active_user,
     get_optional_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
+    get_access_token_expire_minutes,
 )
 
 __all__ = [
@@ -16,6 +16,6 @@ __all__ = [
     "get_current_user",
     "get_current_active_user",
     "get_optional_user",
-    "ACCESS_TOKEN_EXPIRE_MINUTES",
+    "get_access_token_expire_minutes",
 ]
 

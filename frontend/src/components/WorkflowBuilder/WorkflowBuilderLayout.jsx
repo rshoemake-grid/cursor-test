@@ -34,8 +34,8 @@ function WorkflowBuilderLayout({
     onPaneClick,
   } = canvasHandlers;
   const { selectedNodeId, setSelectedNodeId, notifyModified } = selection;
-  const { clipboardNode, onCopy, onCut, onPaste } = keyboard;
-  const { instanceRef } = reactFlow;
+  const { clipboardHasContent, onCopy, onCut, onPaste } = keyboard;
+  const { instanceRef, initialViewport = null } = reactFlow;
   const {
     activeWorkflowId,
     workflowTabId,
@@ -62,7 +62,7 @@ function WorkflowBuilderLayout({
               notifyModified,
             }}
             keyboard={{
-              clipboardNode,
+              clipboardHasContent,
               onCopy,
               onCut,
               onPaste,
@@ -70,6 +70,7 @@ function WorkflowBuilderLayout({
           />
           <ReactFlowInstanceCapture instanceRef={instanceRef} />
           <WorkflowCanvas
+            initialViewport={initialViewport}
             graph={{
               nodes,
               edges,
@@ -144,13 +145,18 @@ WorkflowBuilderLayout.propTypes = {
     notifyModified: PropTypes.func.isRequired,
   }).isRequired,
   keyboard: PropTypes.shape({
-    clipboardNode: PropTypes.object,
+    clipboardHasContent: PropTypes.bool,
     onCopy: PropTypes.func.isRequired,
     onCut: PropTypes.func.isRequired,
     onPaste: PropTypes.func.isRequired,
   }).isRequired,
   reactFlow: PropTypes.shape({
     instanceRef: PropTypes.shape({ current: PropTypes.any }),
+    initialViewport: PropTypes.shape({
+      x: PropTypes.number,
+      y: PropTypes.number,
+      zoom: PropTypes.number,
+    }),
   }).isRequired,
   executionConsole: PropTypes.shape({
     activeWorkflowId: nullableString,

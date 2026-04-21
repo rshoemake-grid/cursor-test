@@ -506,9 +506,14 @@ describe("AuthProvider", () => {
       await act(async () => {
         await result.current.login("testuser", "password", true);
       });
+      const dispatchSpy = jest.spyOn(window, "dispatchEvent");
       act(() => {
         result.current.logout();
       });
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "auth:logged-out" }),
+      );
+      dispatchSpy.mockRestore();
       expect(result.current.user).toBeNull();
       expect(result.current.token).toBeNull();
       expect(result.current.isAuthenticated).toBe(false);

@@ -9,7 +9,7 @@ function useKeyboardShortcuts({
   selectedNodeId,
   setSelectedNodeId,
   notifyModified,
-  clipboardNode,
+  clipboardHasContent,
   onCopy,
   onCut,
   onPaste,
@@ -23,22 +23,32 @@ function useKeyboardShortcuts({
       }
       if (matchesKeyCombination(event, "c")) {
         const selectedNodes = getNodes().filter((node) => node.selected);
-        if (selectedNodes.length === 1) {
+        if (selectedNodes.length >= 1) {
           event.preventDefault();
-          onCopy(selectedNodes[0]);
+          const selectedIds = new Set(selectedNodes.map((n) => n.id));
+          const selectedEdges = getEdges().filter(
+            (e) =>
+              selectedIds.has(e.source) && selectedIds.has(e.target),
+          );
+          onCopy({ nodes: selectedNodes, edges: selectedEdges });
         }
         return;
       }
       if (matchesKeyCombination(event, "x")) {
         const selectedNodes = getNodes().filter((node) => node.selected);
-        if (selectedNodes.length === 1) {
+        if (selectedNodes.length >= 1) {
           event.preventDefault();
-          onCut(selectedNodes[0]);
+          const selectedIds = new Set(selectedNodes.map((n) => n.id));
+          const selectedEdges = getEdges().filter(
+            (e) =>
+              selectedIds.has(e.source) && selectedIds.has(e.target),
+          );
+          onCut({ nodes: selectedNodes, edges: selectedEdges });
         }
         return;
       }
       if (matchesKeyCombination(event, "v")) {
-        if (clipboardNode) {
+        if (clipboardHasContent) {
           event.preventDefault();
           onPaste();
         }
@@ -72,7 +82,7 @@ function useKeyboardShortcuts({
     selectedNodeId,
     setSelectedNodeId,
     notifyModified,
-    clipboardNode,
+    clipboardHasContent,
     onCopy,
     onCut,
     onPaste,

@@ -137,7 +137,7 @@ function useCanvasEvents({
       if (
         (event.ctrlKey || event.metaKey) &&
         event.button === 0 &&
-        clipboard?.clipboardNode
+        clipboard?.clipboardHasContent
       ) {
         clipboard.paste(event.clientX, event.clientY);
       }

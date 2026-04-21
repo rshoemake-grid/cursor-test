@@ -40,16 +40,42 @@ function WorkflowTabs({
   httpClient = defaultAdapters.createHttpClient(),
   apiBaseUrl = API_CONFIG.BASE_URL,
 }) {
-  const { tabs, setTabs, activeTabId, setActiveTabId, processedKeys } =
-    useWorkflowTabs();
+  const {
+    tabs,
+    setTabs,
+    activeTabId,
+    setActiveTabId: setActiveTabIdFromContext,
+    processedKeys,
+  } = useWorkflowTabs();
+  const builderRef = useRef(null);
+  /** tabId -> last React Flow viewport; pan/zoom is per-tab, not shared when switching. */
+  const tabViewportsRef = useRef(new Map());
+  const setActiveTabId = useCallback(
+    (nextId) => {
+      if (nextId !== activeTabId) {
+        const vp = builderRef.current?.getViewport?.();
+        if (vp && activeTabId) {
+          tabViewportsRef.current.set(activeTabId, {
+            x: vp.x,
+            y: vp.y,
+            zoom: vp.zoom,
+          });
+        }
+      }
+      setActiveTabIdFromContext(nextId);
+    },
+    [activeTabId, setActiveTabIdFromContext],
+  );
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
-  const builderRef = useRef(null);
-  const { token, isAuthenticated } = useAuth();
+  const { token, isAuthenticated, authHydrated } = useAuth();
+  const wasAuthenticatedThisSessionRef = useRef(false);
   useEffect(() => {
     if (isAuthenticated) {
-      return;
+      wasAuthenticatedThisSessionRef.current = true;
     }
+  }, [isAuthenticated]);
+  const resetTabsForLoggedOutPrivacy = useCallback(() => {
     setTabs((prev) => {
       if (!prev.some((t) => t.workflowId != null)) {
         return prev;
@@ -61,7 +87,33 @@ function WorkflowTabs({
       });
       return [newTab];
     });
-  }, [isAuthenticated, setTabs, setActiveTabId, tabsRef]);
+  }, [setTabs, setActiveTabId]);
+  useEffect(() => {
+    const onLoggedOut = () => {
+      wasAuthenticatedThisSessionRef.current = false;
+      resetTabsForLoggedOutPrivacy();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("auth:logged-out", onLoggedOut);
+      return () => {
+        window.removeEventListener("auth:logged-out", onLoggedOut);
+      };
+    }
+    return void 0;
+  }, [resetTabsForLoggedOutPrivacy]);
+  useEffect(() => {
+    if (!authHydrated || isAuthenticated) {
+      return;
+    }
+    if (wasAuthenticatedThisSessionRef.current) {
+      return;
+    }
+    resetTabsForLoggedOutPrivacy();
+  }, [
+    authHydrated,
+    isAuthenticated,
+    resetTabsForLoggedOutPrivacy,
+  ]);
   useTabInitialization({
     tabs,
     activeTabId,
@@ -115,6 +167,9 @@ function WorkflowTabs({
     [activeTabId, setTabs],
   );
   const activeTab = tabs.find((t) => t.id === activeTabId);
+  const activeTabInitialViewport = activeTab
+    ? tabViewportsRef.current.get(activeTab.id) ?? null
+    : null;
   const marketplacePublishing = useMarketplacePublishing({
     activeTab: activeTab
       ? {
@@ -219,7 +274,9 @@ function WorkflowTabs({
       {activeTab && (
         <WorkflowBuilderMain>
           <WorkflowBuilder
+            key={activeTab.id}
             ref={builderRef}
+            initialViewport={activeTabInitialViewport}
             tab={{
               tabId: activeTab.id,
               workflowId: activeTab.workflowId,

@@ -38,6 +38,7 @@ const AuthProvider = ({ children, options }) => {
   );
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [authHydrated, setAuthHydrated] = useState(false);
   const hasLoadedFromStorage = useRef(false);
   const localRef = useRef(local);
   const sessionRef = useRef(session);
@@ -47,12 +48,15 @@ const AuthProvider = ({ children, options }) => {
   loggerRef.current = injectedLogger;
   useEffect(() => {
     if (hasLoadedFromStorage.current) {
+      setAuthHydrated(true);
       return;
     }
     const currentLocal = localRef.current;
     const currentSession = sessionRef.current;
     const currentLogger = loggerRef.current;
     if (!currentLocal || !currentSession) {
+      hasLoadedFromStorage.current = true;
+      setAuthHydrated(true);
       return;
     }
     hasLoadedFromStorage.current = true;
@@ -77,6 +81,7 @@ const AuthProvider = ({ children, options }) => {
         setUser(() => null);
       }
     }
+    setAuthHydrated(true);
   }, []);
   useEffect(() => {
     const handleUnauthorized = () => {
@@ -164,6 +169,9 @@ const AuthProvider = ({ children, options }) => {
     [httpClient, apiBaseUrl, login],
   );
   const logout = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("auth:logged-out"));
+    }
     setToken(null);
     setUser(null);
     if (local) {
@@ -184,8 +192,9 @@ const AuthProvider = ({ children, options }) => {
       register,
       logout,
       isAuthenticated: !!token,
+      authHydrated,
     }),
-    [user, token, login, register, logout],
+    [user, token, login, register, logout, authHydrated],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -23,7 +23,7 @@ describe("useCanvasEvents", () => {
   const mockSetSelectedNodeId = jest.fn();
   const mockNotifyModified = jest.fn();
   const mockClipboard = {
-    clipboardNode: null,
+    clipboardHasContent: false,
     paste: jest.fn(),
   };
   const mockStorage = {
@@ -431,12 +431,7 @@ describe("useCanvasEvents", () => {
     });
     it("should paste on pane click with Ctrl+V and clipboard node", () => {
       const clipboardWithNode = {
-        clipboardNode: {
-          id: "node-1",
-          type: "agent",
-          position: { x: 0, y: 0 },
-          data: {},
-        },
+        clipboardHasContent: true,
         paste: jest.fn(),
       };
       const { result } = renderHook(() =>
@@ -959,12 +954,7 @@ describe("useCanvasEvents", () => {
   describe("onPaneClick edge cases", () => {
     it("should not paste when button is not 0", () => {
       const clipboardWithNode = {
-        clipboardNode: {
-          id: "node-1",
-          type: "agent",
-          position: { x: 0, y: 0 },
-          data: {},
-        },
+        clipboardHasContent: true,
         paste: jest.fn(),
       };
       const { result } = renderHook(() =>
@@ -1015,12 +1005,7 @@ describe("useCanvasEvents", () => {
     });
     it("should paste with metaKey (Cmd on Mac)", () => {
       const clipboardWithNode = {
-        clipboardNode: {
-          id: "node-1",
-          type: "agent",
-          position: { x: 0, y: 0 },
-          data: {},
-        },
+        clipboardHasContent: true,
         paste: jest.fn(),
       };
       const { result } = renderHook(() =>
@@ -1674,7 +1659,7 @@ describe("useCanvasEvents", () => {
           setEdges: mockSetEdges,
           setSelectedNodeId: mockSetSelectedNodeId,
           notifyModified: mockNotifyModified,
-          clipboard: { ...mockClipboard, clipboardNode: { id: "clipboard-1" } },
+          clipboard: { ...mockClipboard, clipboardHasContent: true },
           storage: mockStorage,
         }),
       );
@@ -1985,12 +1970,7 @@ describe("useCanvasEvents", () => {
       });
       it("should verify exact comparison event.button === 0", () => {
         const clipboardWithNode = {
-          clipboardNode: {
-            id: "node-1",
-            type: "agent",
-            position: { x: 0, y: 0 },
-            data: {},
-          },
+          clipboardHasContent: true,
           paste: jest.fn(),
         };
         const { result } = renderHook(() =>
@@ -2124,12 +2104,7 @@ describe("useCanvasEvents", () => {
       });
       it("should verify exact logical OR event.ctrlKey || event.metaKey in onPaneClick", () => {
         const clipboardWithNode = {
-          clipboardNode: {
-            id: "node-1",
-            type: "agent",
-            position: { x: 0, y: 0 },
-            data: {},
-          },
+          clipboardHasContent: true,
           paste: jest.fn(),
         };
         const { result } = renderHook(() =>
@@ -2481,14 +2456,9 @@ describe("useCanvasEvents", () => {
         });
         expect(mockSetNodes).toHaveBeenCalled();
       });
-      it("should verify exact optional chaining clipboard?.clipboardNode", () => {
+      it("should verify exact optional chaining clipboard?.clipboardHasContent", () => {
         const clipboardWithNode = {
-          clipboardNode: {
-            id: "node-1",
-            type: "agent",
-            position: { x: 0, y: 0 },
-            data: {},
-          },
+          clipboardHasContent: true,
           paste: jest.fn(),
         };
         const { result: result1 } = renderHook(() =>
@@ -2514,7 +2484,7 @@ describe("useCanvasEvents", () => {
         expect(clipboardWithNode.paste).toHaveBeenCalled();
         jest.clearAllMocks();
         const clipboardWithoutNode = {
-          clipboardNode: null,
+          clipboardHasContent: false,
           paste: jest.fn(),
         };
         const { result: result2 } = renderHook(() =>
@@ -2804,9 +2774,9 @@ describe("useCanvasEvents", () => {
       });
     });
     describe("onPaneClick - complex logical AND", () => {
-      it("should verify exact logical AND: (ctrlKey || metaKey) && button === 0 && clipboardNode", () => {
+      it("should verify exact logical AND: (ctrlKey || metaKey) && button === 0 && clipboardHasContent", () => {
         const clipboardWithNode = {
-          clipboardNode: { id: "node-1" },
+          clipboardHasContent: true,
           paste: jest.fn(),
         };
         const { result } = renderHook(() =>
@@ -2856,7 +2826,7 @@ describe("useCanvasEvents", () => {
         });
         expect(clipboardWithNode.paste).not.toHaveBeenCalled();
         const clipboardWithoutNode = {
-          clipboardNode: null,
+          clipboardHasContent: false,
           paste: jest.fn(),
         };
         const { result: result2 } = renderHook(() =>
@@ -2991,7 +2961,7 @@ describe("useCanvasEvents", () => {
         const nodes = setNodesCall([]);
         expect(nodes[0].position).toEqual({ x: 100, y: 200 });
       });
-      it("should verify exact optional chaining: clipboard?.clipboardNode - clipboard is null", () => {
+      it("should verify exact optional chaining: clipboard?.clipboardHasContent - clipboard is null", () => {
         const { result } = renderHook(() =>
           useCanvasEvents({
             reactFlowInstanceRef: mockReactFlowInstanceRef,

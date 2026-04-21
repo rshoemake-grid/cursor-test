@@ -15,7 +15,7 @@ from backend.auth import (
     verify_password,
     create_access_token,
     get_current_active_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    get_access_token_expire_minutes,
 )
 from backend.auth.auth import create_refresh_token, verify_refresh_token, REFRESH_TOKEN_EXPIRE_DAYS
 
@@ -169,7 +169,7 @@ async def login(
             detail="Inactive user"
         )
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=get_access_token_expire_minutes())
     token = _create_login_response(user, db, access_token_expires)
     await db.commit()
     return token
@@ -218,7 +218,11 @@ async def login_json(
             detail="Inactive user"
         )
 
-    access_token_expires = timedelta(days=7) if user_data.remember_me else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = (
+        timedelta(days=7)
+        if user_data.remember_me
+        else timedelta(minutes=get_access_token_expire_minutes())
+    )
     token = _create_login_response(user, db, access_token_expires)
     await db.commit()
     return token
@@ -462,7 +466,7 @@ async def refresh_access_token(
     refresh_token_db.revoked = True
     
     # Create new access token
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=get_access_token_expire_minutes())
     access_token = create_access_token(
         data={"sub": user.username},
         expires_delta=access_token_expires
@@ -490,7 +494,7 @@ async def refresh_access_token(
         access_token=access_token,
         token_type="bearer",
         refresh_token=new_refresh_token_jwt,
-        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # seconds
+        expires_in=get_access_token_expire_minutes() * 60,  # seconds
         user=UserResponse(
             id=user.id,
             username=user.username,

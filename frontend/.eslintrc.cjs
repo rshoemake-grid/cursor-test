@@ -44,6 +44,8 @@ module.exports = {
     }],
     'react/prop-types': 'off',
     'react/react-in-jsx-scope': 'off',
+    // Mark JSX identifiers as used (avoids false no-unused-vars on components only referenced in JSX).
+    'react/jsx-uses-vars': 'error',
     'react/jsx-uses-react': 'off',
     'react-hooks/exhaustive-deps': 'off',
     'no-restricted-imports': [

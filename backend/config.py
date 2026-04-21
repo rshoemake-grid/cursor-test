@@ -105,6 +105,14 @@ class Settings(BaseSettings):
     websocket_ping_interval: int = 20  # seconds
     websocket_timeout: int = 60  # seconds
 
+    # Auth — JWT access token lifetime (OAuth2 /login without remember-me, and refresh flow).
+    # Env: ACCESS_TOKEN_EXPIRE_MINUTES. Minimum 20 minutes (enforced by validation).
+    access_token_expire_minutes: int = Field(
+        default=30,
+        ge=20,
+        description="ACCESS_TOKEN_EXPIRE_MINUTES",
+    )
+
     @model_validator(mode="after")
     def _normalize_sqlite_database_path(self) -> Self:
         normalized = _resolve_sqlite_url_if_relative(self.database_url)

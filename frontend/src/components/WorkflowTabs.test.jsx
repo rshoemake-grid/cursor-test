@@ -100,6 +100,7 @@ describe("WorkflowTabs", () => {
     mockGetLocalStorageItem.mockReturnValue([]);
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
+      authHydrated: true,
       user: {
         id: "1",
         username: "testuser",
@@ -2255,6 +2256,7 @@ describe("WorkflowTabs", () => {
     it("should not publish over HTTP when guest tabs are cleared of saved workflow ids", async () => {
       mockUseAuth.mockReturnValue({
         isAuthenticated: false,
+        authHydrated: true,
         user: null,
         token: null,
         login: jest.fn(),

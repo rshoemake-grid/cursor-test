@@ -38,7 +38,13 @@ import { selectExecutionStateForBuilderTab } from "../utils/workflowExecutionTab
 import { WorkflowBuilderLayout } from "./WorkflowBuilder/WorkflowBuilderLayout";
 import { WorkflowBuilderDialogs } from "./WorkflowBuilder/WorkflowBuilderDialogs";
 const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
-  { tab, storage: storageProp, workflowTabs = [], callbacks = {} },
+  {
+    tab,
+    storage: storageProp,
+    workflowTabs = [],
+    callbacks = {},
+    initialViewport = null,
+  },
   ref,
 ) {
   const defaultStorageRef = useRef(null);
@@ -105,7 +111,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
   const { isAuthenticated } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [workflowChatClearNonce, setWorkflowChatClearNonce] = useState(0);
-  const clipboard = useClipboard(reactFlowInstanceRef, notifyModified);
+  const clipboard = useClipboard(reactFlowInstanceRef, notifyModified, tabId);
   const workflowUpdates = useWorkflowUpdates({
     nodes,
     edges,
@@ -232,6 +238,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
       executeWorkflow: execution.executeWorkflow,
       exportWorkflow,
       clearWorkflow,
+      getViewport: () => reactFlowInstanceRef.current?.getViewport?.() ?? null,
     }),
     [saveWorkflow, execution.executeWorkflow, exportWorkflow, clearWorkflow],
   );
@@ -383,13 +390,14 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
           notifyModified,
         }}
         keyboard={{
-          clipboardNode: clipboard.clipboardNode,
+          clipboardHasContent: clipboard.clipboardHasContent,
           onCopy: clipboard.copy,
           onCut: clipboard.cut,
           onPaste: clipboard.paste,
         }}
         reactFlow={{
           instanceRef: reactFlowInstanceRef,
+          initialViewport,
         }}
         executionConsole={{
           activeWorkflowId: localWorkflowId || null,
@@ -453,7 +461,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
             }
           },
           onSendToMarketplace: handleSendToMarketplace,
-          canPaste: !!clipboard.clipboardNode,
+          canPaste: clipboard.clipboardHasContent,
         }}
         marketplace={{
           isOpen: showMarketplaceDialog,
@@ -479,6 +487,11 @@ WorkflowBuilder.propTypes = {
     removeItem: PropTypes.func,
   }),
   workflowTabs: PropTypes.arrayOf(PropTypes.object),
+  initialViewport: PropTypes.shape({
+    x: PropTypes.number,
+    y: PropTypes.number,
+    zoom: PropTypes.number,
+  }),
   callbacks: PropTypes.shape({
     onExecutionStart: PropTypes.func,
     onWorkflowSaved: PropTypes.func,

@@ -38,8 +38,12 @@ def _get_refresh_secret_key() -> str:
 SECRET_KEY = _get_secret_key()
 REFRESH_TOKEN_SECRET_KEY = _get_refresh_secret_key()
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 30  # Refresh tokens last 30 days
+
+
+def get_access_token_expire_minutes() -> int:
+    """JWT access token lifetime in minutes from app settings (minimum 20)."""
+    return get_settings().access_token_expire_minutes
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -80,7 +84,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=get_access_token_expire_minutes()
+        )
     to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

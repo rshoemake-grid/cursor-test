@@ -77,7 +77,7 @@ describe("WorkflowBuilderLayout", () => {
       notifyModified: jest.fn(),
     },
     keyboard: {
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: jest.fn(),
       onCut: jest.fn(),
       onPaste: jest.fn(),

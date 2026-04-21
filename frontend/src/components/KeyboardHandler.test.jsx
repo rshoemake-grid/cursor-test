@@ -16,7 +16,7 @@ describe("KeyboardHandler", () => {
       notifyModified: jest.fn(),
     },
     keyboard: {
-      clipboardNode: null,
+      clipboardHasContent: false,
       onCopy: jest.fn(),
       onCut: jest.fn(),
       onPaste: jest.fn(),
@@ -36,31 +36,22 @@ describe("KeyboardHandler", () => {
       selectedNodeId: mockProps.selection.selectedNodeId,
       setSelectedNodeId: mockProps.selection.setSelectedNodeId,
       notifyModified: mockProps.selection.notifyModified,
-      clipboardNode: mockProps.keyboard.clipboardNode,
+      clipboardHasContent: mockProps.keyboard.clipboardHasContent,
       onCopy: mockProps.keyboard.onCopy,
       onCut: mockProps.keyboard.onCut,
       onPaste: mockProps.keyboard.onPaste,
     });
   });
-  it("should pass clipboardNode to hook", () => {
-    const clipboardNode = {
-      id: "clipboard-1",
-      type: "agent",
-      data: {},
-      position: {
-        x: 0,
-        y: 0,
-      },
-    };
+  it("should pass clipboardHasContent to hook", () => {
     render(
       <KeyboardHandler
         {...mockProps}
-        keyboard={{ ...mockProps.keyboard, clipboardNode }}
+        keyboard={{ ...mockProps.keyboard, clipboardHasContent: true }}
       />,
     );
     expect(mockUseKeyboardShortcuts).toHaveBeenCalledWith(
       expect.objectContaining({
-        clipboardNode,
+        clipboardHasContent: true,
       }),
     );
   });

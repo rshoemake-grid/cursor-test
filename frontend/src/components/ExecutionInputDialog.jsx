@@ -23,11 +23,31 @@ import {
   EditorTextarea,
   EditorHint,
 } from "../styles/editorForm.styled";
+const DEFAULT_EXTRA_ARGS_JSON = "{}";
+
+function parseAdditionalExecutionArgs(raw) {
+  const trimmed = (raw ?? "").trim();
+  if (trimmed === "") {
+    return {};
+  }
+  const parsed = JSON.parse(trimmed);
+  if (
+    parsed === null ||
+    typeof parsed !== "object" ||
+    Array.isArray(parsed)
+  ) {
+    throw new Error("Additional arguments must be a JSON object.");
+  }
+  return parsed;
+}
+
 function ExecutionInputDialog({ dialog, graph, handlers }) {
   const { isOpen, workflowName } = dialog;
   const { nodes } = graph;
   const { onClose, onSubmit } = handlers;
   const [inputs, setInputs] = useState({});
+  const [extraArgsJson, setExtraArgsJson] = useState(DEFAULT_EXTRA_ARGS_JSON);
+  const [argsJsonError, setArgsJsonError] = useState("");
   useEffect(() => {
     if (isOpen) {
       const initialInputs = {};
@@ -42,8 +62,12 @@ function ExecutionInputDialog({ dialog, graph, handlers }) {
         }
       });
       setInputs(initialInputs);
+      setExtraArgsJson(DEFAULT_EXTRA_ARGS_JSON);
+      setArgsJsonError("");
     } else {
       setInputs({});
+      setExtraArgsJson(DEFAULT_EXTRA_ARGS_JSON);
+      setArgsJsonError("");
     }
   }, [isOpen, nodes]);
   if (!isOpen) return null;
@@ -52,7 +76,20 @@ function ExecutionInputDialog({ dialog, graph, handlers }) {
   );
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(inputs);
+    let extra;
+    try {
+      extra = parseAdditionalExecutionArgs(extraArgsJson);
+    } catch (err) {
+      setArgsJsonError(
+        err instanceof SyntaxError
+          ? "Invalid JSON. Use an object, e.g. {\"topic\": \"hello\"}."
+          : err.message || "Invalid additional arguments.",
+      );
+      return;
+    }
+    setArgsJsonError("");
+    const merged = { ...inputs, ...extra };
+    onSubmit(merged);
     onClose();
   };
   const handleInputChange = (name, value) => {
@@ -80,8 +117,9 @@ function ExecutionInputDialog({ dialog, graph, handlers }) {
           <ModalBody>
             {inputNodes.length === 0 ? (
               <ModalLead>
-                This workflow does not require any inputs. Click Execute to run
-                it.
+                This workflow does not define start-node fields. You can still
+                pass execution variables as JSON below (merged into workflow
+                variables), or leave {"{}"} to run with saved defaults only.
               </ModalLead>
             ) : (
               <ModalStack>
@@ -155,6 +193,47 @@ function ExecutionInputDialog({ dialog, graph, handlers }) {
                 })}
               </ModalStack>
             )}
+            <ModalStack style={{ marginTop: inputNodes.length === 0 ? 0 : 16 }}>
+              <ModalSectionTitle>Additional arguments (JSON)</ModalSectionTitle>
+              <ModalLead style={{ marginTop: 0, marginBottom: 8 }}>
+                Optional. Merged with the fields above; keys here override
+                same-named start inputs. Use strings, numbers, booleans, or
+                nested objects.
+              </ModalLead>
+              <EditorLabel htmlFor="exec-additional-args-json">
+                Variables JSON
+              </EditorLabel>
+              <EditorTextarea
+                id="exec-additional-args-json"
+                value={extraArgsJson}
+                onChange={(e) => {
+                  setExtraArgsJson(e.target.value);
+                  if (argsJsonError) {
+                    setArgsJsonError("");
+                  }
+                }}
+                rows={6}
+                placeholder='{"key": "value"}'
+                aria-invalid={argsJsonError ? "true" : "false"}
+                aria-describedby={
+                  argsJsonError ? "exec-additional-args-json-error" : undefined
+                }
+                spellCheck={false}
+              />
+              {argsJsonError ? (
+                <EditorHint
+                  id="exec-additional-args-json-error"
+                  role="alert"
+                  style={{ color: "#c62828" }}
+                >
+                  {argsJsonError}
+                </EditorHint>
+              ) : (
+                <EditorHint>
+                  Must be a single JSON object. Empty or {"{}"} is fine.
+                </EditorHint>
+              )}
+            </ModalStack>
           </ModalBody>
           <ModalFooter>
             <DialogCancelButton type="button" onClick={onClose}>

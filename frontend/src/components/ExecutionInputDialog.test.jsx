@@ -57,7 +57,10 @@ describe("ExecutionInputDialog", () => {
       />,
     );
     expect(
-      screen.getByText(/This workflow does not require any inputs/),
+      screen.getByText(/This workflow does not define start-node fields/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /Variables JSON/i }),
     ).toBeInTheDocument();
   });
   it("should render input fields for nodes with input_config", () => {
@@ -124,8 +127,7 @@ describe("ExecutionInputDialog", () => {
         handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
-    const inputs = screen.getAllByRole("textbox");
-    const input = inputs[0];
+    const input = screen.getByLabelText("Input 1");
     fireEvent.change(input, {
       target: {
         value: "test value",
@@ -202,7 +204,7 @@ describe("ExecutionInputDialog", () => {
         handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
-    const textarea = screen.getByRole("textbox");
+    const textarea = screen.getByLabelText("Description");
     fireEvent.change(textarea, {
       target: {
         value: "test description",
@@ -360,8 +362,7 @@ describe("ExecutionInputDialog", () => {
         handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
-    const inputs = screen.getAllByRole("textbox");
-    const input = inputs[0];
+    const input = screen.getByLabelText("Input 1");
     fireEvent.change(input, {
       target: {
         value: "test value",
@@ -386,6 +387,74 @@ describe("ExecutionInputDialog", () => {
     fireEvent.click(submitButton);
     expect(mockOnSubmit).toHaveBeenCalledWith({});
     expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+  it("should merge additional JSON arguments when no start inputs", () => {
+    render(
+      <ExecutionInputDialog
+        dialog={{ isOpen: true }}
+        graph={{ nodes: mockNodes }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
+      />,
+    );
+    const jsonBox = screen.getByRole("textbox", { name: /Variables JSON/i });
+    fireEvent.change(jsonBox, {
+      target: { value: '{"topic":"hello","n":42}' },
+    });
+    fireEvent.click(screen.getByText("Execute"));
+    expect(mockOnSubmit).toHaveBeenCalledWith({ topic: "hello", n: 42 });
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+  it("should not submit when additional JSON is invalid", () => {
+    render(
+      <ExecutionInputDialog
+        dialog={{ isOpen: true }}
+        graph={{ nodes: mockNodes }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
+      />,
+    );
+    const jsonBox = screen.getByRole("textbox", { name: /Variables JSON/i });
+    fireEvent.change(jsonBox, {
+      target: { value: "{not json" },
+    });
+    fireEvent.click(screen.getByText("Execute"));
+    expect(mockOnSubmit).not.toHaveBeenCalled();
+    expect(mockOnClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+  it("should let JSON override same-named start fields", () => {
+    const nodesWithInputs = [
+      {
+        id: "start-1",
+        type: "start",
+        name: "Start Node",
+        position: { x: 0, y: 0 },
+        inputs: [],
+        input_config: {
+          inputs: [
+            {
+              name: "input1",
+              label: "Input 1",
+              type: "text",
+            },
+          ],
+        },
+      },
+    ];
+    render(
+      <ExecutionInputDialog
+        dialog={{ isOpen: true }}
+        graph={{ nodes: nodesWithInputs }}
+        handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("Input 1"), {
+      target: { value: "from form" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /Variables JSON/i }), {
+      target: { value: '{"input1":"from json"}' },
+    });
+    fireEvent.click(screen.getByText("Execute"));
+    expect(mockOnSubmit).toHaveBeenCalledWith({ input1: "from json" });
   });
   it("should handle multiple input nodes", () => {
     const nodesWithInputs = [
@@ -523,10 +592,11 @@ describe("ExecutionInputDialog", () => {
         handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
-    const textarea = container.querySelector("textarea");
-    expect(textarea).toBeInTheDocument();
-    expect(textarea.tagName).toBe("TEXTAREA");
-    expect(textarea.rows).toBe(4);
+    const textareas = container.querySelectorAll("textarea");
+    const nodeTextarea = textareas[0];
+    expect(nodeTextarea).toBeInTheDocument();
+    expect(nodeTextarea.tagName).toBe("TEXTAREA");
+    expect(nodeTextarea.rows).toBe(4);
   });
   it("should handle number input type", () => {
     const nodesWithNumber = [
@@ -777,7 +847,7 @@ describe("ExecutionInputDialog", () => {
       />,
     );
     expect(
-      screen.getByText(/This workflow does not require any inputs/),
+      screen.getByText(/This workflow does not define start-node fields/),
     ).toBeInTheDocument();
   });
   it("should handle input_config without inputs property", () => {
@@ -832,8 +902,7 @@ describe("ExecutionInputDialog", () => {
         handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
-    const inputs = screen.getAllByRole("textbox");
-    const input = inputs[0];
+    const input = screen.getByLabelText("Input 1");
     expect(input.value).toBe("");
   });
   it("should handle input with default_value as null", () => {
@@ -866,8 +935,7 @@ describe("ExecutionInputDialog", () => {
         handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
-    const inputs = screen.getAllByRole("textbox");
-    const input = inputs[0];
+    const input = screen.getByLabelText("Input 1");
     expect(input.value).toBe("");
   });
   it("should handle input with default_value as 0", () => {
@@ -934,8 +1002,7 @@ describe("ExecutionInputDialog", () => {
         handlers={{ onClose: mockOnClose, onSubmit: mockOnSubmit }}
       />,
     );
-    const inputs = screen.getAllByRole("textbox");
-    const input = inputs[0];
+    const input = screen.getByLabelText("Enabled");
     expect(input.value).toBe("");
   });
 });

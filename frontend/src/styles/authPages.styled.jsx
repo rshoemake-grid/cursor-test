@@ -64,6 +64,15 @@ export const AuthErrorBanner = styled.div`
   font-size: 0.875rem;
 `;
 
+export const AuthNoticeBanner = styled.div`
+  background: ${c.blue50};
+  border: 1px solid ${c.blue200};
+  color: ${c.blue800};
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+`;
+
 export const AuthFieldLabel = styled.label`
   display: block;
   font-size: 0.875rem;

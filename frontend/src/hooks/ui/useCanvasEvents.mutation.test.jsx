@@ -21,7 +21,7 @@ describe("useCanvasEvents - Mutation Killers", () => {
   const mockSetSelectedNodeId = jest.fn();
   const mockNotifyModified = jest.fn();
   const mockClipboard = {
-    clipboardNode: null,
+    clipboardHasContent: false,
     paste: jest.fn(),
   };
   const mockStorage = {
@@ -543,7 +543,7 @@ describe("useCanvasEvents - Mutation Killers", () => {
             setEdges: mockSetEdges,
             setSelectedNodeId: mockSetSelectedNodeId,
             notifyModified: mockNotifyModified,
-            clipboard: { ...mockClipboard, clipboardNode: { id: "clip-1" } },
+            clipboard: { ...mockClipboard, clipboardHasContent: true },
           }),
         );
         const mockEvent = {
@@ -567,7 +567,7 @@ describe("useCanvasEvents - Mutation Killers", () => {
             setEdges: mockSetEdges,
             setSelectedNodeId: mockSetSelectedNodeId,
             notifyModified: mockNotifyModified,
-            clipboard: { ...mockClipboard, clipboardNode: { id: "clip-1" } },
+            clipboard: { ...mockClipboard, clipboardHasContent: true },
           }),
         );
         const mockEvent = {
@@ -690,7 +690,7 @@ describe("useCanvasEvents - Mutation Killers", () => {
             setEdges: mockSetEdges,
             setSelectedNodeId: mockSetSelectedNodeId,
             notifyModified: mockNotifyModified,
-            clipboard: { ...mockClipboard, clipboardNode: { id: "clip-1" } },
+            clipboard: { ...mockClipboard, clipboardHasContent: true },
           }),
         );
         const mockEvent = {
@@ -713,7 +713,7 @@ describe("useCanvasEvents - Mutation Killers", () => {
             setEdges: mockSetEdges,
             setSelectedNodeId: mockSetSelectedNodeId,
             notifyModified: mockNotifyModified,
-            clipboard: { ...mockClipboard, clipboardNode: { id: "clip-1" } },
+            clipboard: { ...mockClipboard, clipboardHasContent: true },
           }),
         );
         const mockEvent = {
@@ -1139,8 +1139,8 @@ describe("useCanvasEvents - Mutation Killers", () => {
         expect(mockSetNodes).toHaveBeenCalled();
       });
     });
-    describe("onPaneClick - clipboard?.clipboardNode", () => {
-      it("should verify optional chaining - clipboardNode is null", () => {
+    describe("onPaneClick - clipboard?.clipboardHasContent", () => {
+      it("should verify optional chaining - clipboard has no content", () => {
         const { result } = renderHook(() =>
           useCanvasEvents({
             reactFlowInstanceRef: mockReactFlowInstanceRef,
@@ -1148,7 +1148,7 @@ describe("useCanvasEvents - Mutation Killers", () => {
             setEdges: mockSetEdges,
             setSelectedNodeId: mockSetSelectedNodeId,
             notifyModified: mockNotifyModified,
-            clipboard: { clipboardNode: null, paste: mockClipboard.paste },
+            clipboard: { clipboardHasContent: false, paste: mockClipboard.paste },
           }),
         );
         const mockEvent = {
@@ -1163,7 +1163,7 @@ describe("useCanvasEvents - Mutation Killers", () => {
         });
         expect(mockClipboard.paste).not.toHaveBeenCalled();
       });
-      it("should verify optional chaining - clipboardNode exists", () => {
+      it("should verify optional chaining - clipboard has content", () => {
         const { result } = renderHook(() =>
           useCanvasEvents({
             reactFlowInstanceRef: mockReactFlowInstanceRef,
@@ -1172,7 +1172,7 @@ describe("useCanvasEvents - Mutation Killers", () => {
             setSelectedNodeId: mockSetSelectedNodeId,
             notifyModified: mockNotifyModified,
             clipboard: {
-              clipboardNode: { id: "clip-1" },
+              clipboardHasContent: true,
               paste: mockClipboard.paste,
             },
           }),

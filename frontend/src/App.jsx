@@ -21,6 +21,7 @@ import LogPage from "./pages/LogPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { WorkflowTabsProvider } from "./contexts/WorkflowTabsContext";
+import { CanvasClipboardProvider } from "./contexts/CanvasClipboardContext";
 import { store } from "./redux/store";
 import {
   Play,
@@ -55,6 +56,24 @@ import {
   SignInLink,
   Main,
 } from "./App.styled";
+
+function AuthSessionRedirect() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  useEffect(() => {
+    const onUnauthorized = () => {
+      if (location.pathname === "/auth") {
+        return;
+      }
+      navigate("/auth", { replace: true, state: { sessionExpired: true } });
+    };
+    window.addEventListener("auth:unauthorized", onUnauthorized);
+    return () => {
+      window.removeEventListener("auth:unauthorized", onUnauthorized);
+    };
+  }, [navigate, location.pathname]);
+  return null;
+}
 
 function AuthenticatedLayout() {
   const [currentView, setCurrentView] = useState("builder");
@@ -146,11 +165,13 @@ function AuthenticatedLayout() {
   const renderBuilderContent = () => (
     <WorkflowTabsProvider>
       {currentView === "builder" && (
-        <WorkflowTabs
-          initialWorkflowId={selectedWorkflowId}
-          workflowLoadKey={workflowLoadKey}
-          onExecutionStart={handleExecutionStart}
-        />
+        <CanvasClipboardProvider>
+          <WorkflowTabs
+            initialWorkflowId={selectedWorkflowId}
+            workflowLoadKey={workflowLoadKey}
+            onExecutionStart={handleExecutionStart}
+          />
+        </CanvasClipboardProvider>
       )}
       {currentView === "list" && (
         <WorkflowList
@@ -309,6 +330,7 @@ function App() {
           }}
         >
           <AuthProvider>
+            <AuthSessionRedirect />
             <Routes>
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />

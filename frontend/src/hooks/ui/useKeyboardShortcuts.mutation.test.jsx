@@ -66,7 +66,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -86,7 +86,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -110,7 +110,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -131,7 +131,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -142,7 +142,10 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         target: mockDiv,
       });
       window.dispatchEvent(event);
-      expect(mockOnCopy).toHaveBeenCalledWith(selectedNode);
+      expect(mockOnCopy).toHaveBeenCalledWith({
+        nodes: [selectedNode],
+        edges: [],
+      });
     });
   });
   describe("Copy shortcut - logical OR and exact string match", () => {
@@ -153,14 +156,17 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "c", ctrlKey: true });
       window.dispatchEvent(event);
-      expect(mockOnCopy).toHaveBeenCalledWith(selectedNode);
+      expect(mockOnCopy).toHaveBeenCalledWith({
+        nodes: [selectedNode],
+        edges: [],
+      });
       expect(event.preventDefault).toHaveBeenCalled();
     });
     it("should verify exact OR - metaKey true", () => {
@@ -170,14 +176,17 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "c", metaKey: true });
       window.dispatchEvent(event);
-      expect(mockOnCopy).toHaveBeenCalledWith(selectedNode);
+      expect(mockOnCopy).toHaveBeenCalledWith({
+        nodes: [selectedNode],
+        edges: [],
+      });
       expect(event.preventDefault).toHaveBeenCalled();
     });
     it('should verify exact string match - key === "c"', () => {
@@ -187,14 +196,17 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "c", ctrlKey: true });
       window.dispatchEvent(event);
-      expect(mockOnCopy).toHaveBeenCalledWith(selectedNode);
+      expect(mockOnCopy).toHaveBeenCalledWith({
+        nodes: [selectedNode],
+        edges: [],
+      });
     });
     it('should verify exact string match - key !== "c" (should not copy)', () => {
       const selectedNode = { id: "node1", selected: true };
@@ -203,7 +215,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -219,32 +231,40 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "c", ctrlKey: true });
       window.dispatchEvent(event);
-      expect(mockOnCopy).toHaveBeenCalledWith(selectedNode);
+      expect(mockOnCopy).toHaveBeenCalledWith({
+        nodes: [selectedNode],
+        edges: [],
+      });
     });
-    it("should verify exact equality - selectedNodes.length !== 1 (should not copy)", () => {
-      mockGetNodes.mockReturnValue([
-        { id: "node1", selected: true },
-        { id: "node2", selected: true },
+    it("should copy when multiple nodes are selected", () => {
+      const n1 = { id: "node1", selected: true };
+      const n2 = { id: "node2", selected: true };
+      mockGetNodes.mockReturnValue([n1, n2]);
+      mockGetEdges.mockReturnValue([
+        { id: "e1", source: "node1", target: "node2" },
       ]);
       renderHookWithProvider({
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "c", ctrlKey: true });
       window.dispatchEvent(event);
-      expect(mockOnCopy).not.toHaveBeenCalled();
+      expect(mockOnCopy).toHaveBeenCalledWith({
+        nodes: [n1, n2],
+        edges: [{ id: "e1", source: "node1", target: "node2" }],
+      });
     });
     it("should verify exact equality - selectedNodes.length === 0 (should not copy)", () => {
       mockGetNodes.mockReturnValue([]);
@@ -252,7 +272,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: null,
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -270,14 +290,17 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "x", ctrlKey: true });
       window.dispatchEvent(event);
-      expect(mockOnCut).toHaveBeenCalledWith(selectedNode);
+      expect(mockOnCut).toHaveBeenCalledWith({
+        nodes: [selectedNode],
+        edges: [],
+      });
       expect(event.preventDefault).toHaveBeenCalled();
     });
     it("should verify exact OR - metaKey true", () => {
@@ -287,14 +310,17 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "x", metaKey: true });
       window.dispatchEvent(event);
-      expect(mockOnCut).toHaveBeenCalledWith(selectedNode);
+      expect(mockOnCut).toHaveBeenCalledWith({
+        nodes: [selectedNode],
+        edges: [],
+      });
     });
     it('should verify exact string match - key === "x"', () => {
       const selectedNode = { id: "node1", selected: true };
@@ -303,14 +329,17 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "x", ctrlKey: true });
       window.dispatchEvent(event);
-      expect(mockOnCut).toHaveBeenCalledWith(selectedNode);
+      expect(mockOnCut).toHaveBeenCalledWith({
+        nodes: [selectedNode],
+        edges: [],
+      });
     });
     it('should verify exact string match - key !== "x" (should not cut)', () => {
       const selectedNode = { id: "node1", selected: true };
@@ -319,7 +348,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -335,24 +364,26 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "x", ctrlKey: true });
       window.dispatchEvent(event);
-      expect(mockOnCut).toHaveBeenCalledWith(selectedNode);
+      expect(mockOnCut).toHaveBeenCalledWith({
+        nodes: [selectedNode],
+        edges: [],
+      });
     });
   });
   describe("Paste shortcut - logical OR and truthy check", () => {
     it("should verify exact OR - ctrlKey true", () => {
-      const clipboardNode = { id: "node1", type: "agent" };
       renderHookWithProvider({
         selectedNodeId: null,
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode,
+        clipboardHasContent: true,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -363,12 +394,11 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
       expect(event.preventDefault).toHaveBeenCalled();
     });
     it("should verify exact OR - metaKey true", () => {
-      const clipboardNode = { id: "node1", type: "agent" };
       renderHookWithProvider({
         selectedNodeId: null,
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode,
+        clipboardHasContent: true,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -378,12 +408,11 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
       expect(mockOnPaste).toHaveBeenCalled();
     });
     it('should verify exact string match - key === "v"', () => {
-      const clipboardNode = { id: "node1", type: "agent" };
       renderHookWithProvider({
         selectedNodeId: null,
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode,
+        clipboardHasContent: true,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -392,13 +421,12 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
       window.dispatchEvent(event);
       expect(mockOnPaste).toHaveBeenCalled();
     });
-    it("should verify truthy check - clipboardNode exists", () => {
-      const clipboardNode = { id: "node1", type: "agent" };
+    it("should verify truthy check - clipboardHasContent", () => {
       renderHookWithProvider({
         selectedNodeId: null,
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode,
+        clipboardHasContent: true,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -407,12 +435,12 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
       window.dispatchEvent(event);
       expect(mockOnPaste).toHaveBeenCalled();
     });
-    it("should verify truthy check - clipboardNode is null (should not paste)", () => {
+    it("should verify truthy check - clipboardHasContent false (should not paste)", () => {
       renderHookWithProvider({
         selectedNodeId: null,
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -421,12 +449,12 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
       window.dispatchEvent(event);
       expect(mockOnPaste).not.toHaveBeenCalled();
     });
-    it("should verify truthy check - clipboardNode is undefined (should not paste)", () => {
+    it("should verify truthy check - clipboardHasContent undefined (should not paste)", () => {
       renderHookWithProvider({
         selectedNodeId: null,
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: void 0,
+        clipboardHasContent: void 0,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -445,7 +473,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -464,7 +492,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -482,7 +510,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -501,7 +529,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -524,7 +552,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: null,
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -541,7 +569,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: null,
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -559,7 +587,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -575,7 +603,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: null,
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -594,7 +622,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -612,7 +640,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         // Different ID
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,
@@ -628,7 +656,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         selectedNodeId: "node1",
         setSelectedNodeId: mockSetSelectedNodeId,
         notifyModified: mockNotifyModified,
-        clipboardNode: null,
+        clipboardHasContent: false,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
         onPaste: mockOnPaste,

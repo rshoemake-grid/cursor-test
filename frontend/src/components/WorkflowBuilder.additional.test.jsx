@@ -202,7 +202,7 @@ jest.mock("../hooks/ui", () => ({
     closeContextMenu: jest.fn(),
   }),
   useClipboard: () => ({
-    clipboardNode: null,
+    clipboardHasContent: false,
     onCopy: jest.fn(),
     onCut: jest.fn(),
     onPaste: jest.fn(),

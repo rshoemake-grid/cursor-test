@@ -26,7 +26,11 @@ const StyledMiniMap = styled(MiniMap)`
     0 4px 6px -4px rgb(0 0 0 / 0.1);
 `;
 
-const WorkflowCanvas = memo(function WorkflowCanvas2({ graph, handlers }) {
+const WorkflowCanvas = memo(function WorkflowCanvas2({
+  graph,
+  handlers,
+  initialViewport = null,
+}) {
   const { nodes, edges, nodeExecutionStates = {} } = graph;
   const {
     onNodesChange,
@@ -52,6 +56,12 @@ const WorkflowCanvas = memo(function WorkflowCanvas2({ graph, handlers }) {
       };
     });
   }, [nodes, nodeExecutionStates]);
+  const hasSavedViewport =
+    initialViewport != null &&
+    typeof initialViewport === "object" &&
+    Number.isFinite(initialViewport.x) &&
+    Number.isFinite(initialViewport.y) &&
+    Number.isFinite(initialViewport.zoom);
   const nodeColor = useMemo(
     () => (node) => {
       switch (node.type) {
@@ -102,7 +112,16 @@ const WorkflowCanvas = memo(function WorkflowCanvas2({ graph, handlers }) {
         zoomOnPinch={true}
         selectionOnDrag={true}
         selectNodesOnDrag={false}
-        fitView={true}
+        defaultViewport={
+          hasSavedViewport
+            ? {
+                x: initialViewport.x,
+                y: initialViewport.y,
+                zoom: initialViewport.zoom,
+              }
+            : undefined
+        }
+        fitView={!hasSavedViewport}
         defaultEdgeOptions={{
           style: {
             strokeWidth: 3,
@@ -118,6 +137,11 @@ const WorkflowCanvas = memo(function WorkflowCanvas2({ graph, handlers }) {
 });
 
 WorkflowCanvas.propTypes = {
+  initialViewport: PropTypes.shape({
+    x: PropTypes.number,
+    y: PropTypes.number,
+    zoom: PropTypes.number,
+  }),
   graph: PropTypes.shape({
     nodes: PropTypes.arrayOf(PropTypes.object).isRequired,
     edges: PropTypes.arrayOf(PropTypes.object).isRequired,
