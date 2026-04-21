@@ -12,6 +12,7 @@ import com.workflow.util.RepositoryUtils;
 import com.workflow.security.JwtUtil;
 import com.workflow.util.UserResponseMapper;
 import com.workflow.util.ValidationUtils;
+import com.workflow.config.JwtTimeProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,16 +42,15 @@ public class AuthService {
     private final TokenService tokenService;
     private final PasswordResetService passwordResetService;
     private final UserResponseMapper userResponseMapper;
-
-    @Value("${jwt.expiration:86400000}")
-    private long jwtExpirationMs;
+    private final JwtTimeProperties jwtTimeProperties;
 
     @Value("${auth.remember-me-expiration-ms:604800000}")
     private long rememberMeExpirationMs;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
                        AuthenticationManager authenticationManager, TokenService tokenService,
-                       PasswordResetService passwordResetService, UserResponseMapper userResponseMapper) {
+                       PasswordResetService passwordResetService, UserResponseMapper userResponseMapper,
+                       JwtTimeProperties jwtTimeProperties) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -58,6 +58,7 @@ public class AuthService {
         this.tokenService = tokenService;
         this.passwordResetService = passwordResetService;
         this.userResponseMapper = userResponseMapper;
+        this.jwtTimeProperties = jwtTimeProperties;
     }
 
     public UserResponse register(UserCreate userCreate) {
@@ -114,7 +115,9 @@ public class AuthService {
                 ErrorMessages.USER_NOT_FOUND);
 
         boolean rememberMe = Boolean.TRUE.equals(loginRequest.getRememberMe());
-        long accessTokenExpirationMs = rememberMe ? rememberMeExpirationMs : jwtExpirationMs;
+        long accessTokenExpirationMs = rememberMe
+                ? rememberMeExpirationMs
+                : jwtTimeProperties.getAccessExpirationMillis();
         String accessToken = jwtUtil.generateToken(user.getUsername(), user.getId(), accessTokenExpirationMs);
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), user.getId());
 

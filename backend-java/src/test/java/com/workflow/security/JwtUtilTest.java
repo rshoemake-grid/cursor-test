@@ -1,25 +1,26 @@
 package com.workflow.security;
 
+import com.workflow.config.JwtTimeProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Field;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import io.jsonwebtoken.JwtException;
 
 class JwtUtilTest {
 
     private JwtUtil jwtUtil;
     private static final String TEST_SECRET = "test-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256-algorithm";
-    private static final Long EXPIRATION = 3600000L;
-    private static final Long REFRESH_EXPIRATION = 604800000L;
+    private static final String TEST_REFRESH_SECRET =
+            "other-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256-algorithm";
 
     @BeforeEach
-    void setUp() throws Exception {
-        jwtUtil = new JwtUtil();
-        setField(jwtUtil, "secret", TEST_SECRET);
-        setField(jwtUtil, "expiration", EXPIRATION);
-        setField(jwtUtil, "refreshExpiration", REFRESH_EXPIRATION);
+    void setUp() {
+        JwtTimeProperties times = new JwtTimeProperties();
+        times.setAccessExpirationMinutes(60);
+        times.setRefreshExpirationDays(7);
+        jwtUtil = new JwtUtil(TEST_SECRET, "", times);
     }
 
     @Test
@@ -36,6 +37,25 @@ class JwtUtilTest {
 
         assertNotNull(token);
         assertFalse(token.isEmpty());
+    }
+
+    @Test
+    void generateRefreshToken_withoutSeparateRefreshSecret_isReadableWithAccessVerification() {
+        String refresh = jwtUtil.generateRefreshToken("testuser", "user-123");
+
+        assertEquals("testuser", jwtUtil.extractUsername(refresh));
+    }
+
+    @Test
+    void generateRefreshToken_withSeparateRefreshSecret_failsAccessKeyVerification() {
+        JwtTimeProperties times = new JwtTimeProperties();
+        times.setAccessExpirationMinutes(60);
+        times.setRefreshExpirationDays(7);
+        JwtUtil withRefreshKey = new JwtUtil(TEST_SECRET, TEST_REFRESH_SECRET, times);
+
+        String refresh = withRefreshKey.generateRefreshToken("testuser", "user-123");
+
+        assertThrows(JwtException.class, () -> withRefreshKey.extractUsername(refresh));
     }
 
     @Test
@@ -80,9 +100,4 @@ class JwtUtilTest {
         assertNotEquals(token1, token2);
     }
 
-    private void setField(Object target, String fieldName, Object value) throws Exception {
-        Field field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
-    }
 }

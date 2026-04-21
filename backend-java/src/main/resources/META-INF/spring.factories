@@ -1,2 +1,3 @@
 org.springframework.boot.env.EnvironmentPostProcessor=\
-com.workflow.config.DotenvEnvironmentPostProcessor
+com.workflow.config.DotenvEnvironmentPostProcessor,\
+com.workflow.config.SqlitePathEnvironmentPostProcessor

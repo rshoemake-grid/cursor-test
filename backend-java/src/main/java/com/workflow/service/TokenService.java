@@ -10,9 +10,9 @@ import com.workflow.util.RepositoryUtils;
 import com.workflow.repository.UserRepository;
 import com.workflow.security.JwtUtil;
 import com.workflow.util.UserResponseMapper;
+import com.workflow.config.JwtTimeProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,26 +27,26 @@ import static com.workflow.constants.WorkflowConstants.TOKEN_TYPE_BEARER;
 @Service
 public class TokenService {
     private static final Logger log = LoggerFactory.getLogger(TokenService.class);
-    private static final int REFRESH_TOKEN_EXPIRATION_DAYS = 7;
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
     private final UserResponseMapper userResponseMapper;
-
-    @Value("${jwt.expiration:86400000}")
-    private long jwtExpirationMs;
+    private final JwtTimeProperties jwtTimeProperties;
 
     public TokenService(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository,
-                        JwtUtil jwtUtil, UserResponseMapper userResponseMapper) {
+                        JwtUtil jwtUtil, UserResponseMapper userResponseMapper,
+                        JwtTimeProperties jwtTimeProperties) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtUtil = jwtUtil;
         this.userResponseMapper = userResponseMapper;
+        this.jwtTimeProperties = jwtTimeProperties;
     }
 
     public TokenResponse buildTokenResponse(String accessToken, String refreshToken, User user) {
-        return buildTokenResponse(accessToken, refreshToken, user, jwtExpirationMs / 1000);
+        return buildTokenResponse(
+                accessToken, refreshToken, user, jwtTimeProperties.getAccessExpirationMillis() / 1000);
     }
 
     public TokenResponse buildTokenResponse(String accessToken, String refreshToken, User user, long expiresInSeconds) {
@@ -65,7 +65,7 @@ public class TokenService {
         entity.setId(UUID.randomUUID().toString());
         entity.setUserId(userId);
         entity.setToken(refreshToken);
-        entity.setExpiresAt(LocalDateTime.now().plusDays(REFRESH_TOKEN_EXPIRATION_DAYS));
+        entity.setExpiresAt(LocalDateTime.now().plusDays(jwtTimeProperties.getRefreshExpirationDays()));
         entity.setRevoked(false);
         refreshTokenRepository.save(entity);
     }
@@ -88,7 +88,7 @@ public class TokenService {
         String newRefreshToken = jwtUtil.generateRefreshToken(user.getUsername(), user.getId());
 
         tokenEntity.setToken(newRefreshToken);
-        tokenEntity.setExpiresAt(LocalDateTime.now().plusDays(REFRESH_TOKEN_EXPIRATION_DAYS));
+        tokenEntity.setExpiresAt(LocalDateTime.now().plusDays(jwtTimeProperties.getRefreshExpirationDays()));
         refreshTokenRepository.save(tokenEntity);
 
         log.debug("Token refreshed for user: {}", user.getUsername());

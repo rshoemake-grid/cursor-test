@@ -1,5 +1,6 @@
 package com.workflow.security;
 
+import com.workflow.config.JwtTimeProperties;
 import com.workflow.util.ObjectUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -16,18 +17,30 @@ import java.util.function.Function;
 
 @Component
 public class JwtUtil {
-    @Value("${jwt.secret}")
-    private String secret;
-    
-    @Value("${jwt.expiration:86400000}")
-    private Long expiration;
-    
-    @Value("${jwt.refresh-expiration:604800000}")
-    private Long refreshExpiration;
+    private final String secret;
+    private final String refreshSecret;
+    private final JwtTimeProperties jwtTimeProperties;
+
+    public JwtUtil(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.refresh-secret:}") String refreshSecret,
+            JwtTimeProperties jwtTimeProperties) {
+        this.secret = secret;
+        this.refreshSecret = refreshSecret != null ? refreshSecret : "";
+        this.jwtTimeProperties = jwtTimeProperties;
+    }
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    /** Refresh tokens use {@code jwt.refresh-secret} when set; otherwise the access secret (Python parity). */
+    private SecretKey getRefreshSigningKey() {
+        if (!refreshSecret.isBlank()) {
+            return Keys.hmacShaKeyFor(refreshSecret.getBytes(StandardCharsets.UTF_8));
+        }
+        return getSigningKey();
     }
 
     public String extractUsername(String token) {
@@ -69,7 +82,7 @@ public class JwtUtil {
     public String generateToken(String username, String userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
-        return createToken(claims, username, expiration);
+        return createAccessToken(claims, username, jwtTimeProperties.getAccessExpirationMillis());
     }
 
     /**
@@ -78,23 +91,27 @@ public class JwtUtil {
     public String generateToken(String username, String userId, long expirationMs) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
-        return createToken(claims, username, expirationMs);
+        return createAccessToken(claims, username, expirationMs);
     }
 
     public String generateRefreshToken(String username, String userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
-        return createToken(claims, username, refreshExpiration);
+        return createToken(claims, username, jwtTimeProperties.getRefreshExpirationMillis(), getRefreshSigningKey());
     }
 
-    private String createToken(Map<String, Object> claims, String subject, Long expirationTime) {
+    private String createToken(Map<String, Object> claims, String subject, long expirationTime, SecretKey signingKey) {
         return Jwts.builder()
                 .claims(claims)
                 .subject(subject)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(getSigningKey())
+                .signWith(signingKey)
                 .compact();
+    }
+
+    private String createAccessToken(Map<String, Object> claims, String subject, long expirationTime) {
+        return createToken(claims, subject, expirationTime, getSigningKey());
     }
 
     public Boolean validateToken(String token, String username) {

@@ -8,6 +8,7 @@ import com.workflow.exception.ValidationException;
 import com.workflow.repository.PasswordResetTokenRepository;
 import com.workflow.repository.RefreshTokenRepository;
 import com.workflow.repository.UserRepository;
+import com.workflow.config.JwtTimeProperties;
 import com.workflow.security.JwtUtil;
 import com.workflow.util.UserResponseMapper;
 
@@ -58,6 +59,7 @@ class AuthServiceTest {
     private UserResponseMapper userResponseMapper;
 
     private AuthService authService;
+    private JwtTimeProperties jwtTimeProperties;
 
     private UserCreate validUserCreate;
     private User userEntity;
@@ -65,14 +67,14 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        jwtUtil = new JwtUtil();
-        setField(jwtUtil, "secret", "test-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256-algorithm");
-        setField(jwtUtil, "expiration", 3600000L);
-        setField(jwtUtil, "refreshExpiration", 604800000L);
+        jwtTimeProperties = new JwtTimeProperties();
+        jwtTimeProperties.setAccessExpirationMinutes(60);
+        jwtTimeProperties.setRefreshExpirationDays(7);
+
+        jwtUtil = new JwtUtil("test-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256-algorithm", "", jwtTimeProperties);
 
         userResponseMapper = new UserResponseMapper();
-        tokenService = new TokenService(userRepository, refreshTokenRepository, jwtUtil, userResponseMapper);
-        setField(tokenService, "jwtExpirationMs", 3600000L);
+        tokenService = new TokenService(userRepository, refreshTokenRepository, jwtUtil, userResponseMapper, jwtTimeProperties);
 
         passwordResetService = new PasswordResetService(userRepository, passwordResetTokenRepository, passwordEncoder, mock(org.springframework.core.env.Environment.class));
         setField(passwordResetService, "passwordResetReturnToken", false);
@@ -84,9 +86,9 @@ class AuthServiceTest {
             authenticationManager,
             tokenService,
             passwordResetService,
-            userResponseMapper
+            userResponseMapper,
+            jwtTimeProperties
         );
-        setField(authService, "jwtExpirationMs", 3600000L);
         
         // Setup valid UserCreate
         validUserCreate = new UserCreate();

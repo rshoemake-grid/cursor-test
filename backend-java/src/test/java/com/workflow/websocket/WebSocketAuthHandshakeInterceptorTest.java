@@ -1,5 +1,6 @@
 package com.workflow.websocket;
 
+import com.workflow.config.JwtTimeProperties;
 import com.workflow.security.JwtUtil;
 import com.workflow.service.ExecutionOwnershipChecker;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +13,6 @@ import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.socket.WebSocketHandler;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,11 +38,11 @@ class WebSocketAuthHandshakeInterceptorTest {
     private WebSocketAuthHandshakeInterceptor interceptor;
 
     @BeforeEach
-    void setUp() throws Exception {
-        jwtUtil = new JwtUtil();
-        setField(jwtUtil, "secret", "test-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256");
-        setField(jwtUtil, "expiration", 3600000L);
-        setField(jwtUtil, "refreshExpiration", 604800000L);
+    void setUp() {
+        JwtTimeProperties times = new JwtTimeProperties();
+        times.setAccessExpirationMinutes(60);
+        times.setRefreshExpirationDays(7);
+        jwtUtil = new JwtUtil("test-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256", "", times);
         interceptor = new WebSocketAuthHandshakeInterceptor(jwtUtil, ownershipChecker);
     }
 
@@ -138,11 +138,5 @@ class WebSocketAuthHandshakeInterceptorTest {
 
         assertFalse(result);
         verify(ownershipChecker, never()).canOpenExecutionStream(any(), any());
-    }
-
-    private void setField(Object target, String fieldName, Object value) throws Exception {
-        Field field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
     }
 }
