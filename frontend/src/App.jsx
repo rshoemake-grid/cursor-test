@@ -128,6 +128,9 @@ function AuthenticatedLayout() {
 
   const handleSelectWorkflow = useCallback((id) => {
     setSelectedWorkflowId(id);
+    // New key so useTabInitialization is not blocked by processedKeys after URL load,
+    // closed tabs, or reopening the same workflow from the list.
+    setWorkflowLoadKey((k) => k + 1);
     setCurrentView("builder");
   }, []);
 

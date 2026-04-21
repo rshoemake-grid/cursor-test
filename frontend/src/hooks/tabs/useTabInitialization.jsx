@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import {
   createNewTab,
   createTabWithWorkflow,
+  findTabByWorkflowId,
   tabExists,
 } from "../utils/tabUtils";
 function useTabInitialization({
@@ -30,23 +31,33 @@ function useTabInitialization({
     if (!isAuthenticated) {
       return;
     }
-    if (initialWorkflowId && workflowLoadKey !== void 0) {
-      const uniqueKey = `${initialWorkflowId}-${workflowLoadKey}`;
-      if (!processedKeys.current.has(uniqueKey)) {
-        processedKeys.current.add(uniqueKey);
-        const newTab = createTabWithWorkflow(initialWorkflowId, "Loading...");
-        setTabs((prev) => {
-          const existingTab = prev.find((t) => t.id === newTab.id);
-          if (existingTab) {
-            return prev;
-          }
-          const newTabs = [...prev, newTab];
-          tabsRef.current = newTabs;
-          return newTabs;
-        });
-        setActiveTabId(newTab.id);
-      }
+    if (!initialWorkflowId || workflowLoadKey === void 0) {
+      return;
     }
+    const existingForWorkflow = findTabByWorkflowId(
+      tabsRef.current,
+      initialWorkflowId,
+    );
+    if (existingForWorkflow) {
+      setActiveTabId(existingForWorkflow.id);
+      return;
+    }
+    const uniqueKey = `${initialWorkflowId}-${workflowLoadKey}`;
+    if (processedKeys.current.has(uniqueKey)) {
+      return;
+    }
+    processedKeys.current.add(uniqueKey);
+    const newTab = createTabWithWorkflow(initialWorkflowId, "Loading...");
+    setTabs((prev) => {
+      const existingTab = prev.find((t) => t.id === newTab.id);
+      if (existingTab) {
+        return prev;
+      }
+      const newTabs = [...prev, newTab];
+      tabsRef.current = newTabs;
+      return newTabs;
+    });
+    setActiveTabId(newTab.id);
   }, [
     initialWorkflowId,
     workflowLoadKey,

@@ -175,6 +175,33 @@ describe("useTabInitialization", () => {
       );
       expect(mockSetTabs).toHaveBeenCalled();
     });
+    it("should focus existing tab for that workflowId without creating a new tab", () => {
+      const tabsWithWf = [
+        {
+          id: "tab-existing",
+          name: "Already open",
+          workflowId: "workflow-123",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
+      ];
+      const ref = { current: tabsWithWf };
+      renderHook(() =>
+        useTabInitialization({
+          tabs: tabsWithWf,
+          activeTabId: "other-tab",
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+          tabsRef: ref,
+          initialWorkflowId: "workflow-123",
+          workflowLoadKey: 1,
+          processedKeys: mockProcessedKeys,
+        }),
+      );
+      expect(mockSetActiveTabId).toHaveBeenCalledWith("tab-existing");
+      expect(mockSetTabs).not.toHaveBeenCalled();
+    });
     it("should not open URL workflow tab when not authenticated", () => {
       renderHook(() =>
         useTabInitialization({
@@ -237,7 +264,7 @@ describe("useTabInitialization", () => {
       );
       expect(mockTabsRef.current.length).toBeGreaterThan(0);
     });
-    it("should not create duplicate tab when tab with same id exists", () => {
+    it("does not call setTabs when a tab for that workflowId already exists", () => {
       const existingTabs = [
         {
           id: "workflow-1234567890",
@@ -248,19 +275,7 @@ describe("useTabInitialization", () => {
           activeExecutionId: null,
         },
       ];
-      const mockSetTabsWithCheck = jest.fn((updater) => {
-        if (typeof updater === "function") {
-          const result = updater(existingTabs);
-          const existingTab = existingTabs.find(
-            (t) => t.id === result[result.length - 1]?.id,
-          );
-          if (existingTab) {
-            return existingTabs;
-          }
-          return result;
-        }
-        return updater;
-      });
+      const mockSetTabsWithCheck = jest.fn();
       renderHook(() =>
         useTabInitialization({
           tabs: existingTabs,
@@ -273,7 +288,8 @@ describe("useTabInitialization", () => {
           processedKeys: mockProcessedKeys,
         }),
       );
-      expect(mockSetTabsWithCheck).toHaveBeenCalled();
+      expect(mockSetTabsWithCheck).not.toHaveBeenCalled();
+      expect(mockSetActiveTabId).toHaveBeenCalledWith("workflow-1234567890");
     });
   });
 });
