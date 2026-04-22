@@ -125,6 +125,9 @@ public class WebClientLlmApiClient implements LlmApiClient {
         Map<String, Object> gen = new LinkedHashMap<>();
         gen.put("temperature", temperature);
         gen.put("maxOutputTokens", Math.max(1, maxOutputTokens));
+        if (LlmVertexGeminiSupport.geminiModelRequestsImageModalities(model)) {
+            gen.put("responseModalities", List.of("TEXT", "IMAGE"));
+        }
         body.put("generationConfig", gen);
 
         var req =

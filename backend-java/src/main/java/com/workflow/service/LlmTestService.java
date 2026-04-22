@@ -113,9 +113,14 @@ public class LlmTestService {
     private String buildGeminiPayload(int maxOutputTokens) {
         try {
             Map<String, Object> payload = Map.of(
-                    "contents", List.of(Map.of("parts", List.of(Map.of("text", "Hello")))),
-                    "generationConfig", Map.of("maxOutputTokens", maxOutputTokens)
-            );
+                    "contents",
+                    List.of(
+                            Map.of(
+                                    "role",
+                                    "user",
+                                    "parts",
+                                    List.of(Map.of("text", "Hello")))),
+                    "generationConfig", Map.of("maxOutputTokens", maxOutputTokens));
             return objectMapper.writeValueAsString(payload);
         } catch (Exception e) {
             log.warn("Failed to build Gemini payload: {}", e.getMessage());

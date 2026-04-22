@@ -10,6 +10,8 @@ import com.workflow.util.NodeConfigUtils;
 import com.workflow.util.ObjectUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.dto.NodeType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +31,8 @@ import java.util.Optional;
  */
 @Component
 public class AgentNodeExecutor implements NodeExecutor {
+
+    private static final Logger log = LoggerFactory.getLogger(AgentNodeExecutor.class);
 
     private final LlmApiClient llmClient;
     private final Environment environment;
@@ -97,6 +101,18 @@ public class AgentNodeExecutor implements NodeExecutor {
             }
             case "gemini" -> {
                 if (LlmVertexGeminiSupport.geminiUsesVertexAdc(effectiveConfig, environment)) {
+                    if (LlmVertexGeminiSupport.geminiModelRequiresVertexGenerateContent(model)) {
+                        log.info(
+                                "Agent node {}: Vertex Gemini using :generateContent for model {} (chat/completions unreliable for this model line)",
+                                node.getId(),
+                                model);
+                        yield llmClient.chatGemini(
+                                null, "", model, systemPrompt, userText, maxTokens, temperature);
+                    }
+                    log.info(
+                            "Agent node {}: Vertex Gemini using OpenAI-compatible chat/completions for model {}",
+                            node.getId(),
+                            model);
                     Map<String, Object> vertexGeminiCfg = new HashMap<>(effectiveConfig);
                     vertexGeminiCfg.put("model", model);
                     LlmConfigUtils.LlmRequestContext requestCtx =

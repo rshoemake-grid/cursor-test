@@ -174,6 +174,39 @@ class AgentNodeExecutorTest {
         assertNull(client.geminiBase);
     }
 
+    @Test
+    void execute_geminiVertexAdc_flashLite_usesGenerateContent() {
+        MockEnvironment env = new MockEnvironment().withProperty("GOOGLE_CLOUD_PROJECT", "vertex-proj");
+        CapturingLlmClient client = new CapturingLlmClient();
+        SettingsService svcWithVertex = new SettingsService(settingsRepository, env);
+        AgentNodeExecutor exec = new AgentNodeExecutor(client, env, svcWithVertex,
+                new com.fasterxml.jackson.databind.ObjectMapper());
+
+        Map<String, Object> gemini = new HashMap<>();
+        gemini.put("type", "gemini");
+        gemini.put("enabled", true);
+        gemini.put("models", List.of("gemini-2.5-flash-lite"));
+        when(settingsRepository.findById("u1"))
+                .thenReturn(Optional.of(settingsRow("u1", Map.of("providers", List.of(gemini)))));
+
+        Node node = agentNode("gemini-2.5-flash-lite", "echo", "n1");
+        Map<String, Object> ctxLlm = new HashMap<>();
+        ctxLlm.put("type", "openai");
+        ctxLlm.put("api_key", "sk-openai-ctx-placeholder-0001");
+        ctxLlm.put("base_url", "https://api.openai.com/v1");
+        ctxLlm.put("model", "gpt-4o-mini");
+
+        NodeExecutionContext ctx = new NodeExecutionContext(ctxLlm, "u1", List.of(), Map.of());
+
+        Object out = exec.execute(node, Map.of("message", "hello lite"), new ExecutionState(), ctx);
+
+        assertEquals("gemini-out", out);
+        assertNull(client.completionsUrl);
+        assertEquals("gemini-2.5-flash-lite", client.geminiModel);
+        assertEquals("echo", client.geminiSystem);
+        assertEquals("hello lite", client.geminiUser);
+    }
+
     private static Settings settingsRow(String userId, Map<String, Object> data) {
         Settings s = new Settings();
         s.setUserId(userId);
@@ -203,6 +236,8 @@ class AgentNodeExecutorTest {
         String geminiBase;
         String geminiKey;
         String geminiModel;
+        String geminiSystem;
+        String geminiUser;
         String completionsUrl;
         String completionsKey;
         String completionsModel;
@@ -245,6 +280,8 @@ class AgentNodeExecutorTest {
             this.geminiBase = baseUrl;
             this.geminiKey = apiKey;
             this.geminiModel = model;
+            this.geminiSystem = systemPrompt;
+            this.geminiUser = userText;
             return "gemini-out";
         }
     }

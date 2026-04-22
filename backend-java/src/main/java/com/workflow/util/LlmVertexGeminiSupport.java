@@ -48,6 +48,37 @@ public final class LlmVertexGeminiSupport {
         return m.startsWith("gemini-3") && m.contains("preview");
     }
 
+    /**
+     * Use native {@code :generateContent} instead of Vertex OpenAI-compatible {@code chat/completions}.
+     * Matches Python {@code GeminiProviderStrategy._gemini_model_requires_generate_content_api}:
+     * flash-lite lines stall on the chat endpoint; image-output models need {@code responseModalities}.
+     */
+    public static boolean geminiModelRequiresVertexGenerateContent(String model) {
+        String m = ObjectUtils.orDefault(model, "").trim().toLowerCase(Locale.ROOT);
+        if (m.startsWith("google/")) {
+            m = m.substring("google/".length());
+        }
+        if (m.contains("flash-lite")) {
+            return true;
+        }
+        return m.contains("flash-image")
+                || m.contains("pro-image")
+                || m.contains("nano-banana")
+                || m.contains("banana");
+    }
+
+    /** True when {@code generationConfig} should request image output modalities (Gemini image models). */
+    public static boolean geminiModelRequestsImageModalities(String model) {
+        String m = ObjectUtils.orDefault(model, "").trim().toLowerCase(Locale.ROOT);
+        if (m.startsWith("google/")) {
+            m = m.substring("google/".length());
+        }
+        return m.contains("flash-image")
+                || m.contains("pro-image")
+                || m.contains("nano-banana")
+                || m.contains("banana");
+    }
+
     public static String resolveLocationForModel(Environment env, String model) {
         if (vertexModelRequiresGlobalLocation(model)) {
             return "global";
