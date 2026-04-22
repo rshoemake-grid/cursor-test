@@ -105,6 +105,8 @@ const workflows = await api.getWorkflows();
 
 Endpoints are composed in **`src/api/endpoints.jsx`**. Adapters (storage, fetch) are under **`src/types/adapters.jsx`** and **`defaultAdapters`**.
 
+Storage explorer calls (GCS, S3, local, Pub/Sub, **BigQuery**, **Firestore**) are exposed on **`api`** as `listGcpBucketObjects`, `listBigqueryDatasets`, `listBigqueryTables`, `listFirestoreCollections`, etc.; see **`endpoints.jsx`** `storageEndpoints` and **`components/editors/input/storageObjectPickers.jsx`** for the shared **`StorageBrowserDialog`** pickers.
+
 ## Testing
 
 - **Framework**: Jest (via `react-scripts test`).

@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import PropTypes from "prop-types";
 import {
   EditorSectionRoot,
@@ -11,9 +12,42 @@ import {
   EditorCalloutBlue,
   EditorCalloutBlueTitle,
   EditorCalloutBlueBody,
+  EditorSecondaryFullButton,
 } from "../../styles/editorForm.styled";
+import {
+  FirestoreRootCollectionPickerDialog,
+  GcpBucketListPickerDialog,
+  GcpBucketObjectPickerDialog,
+} from "./input/storageObjectPickers";
+
+const flexRowStyle = {
+  display: "flex",
+  gap: "0.5rem",
+  alignItems: "stretch",
+};
+
 function FirebaseNodeEditor({ node, onConfigUpdate }) {
   const inputConfig = node.data.input_config || {};
+  const [firestorePickerOpen, setFirestorePickerOpen] = useState(false);
+  const [firestorePickerSession, setFirestorePickerSession] = useState(0);
+  const [storageBucketPickerOpen, setStorageBucketPickerOpen] = useState(false);
+  const [storageBucketPickerSession, setStorageBucketPickerSession] = useState(0);
+  const [storageObjectPickerOpen, setStorageObjectPickerOpen] = useState(false);
+  const [storageObjectPickerSession, setStorageObjectPickerSession] = useState(0);
+
+  const openFirestoreCollectionPicker = useCallback(() => {
+    setFirestorePickerSession((s) => s + 1);
+    setFirestorePickerOpen(true);
+  }, []);
+  const openStorageBucketPicker = useCallback(() => {
+    setStorageBucketPickerSession((s) => s + 1);
+    setStorageBucketPickerOpen(true);
+  }, []);
+  const openStorageObjectPicker = useCallback(() => {
+    setStorageObjectPickerSession((s) => s + 1);
+    setStorageObjectPickerOpen(true);
+  }, []);
+
   return (
     <EditorSectionRoot>
       <EditorSectionTitle>Firebase Configuration</EditorSectionTitle>
@@ -44,7 +78,9 @@ function FirebaseNodeEditor({ node, onConfigUpdate }) {
           }
           placeholder="my-firebase-project"
         />
-        <EditorHint>Your Firebase project ID</EditorHint>
+        <EditorHint>
+          Your Firebase project ID (also used as GCP project for Storage browse)
+        </EditorHint>
       </EditorFieldGroup>
       <EditorFieldGroup $mt="sm">
         <EditorLabel htmlFor="firebase-mode">Connection Mode</EditorLabel>
@@ -66,21 +102,55 @@ function FirebaseNodeEditor({ node, onConfigUpdate }) {
             <EditorLabel htmlFor="firebase-collection-path">
               Collection / Path
             </EditorLabel>
-            <EditorInput
-              id="firebase-collection-path"
-              type="text"
-              value={inputConfig.collection_path || ""}
-              onChange={(e) =>
-                onConfigUpdate(
-                  "input_config",
-                  "collection_path",
-                  e.target.value,
-                )
-              }
-              placeholder="users or users/{userId}/posts"
-            />
+            {inputConfig.firebase_service === "firestore" ? (
+              <div style={flexRowStyle}>
+                <EditorInput
+                  id="firebase-collection-path"
+                  type="text"
+                  value={inputConfig.collection_path || ""}
+                  onChange={(e) =>
+                    onConfigUpdate(
+                      "input_config",
+                      "collection_path",
+                      e.target.value,
+                    )
+                  }
+                  placeholder="users or users/{userId}/posts"
+                  style={{ flex: 1, minWidth: 0 }}
+                />
+                <EditorSecondaryFullButton
+                  type="button"
+                  onClick={openFirestoreCollectionPicker}
+                  aria-label="Browse Firestore root collections"
+                  style={{
+                    width: "auto",
+                    flexShrink: 0,
+                    whiteSpace: "nowrap",
+                    alignSelf: "stretch",
+                  }}
+                >
+                  Browse…
+                </EditorSecondaryFullButton>
+              </div>
+            ) : (
+              <EditorInput
+                id="firebase-collection-path"
+                type="text"
+                value={inputConfig.collection_path || ""}
+                onChange={(e) =>
+                  onConfigUpdate(
+                    "input_config",
+                    "collection_path",
+                    e.target.value,
+                  )
+                }
+                placeholder="users or users/{userId}/posts"
+              />
+            )}
             <EditorHint>
-              Firestore collection path or Realtime DB path
+              {inputConfig.firebase_service === "firestore"
+                ? "Firestore collection path. Browse fills a root collection; add sub-paths manually if needed."
+                : "Firestore collection path or Realtime DB path"}
             </EditorHint>
           </EditorFieldGroup>
           {inputConfig.mode === "read" && (
@@ -107,27 +177,62 @@ function FirebaseNodeEditor({ node, onConfigUpdate }) {
         <>
           <EditorFieldGroup $mt="sm">
             <EditorLabel htmlFor="firebase-bucket-name">Bucket Name</EditorLabel>
-            <EditorInput
-              id="firebase-bucket-name"
-              type="text"
-              value={inputConfig.bucket_name || ""}
-              onChange={(e) =>
-                onConfigUpdate("input_config", "bucket_name", e.target.value)
-              }
-              placeholder="my-firebase-storage.appspot.com"
-            />
+            <div style={flexRowStyle}>
+              <EditorInput
+                id="firebase-bucket-name"
+                type="text"
+                value={inputConfig.bucket_name || ""}
+                onChange={(e) =>
+                  onConfigUpdate("input_config", "bucket_name", e.target.value)
+                }
+                placeholder="my-firebase-storage.appspot.com"
+                style={{ flex: 1, minWidth: 0 }}
+              />
+              <EditorSecondaryFullButton
+                type="button"
+                onClick={openStorageBucketPicker}
+                aria-label="Browse Google Cloud Storage buckets"
+                style={{
+                  width: "auto",
+                  flexShrink: 0,
+                  whiteSpace: "nowrap",
+                  alignSelf: "stretch",
+                }}
+              >
+                Browse…
+              </EditorSecondaryFullButton>
+            </div>
+            <EditorHint>
+              Firebase Storage uses GCS; browse lists buckets in the project above.
+            </EditorHint>
           </EditorFieldGroup>
           <EditorFieldGroup $mt="sm">
             <EditorLabel htmlFor="firebase-file-path">File Path</EditorLabel>
-            <EditorInput
-              id="firebase-file-path"
-              type="text"
-              value={inputConfig.file_path || ""}
-              onChange={(e) =>
-                onConfigUpdate("input_config", "file_path", e.target.value)
-              }
-              placeholder="images/photo.jpg"
-            />
+            <div style={flexRowStyle}>
+              <EditorInput
+                id="firebase-file-path"
+                type="text"
+                value={inputConfig.file_path || ""}
+                onChange={(e) =>
+                  onConfigUpdate("input_config", "file_path", e.target.value)
+                }
+                placeholder="images/photo.jpg"
+                style={{ flex: 1, minWidth: 0 }}
+              />
+              <EditorSecondaryFullButton
+                type="button"
+                onClick={openStorageObjectPicker}
+                aria-label="Browse bucket for a file"
+                style={{
+                  width: "auto",
+                  flexShrink: 0,
+                  whiteSpace: "nowrap",
+                  alignSelf: "stretch",
+                }}
+              >
+                Browse…
+              </EditorSecondaryFullButton>
+            </div>
           </EditorFieldGroup>
         </>
       )}
@@ -157,6 +262,47 @@ function FirebaseNodeEditor({ node, onConfigUpdate }) {
           Storage, and Authentication.
         </EditorCalloutBlueBody>
       </EditorCalloutBlue>
+      {firestorePickerOpen ? (
+        <FirestoreRootCollectionPickerDialog
+          key={firestorePickerSession}
+          isOpen={firestorePickerOpen}
+          onClose={() => setFirestorePickerOpen(false)}
+          credentials={inputConfig.credentials}
+          projectId={inputConfig.project_id}
+          onSelectCollection={(id) => {
+            onConfigUpdate("input_config", "collection_path", id);
+            setFirestorePickerOpen(false);
+          }}
+        />
+      ) : null}
+      {storageBucketPickerOpen ? (
+        <GcpBucketListPickerDialog
+          key={storageBucketPickerSession}
+          isOpen={storageBucketPickerOpen}
+          onClose={() => setStorageBucketPickerOpen(false)}
+          credentials={inputConfig.credentials}
+          projectId={inputConfig.project_id}
+          onSelectBucket={(name) => {
+            onConfigUpdate("input_config", "bucket_name", name);
+            setStorageBucketPickerOpen(false);
+          }}
+        />
+      ) : null}
+      {storageObjectPickerOpen ? (
+        <GcpBucketObjectPickerDialog
+          key={storageObjectPickerSession}
+          isOpen={storageObjectPickerOpen}
+          onClose={() => setStorageObjectPickerOpen(false)}
+          bucketName={inputConfig.bucket_name}
+          credentials={inputConfig.credentials}
+          projectId={inputConfig.project_id}
+          initialObjectPath={inputConfig.file_path}
+          onSelectObject={(path) => {
+            onConfigUpdate("input_config", "file_path", path);
+            setStorageObjectPickerOpen(false);
+          }}
+        />
+      ) : null}
     </EditorSectionRoot>
   );
 }

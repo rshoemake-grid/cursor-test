@@ -4,7 +4,7 @@
 
 **How to use:** When you change either backend, update the relevant row and bump **Last reviewed**. For **Partial** / **Gap** items, link a PR or issue in the Notes column (optional).
 
-**Last reviewed:** 2026-04-21
+**Last reviewed:** 2026-04-20
 
 **Maintainers:** Update this file when adding or changing API routes, executors, or workflow-chat behavior on either backend. Prefer linking to the PR that closed a **Gap** or promoted **Partial → Match**.
 
@@ -24,7 +24,7 @@
 | Import/export | `api/import_export_routes.py` | `ImportExportController` | Match | |
 | Workflow chat | `api/workflow_chat/routes.py` | `WorkflowChatController` | Match | |
 | Debug | `api/debug_routes.py` | `DebugController` | Match | |
-| Storage explorer | `api/storage_explorer_routes.py` | `StorageExplorerController` | Match | |
+| Storage explorer | `api/storage_explorer_routes.py` (+ `inputs/datastore_explorer.py` for BQ / Firestore) | `StorageExplorerController` | Partial | Python adds `POST /api/storage/bigquery/list-datasets`, `/bigquery/list-tables`, `/firestore/list-collections`. Java controller does not expose these paths yet; OpenAPI parity tests may list them as Python-only until implemented. |
 | Health | `GET /health` | `HealthController` | Match | `timestamp` is UTC ISO-8601 (`Instant`) |
 | Metrics | `GET /metrics` | `MetricsController` | Match | Includes `last_reset`; `MetricsCollector.reset()` mirrors Python |
 
@@ -107,5 +107,6 @@
 | 2026-04-16 | Workflow chat LLM resolution: `SettingsService.getLlmConfigForWorkflowChat` (`chat_assistant_model`); `getActiveLlmConfig` prefers top-level `default_model` / `defaultModel` when that model exists on an enabled provider. `WorkflowChatService.chat` uses `getLlmConfigForWorkflowChat`. Tests: `SettingsServiceTest`, `WorkflowChatServiceTest`. |
 | 2026-04-16 | OpenAPI parity guard: `OpenApiContractTest` validates Springdoc `/api-docs` (OpenAPI 3.x + required path templates). |
 | 2026-04-21 | **Automated path parity:** `python-openapi-paths.json` snapshot + `OpenApiParityTest` (full FastAPI path list vs Springdoc, param name normalization). Regenerate snapshot with `python backend/scripts/export_openapi_paths.py`. |
+| 2026-04-20 | Storage explorer: Python **BigQuery** (list datasets / tables) and **Firestore** (list root collections) browse endpoints; implementation in `backend/inputs/datastore_explorer.py`. Java: **Gap** until `StorageExplorerController` adds matching routes. |
 | 2026-04-16 | Cloud input sources: `CloudInputSourceReadSupport` (GCS 404 → `FileNotFoundException`, list cap 10k; S3 pagination + cap, `NoSuchKey` mapping; Pub/Sub catch not-found → empty list). Tests: `CloudInputSourceReadSupportTest`. |
 | 2026-04-16 | DAG executor: parallel batch awaits all futures before applying state (Python `gather`); `NodeExecutionTimeout` + env `NODE_EXECUTION_TIMEOUT_SEC` / property `workflow.node-execution-timeout-sec`. Tests: `NodeExecutionTimeoutTest`, `WorkflowExecutorTest`. |

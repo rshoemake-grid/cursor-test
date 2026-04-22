@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import PropTypes from "prop-types";
 import {
   EditorSectionRoot,
@@ -11,23 +12,72 @@ import {
   EditorCalloutBlue,
   EditorCalloutBlueTitle,
   EditorCalloutBlueBody,
+  EditorSecondaryFullButton,
 } from "../../styles/editorForm.styled";
+import {
+  BigQueryDatasetPickerDialog,
+  BigQueryTablePickerDialog,
+  GcpProjectListPickerDialog,
+} from "./input/storageObjectPickers";
+
+const flexRowStyle = {
+  display: "flex",
+  gap: "0.5rem",
+  alignItems: "stretch",
+};
+
 function BigQueryNodeEditor({ node, onConfigUpdate }) {
   const inputConfig = node.data.input_config || {};
+  const [projectPickerOpen, setProjectPickerOpen] = useState(false);
+  const [projectPickerSession, setProjectPickerSession] = useState(0);
+  const [datasetPickerOpen, setDatasetPickerOpen] = useState(false);
+  const [datasetPickerSession, setDatasetPickerSession] = useState(0);
+  const [tablePickerOpen, setTablePickerOpen] = useState(false);
+  const [tablePickerSession, setTablePickerSession] = useState(0);
+
+  const openProjectPicker = useCallback(() => {
+    setProjectPickerSession((s) => s + 1);
+    setProjectPickerOpen(true);
+  }, []);
+  const openDatasetPicker = useCallback(() => {
+    setDatasetPickerSession((s) => s + 1);
+    setDatasetPickerOpen(true);
+  }, []);
+  const openTablePicker = useCallback(() => {
+    setTablePickerSession((s) => s + 1);
+    setTablePickerOpen(true);
+  }, []);
+
   return (
     <EditorSectionRoot>
       <EditorSectionTitle>BigQuery Configuration</EditorSectionTitle>
       <EditorFieldGroup>
         <EditorLabel htmlFor="bigquery-project-id">Project ID</EditorLabel>
-        <EditorInput
-          id="bigquery-project-id"
-          type="text"
-          value={inputConfig.project_id || ""}
-          onChange={(e) =>
-            onConfigUpdate("input_config", "project_id", e.target.value)
-          }
-          placeholder="my-gcp-project"
-        />
+        <div style={flexRowStyle}>
+          <EditorInput
+            id="bigquery-project-id"
+            type="text"
+            value={inputConfig.project_id || ""}
+            onChange={(e) =>
+              onConfigUpdate("input_config", "project_id", e.target.value)
+            }
+            placeholder="my-gcp-project"
+            style={{ flex: 1, minWidth: 0 }}
+          />
+          <EditorSecondaryFullButton
+            type="button"
+            onClick={openProjectPicker}
+            aria-label="Browse GCP projects"
+            style={{
+              width: "auto",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+              alignSelf: "stretch",
+            }}
+          >
+            Browse…
+          </EditorSecondaryFullButton>
+        </div>
         <EditorHint>Your Google Cloud project ID</EditorHint>
       </EditorFieldGroup>
       <EditorFieldGroup $mt="sm">
@@ -45,15 +95,31 @@ function BigQueryNodeEditor({ node, onConfigUpdate }) {
       </EditorFieldGroup>
       <EditorFieldGroup $mt="sm">
         <EditorLabel htmlFor="bigquery-dataset">Dataset</EditorLabel>
-        <EditorInput
-          id="bigquery-dataset"
-          type="text"
-          value={inputConfig.dataset || ""}
-          onChange={(e) =>
-            onConfigUpdate("input_config", "dataset", e.target.value)
-          }
-          placeholder="my_dataset"
-        />
+        <div style={flexRowStyle}>
+          <EditorInput
+            id="bigquery-dataset"
+            type="text"
+            value={inputConfig.dataset || ""}
+            onChange={(e) =>
+              onConfigUpdate("input_config", "dataset", e.target.value)
+            }
+            placeholder="my_dataset"
+            style={{ flex: 1, minWidth: 0 }}
+          />
+          <EditorSecondaryFullButton
+            type="button"
+            onClick={openDatasetPicker}
+            aria-label="Browse BigQuery datasets"
+            style={{
+              width: "auto",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+              alignSelf: "stretch",
+            }}
+          >
+            Browse…
+          </EditorSecondaryFullButton>
+        </div>
         <EditorHint>BigQuery dataset name</EditorHint>
       </EditorFieldGroup>
       {inputConfig.mode === "read" && (
@@ -76,15 +142,31 @@ function BigQueryNodeEditor({ node, onConfigUpdate }) {
         <>
           <EditorFieldGroup $mt="sm">
             <EditorLabel htmlFor="bigquery-table">Table</EditorLabel>
-            <EditorInput
-              id="bigquery-table"
-              type="text"
-              value={inputConfig.table || ""}
-              onChange={(e) =>
-                onConfigUpdate("input_config", "table", e.target.value)
-              }
-              placeholder="my_table"
-            />
+            <div style={flexRowStyle}>
+              <EditorInput
+                id="bigquery-table"
+                type="text"
+                value={inputConfig.table || ""}
+                onChange={(e) =>
+                  onConfigUpdate("input_config", "table", e.target.value)
+                }
+                placeholder="my_table"
+                style={{ flex: 1, minWidth: 0 }}
+              />
+              <EditorSecondaryFullButton
+                type="button"
+                onClick={openTablePicker}
+                aria-label="Browse BigQuery tables"
+                style={{
+                  width: "auto",
+                  flexShrink: 0,
+                  whiteSpace: "nowrap",
+                  alignSelf: "stretch",
+                }}
+              >
+                Browse…
+              </EditorSecondaryFullButton>
+            </div>
             <EditorHint>Target table for insert/update operations</EditorHint>
           </EditorFieldGroup>
           <EditorFieldGroup $mt="sm">
@@ -151,6 +233,45 @@ function BigQueryNodeEditor({ node, onConfigUpdate }) {
           standard SQL queries and data loading.
         </EditorCalloutBlueBody>
       </EditorCalloutBlue>
+      {projectPickerOpen ? (
+        <GcpProjectListPickerDialog
+          key={projectPickerSession}
+          isOpen={projectPickerOpen}
+          onClose={() => setProjectPickerOpen(false)}
+          credentials={inputConfig.credentials}
+          onSelectProject={(id) => {
+            onConfigUpdate("input_config", "project_id", id);
+            setProjectPickerOpen(false);
+          }}
+        />
+      ) : null}
+      {datasetPickerOpen ? (
+        <BigQueryDatasetPickerDialog
+          key={datasetPickerSession}
+          isOpen={datasetPickerOpen}
+          onClose={() => setDatasetPickerOpen(false)}
+          credentials={inputConfig.credentials}
+          projectId={inputConfig.project_id}
+          onSelectDataset={(id) => {
+            onConfigUpdate("input_config", "dataset", id);
+            setDatasetPickerOpen(false);
+          }}
+        />
+      ) : null}
+      {tablePickerOpen ? (
+        <BigQueryTablePickerDialog
+          key={tablePickerSession}
+          isOpen={tablePickerOpen}
+          onClose={() => setTablePickerOpen(false)}
+          credentials={inputConfig.credentials}
+          projectId={inputConfig.project_id}
+          datasetId={inputConfig.dataset}
+          onSelectTable={(id) => {
+            onConfigUpdate("input_config", "table", id);
+            setTablePickerOpen(false);
+          }}
+        />
+      ) : null}
     </EditorSectionRoot>
   );
 }

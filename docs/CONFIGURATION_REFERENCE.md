@@ -13,7 +13,8 @@ Complete reference for all configuration options, environment variables, and set
 7. [WebSocket Configuration](#websocket-configuration)
 8. [Frontend Configuration](#frontend-configuration)
 9. [Production Settings](#production-settings)
-10. [Configuration Examples](#configuration-examples)
+10. [Workflow builder storage explorer (Python)](#workflow-builder-storage-explorer-python)
+11. [Configuration Examples](#configuration-examples)
 
 ---
 
@@ -362,6 +363,15 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```bash
 gunicorn backend.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 ```
+
+### Workflow builder storage explorer (Python)
+
+The authenticated **`/api/storage/*`** routes power **Browse…** in node editors (GCS, S3, local paths, Pub/Sub, **BigQuery**, **Firestore**, etc.). Ensure the Python environment includes root **`requirements.txt`** dependencies:
+
+- **`google-cloud-bigquery`** — listing datasets and tables from the BigQuery node editor.
+- **`google-cloud-firestore`** — listing root Firestore collections from the Firebase (Firestore) editor.
+
+If a package is missing, the API responds with **503** and a message that includes an install hint. Other explorer features (GCS, Pub/Sub, etc.) use their own `google-cloud-*` libraries already declared in `requirements.txt`.
 
 ---
 

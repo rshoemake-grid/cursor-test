@@ -453,8 +453,166 @@ GcpPubsubSubscriptionPickerDialog.propTypes = {
   onSelectSubscription: PropTypes.func.isRequired,
 };
 
+function BigQueryDatasetPickerDialog({
+  isOpen,
+  onClose,
+  credentials,
+  projectId,
+  onSelectDataset,
+}) {
+  const projectTrimmed = (projectId || "").trim();
+  const prereqError = projectTrimmed
+    ? ""
+    : "Enter a GCP project ID above to list BigQuery datasets.";
+  const fetchDatasets = useCallback(async () => {
+    const data = await api.listBigqueryDatasets({
+      credentials: credentials?.trim() ? credentials : undefined,
+      project_id: projectTrimmed,
+    });
+    const objects = data?.objects;
+    return {
+      prefixes: [],
+      objects: Array.isArray(objects) ? objects : [],
+    };
+  }, [credentials, projectTrimmed]);
+  return (
+    <StorageBrowserDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Select BigQuery dataset"
+      resourceSubtitle={`Project: ${projectTrimmed || "(required)"}. Uses credentials on the node or ADC on the server. Requires bigquery.datasets.get (or broader).`}
+      titleId="bigquery-dataset-picker-title"
+      variant="bucketList"
+      initialLocation=""
+      prereqError={prereqError}
+      fetchPage={fetchDatasets}
+      onSelectFile={onSelectDataset}
+      selectButtonLabel="Use selected dataset"
+      emptyFolderMessage="No datasets found in this project."
+      listPathLabel="Datasets"
+      listAriaLabel="BigQuery datasets"
+    />
+  );
+}
+
+BigQueryDatasetPickerDialog.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  credentials: PropTypes.string,
+  projectId: PropTypes.string,
+  onSelectDataset: PropTypes.func.isRequired,
+};
+
+function BigQueryTablePickerDialog({
+  isOpen,
+  onClose,
+  credentials,
+  projectId,
+  datasetId,
+  onSelectTable,
+}) {
+  const projectTrimmed = (projectId || "").trim();
+  const datasetTrimmed = (datasetId || "").trim();
+  const prereqError =
+    projectTrimmed && datasetTrimmed
+      ? ""
+      : "Enter project ID and dataset above to list tables.";
+  const fetchTables = useCallback(async () => {
+    const data = await api.listBigqueryTables({
+      credentials: credentials?.trim() ? credentials : undefined,
+      project_id: projectTrimmed,
+      dataset_id: datasetTrimmed,
+    });
+    const objects = data?.objects;
+    return {
+      prefixes: [],
+      objects: Array.isArray(objects) ? objects : [],
+    };
+  }, [credentials, projectTrimmed, datasetTrimmed]);
+  return (
+    <StorageBrowserDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Select BigQuery table"
+      resourceSubtitle={`${projectTrimmed}.${datasetTrimmed || "…"}. Requires bigquery.tables.list (or broader).`}
+      titleId="bigquery-table-picker-title"
+      variant="bucketList"
+      initialLocation=""
+      prereqError={prereqError}
+      fetchPage={fetchTables}
+      onSelectFile={onSelectTable}
+      selectButtonLabel="Use selected table"
+      emptyFolderMessage="No tables found in this dataset."
+      listPathLabel="Tables"
+      listAriaLabel="BigQuery tables"
+    />
+  );
+}
+
+BigQueryTablePickerDialog.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  credentials: PropTypes.string,
+  projectId: PropTypes.string,
+  datasetId: PropTypes.string,
+  onSelectTable: PropTypes.func.isRequired,
+};
+
+function FirestoreRootCollectionPickerDialog({
+  isOpen,
+  onClose,
+  credentials,
+  projectId,
+  onSelectCollection,
+}) {
+  const projectTrimmed = (projectId || "").trim();
+  const prereqError = projectTrimmed
+    ? ""
+    : "Enter a Firebase / GCP project ID above to list Firestore root collections.";
+  const fetchCollections = useCallback(async () => {
+    const data = await api.listFirestoreCollections({
+      credentials: credentials?.trim() ? credentials : undefined,
+      project_id: projectTrimmed,
+    });
+    const objects = data?.objects;
+    return {
+      prefixes: [],
+      objects: Array.isArray(objects) ? objects : [],
+    };
+  }, [credentials, projectTrimmed]);
+  return (
+    <StorageBrowserDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Select Firestore collection"
+      resourceSubtitle={`Project: ${projectTrimmed || "(required)"}. Lists top-level collections only; subcollection paths can be edited manually. Requires datastore.databases.get / appropriate Firestore access.`}
+      titleId="firestore-collection-picker-title"
+      variant="bucketList"
+      initialLocation=""
+      prereqError={prereqError}
+      fetchPage={fetchCollections}
+      onSelectFile={onSelectCollection}
+      selectButtonLabel="Use selected collection"
+      emptyFolderMessage="No root collections found."
+      listPathLabel="Collections"
+      listAriaLabel="Firestore collections"
+    />
+  );
+}
+
+FirestoreRootCollectionPickerDialog.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  credentials: PropTypes.string,
+  projectId: PropTypes.string,
+  onSelectCollection: PropTypes.func.isRequired,
+};
+
 export {
   AwsRegionListPickerDialog,
+  BigQueryDatasetPickerDialog,
+  BigQueryTablePickerDialog,
+  FirestoreRootCollectionPickerDialog,
   GcpBucketListPickerDialog,
   GcpBucketObjectPickerDialog,
   GcpProjectListPickerDialog,

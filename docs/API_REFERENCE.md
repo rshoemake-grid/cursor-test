@@ -1,7 +1,7 @@
 # API Reference
 
 **Base URL:** `/api`  
-**Last Updated:** 2026-04-01
+**Last Updated:** 2026-04-20
 
 ## Overview
 
@@ -19,7 +19,32 @@ All API endpoints use the `/api` prefix. Interactive OpenAPI documentation is av
 | **Settings** | `GET/POST /api/settings/llm` |
 | **Workflow Chat** | `POST /api/workflow-chat/chat` |
 | **Sharing** | `POST /api/sharing/share`, `GET /api/sharing/shared-with-me`, `GET /api/sharing/shared-by-me` |
+| **Storage explorer** | See [Storage explorer](#storage-explorer-authenticated) (workflow builder pickers) |
 | **Health** | `GET /health`, `GET /metrics` |
+
+## Storage explorer (authenticated)
+
+These **POST** routes live under **`/api/storage`** (same prefix as the rest of the API). They power **Browse…** dialogs in the workflow builder (GCS buckets/objects, AWS, local paths, Pub/Sub, BigQuery, Firestore). Callers must send a valid **Authorization** header (Bearer JWT), same as other protected endpoints.
+
+| Path | Purpose |
+|------|---------|
+| `POST /api/storage/gcp/list-objects` | GCS prefixes and objects under a prefix |
+| `POST /api/storage/gcp/list-buckets` | GCS buckets in a project |
+| `POST /api/storage/gcp/list-projects` | GCP projects visible to the credentials |
+| `POST /api/storage/gcp/default-project` | Resolve default GCP project from credentials / ADC |
+| `POST /api/storage/gcp/pubsub/list-topics` | Pub/Sub topics |
+| `POST /api/storage/gcp/pubsub/list-subscriptions` | Pub/Sub subscriptions |
+| `POST /api/storage/bigquery/list-datasets` | BigQuery datasets in a project (`project_id`, optional `credentials`) |
+| `POST /api/storage/bigquery/list-tables` | Tables in a dataset (`project_id`, `dataset_id`, optional `credentials`) |
+| `POST /api/storage/firestore/list-collections` | Firestore **root** collection IDs (`project_id`, optional `credentials`) |
+| `POST /api/storage/aws/list-objects` | S3 keys under a prefix |
+| `POST /api/storage/aws/list-buckets` | S3 buckets |
+| `POST /api/storage/aws/list-regions` | AWS regions |
+| `POST /api/storage/local/list-directory` | Server directory listing (respects `LOCAL_FILE_BASE_PATH`) |
+
+**Responses:** List-style endpoints return JSON with an **`objects`** array of `{ name, display_name, size?, updated? }`, matching the shared picker UI. **503** may be returned if an optional Python dependency is missing on the server (message includes install hint).
+
+**Dependencies (Python API):** BigQuery and Firestore listing require `google-cloud-bigquery` and `google-cloud-firestore` (listed in `requirements.txt`). Credential resolution matches workflow GCS nodes (inline service account JSON, or Application Default Credentials on the server).
 
 ## Workflow Chat
 
@@ -43,7 +68,7 @@ Response includes `message` (assistant text) and optional `workflow_changes` for
 ## Notes
 
 - **Templates:** Use `/api/templates` (no trailing slash). Query params: `category`, `difficulty`, `search`, `sort_by`, `limit`, `offset`.
-- **Backend parity:** Python and Java backends expose the same endpoints. Path variable names may differ internally (e.g. `template_id` vs `templateId`); URLs are identical.
+- **Backend parity:** Python and Java backends expose the same core endpoints. Path variable names may differ internally (e.g. `template_id` vs `templateId`); URLs are identical. **Exception:** the Python API adds **BigQuery** and **Firestore** storage-explorer routes above; the Java `StorageExplorerController` may not implement those paths yet—use Python or extend Java for full picker parity.
 
 ## Related Documentation
 

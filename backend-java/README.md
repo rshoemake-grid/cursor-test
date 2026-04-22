@@ -23,7 +23,8 @@ backend-java/
 │   │   ├── security/                # JWT authentication & security
 │   │   └── exception/               # Exception handling
 │   └── resources/
-│       └── application.properties   # Application configuration
+│       ├── application.properties   # Application configuration
+│       └── logback-spring.xml        # SLF4J/Logback: stdout-only; optional JSON profile for Datadog
 ```
 
 ## Key Features
@@ -103,6 +104,15 @@ Configuration is in `src/main/resources/application.properties`:
 - `server.port=8000` - API port (matches Python backend)
 - `spring.datasource.url=jdbc:sqlite:./workflows.db` - SQLite database
 - `jwt.secret` - JWT secret key (set via environment variable)
+
+### Logging (Docker / Kubernetes / Datadog)
+
+Logging uses **SLF4J** with **Logback** (`logback-spring.xml`). Output goes to **stdout/stderr only** so container runtimes and log forwarders (Datadog Agent, `kubectl logs`, Google Cloud Logging, etc.) can collect it. There is **no** default log file under `/app`.
+
+- **Human-readable** (default): standard Spring Boot console layout; in `production` the pattern omits ANSI colors (see `application-production.properties`).
+- **JSON** (one line per event): add the Spring profile **`json`**, for example `SPRING_PROFILES_ACTIVE=production,json`. That uses the **Logstash Logback Encoder** for structured parsing in Datadog and similar tools.
+
+Levels are controlled with normal Spring properties, e.g. `logging.level.root=INFO` or env `LOGGING_LEVEL_ROOT`.
 
 ## Database
 

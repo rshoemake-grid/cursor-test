@@ -5,6 +5,7 @@ metadata:
   namespace: workflow-builder
 data:
   # Spring Boot (backend-java) — see backend-java/src/main/resources/application*.properties
+  # Add ",json" for one JSON log line per event (Datadog / Loki / Cloud Logging): production,json
   SPRING_PROFILES_ACTIVE: "production"
 
   # PostgreSQL (add org.postgresql driver is on the classpath; override SQLite defaults)

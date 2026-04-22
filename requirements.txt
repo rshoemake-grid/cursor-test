@@ -29,6 +29,8 @@ greenlet>=3.1.0
 # Optional dependencies for input sources (install only if needed)
 google-cloud-storage
 google-cloud-pubsub>=2.24.1
+google-cloud-bigquery
+google-cloud-firestore
 # boto3==1.35.0                  # For AWS S3 input source
 
 # Google ADK (Agent Development Kit) - pin >=1.24 for fastapi>=0.124.1 compatibility

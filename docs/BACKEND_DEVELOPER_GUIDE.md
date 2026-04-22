@@ -23,6 +23,7 @@ backend/
 │   │   ├── workflow_routes.py    # Workflow CRUD endpoints
 │   │   └── execution_routes.py   # Execution endpoints (execute, list, logs, cancel)
 │   ├── auth_routes.py          # Authentication endpoints
+│   ├── storage_explorer_routes.py  # Storage / datastore browser for workflow UI (GCS, S3, BQ, Firestore, …)
 │   ├── websocket_routes.py     # WebSocket endpoints
 │   ├── settings_routes.py      # Settings/LLM configuration
 │   └── marketplace_routes.py   # Marketplace endpoints
@@ -54,7 +55,8 @@ backend/
 │   ├── registry.py            # Tool registry
 │   └── builtin_tools.py        # Built-in tool implementations
 ├── inputs/                # Input source handlers
-│   └── input_sources.py        # File/local input sources
+│   ├── input_sources.py        # Cloud and local input sources (GCS, S3, Pub/Sub, …)
+│   └── datastore_explorer.py   # BigQuery / Firestore listing for storage explorer API
 ├── auth/                  # Authentication and authorization
 │   └── auth.py                # Auth utilities and dependencies
 ├── websocket/             # WebSocket management

@@ -1,9 +1,9 @@
 # Documentation Index
 
 **Documentation Version:** 1.0.0  
-**Last Updated:** 2026-04-01  
+**Last Updated:** 2026-04-20  
 
-**Recent changes:** API paths use `/api` prefix (no `/v1`). **Guest users:** workflow list and private workflow payloads are not exposed without auth; use Marketplace for templates. **Workflow chat:** `POST /api/workflow-chat/chat` accepts optional `iteration_limit` (1–100). **Frontend dev:** default API calls use same-origin `/api` via CRA `setupProxy`; see [Configuration Reference](./CONFIGURATION_REFERENCE.md#frontend-configuration). **Dev bootstrap:** optional `DEV_BOOTSTRAP_*` env vars create/update a local user — see [Configuration Reference](./CONFIGURATION_REFERENCE.md#development-user-bootstrap-optional).
+**Recent changes:** **Storage explorer** documents **BigQuery** and **Firestore** browse endpoints (`POST /api/storage/bigquery/*`, `POST /api/storage/firestore/list-collections`) in [API Reference](./API_REFERENCE.md#storage-explorer-authenticated) and [Node Types](./NODE_TYPES_REFERENCE.md#workflow-builder-datastore-pickers). **Java parity:** see [PYTHON_PARITY.md](../backend-java/PYTHON_PARITY.md) (Partial until Java adds the same paths). API paths use `/api` prefix (no `/v1`). **Guest users:** workflow list and private workflow payloads are not exposed without auth; use Marketplace for templates. **Workflow chat:** `POST /api/workflow-chat/chat` accepts optional `iteration_limit` (1–100). **Frontend dev:** default API calls use same-origin `/api` via CRA `setupProxy`; see [Configuration Reference](./CONFIGURATION_REFERENCE.md#frontend-configuration). **Dev bootstrap:** optional `DEV_BOOTSTRAP_*` env vars create/update a local user — see [Configuration Reference](./CONFIGURATION_REFERENCE.md#development-user-bootstrap-optional).
 
 Welcome to the workflow engine documentation! This index helps you find the right documentation for your needs.
 

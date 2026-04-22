@@ -5,6 +5,9 @@ export { GcpBucketObjectPickerDialog as default } from "./storageObjectPickers";
 export { GcpBucketListPickerDialog } from "./storageObjectPickers";
 export { GcpProjectListPickerDialog } from "./storageObjectPickers";
 export {
+  BigQueryDatasetPickerDialog,
+  BigQueryTablePickerDialog,
+  FirestoreRootCollectionPickerDialog,
   GcpPubsubSubscriptionPickerDialog,
   GcpPubsubTopicPickerDialog,
 } from "./storageObjectPickers";

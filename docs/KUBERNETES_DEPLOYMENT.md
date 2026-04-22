@@ -83,6 +83,11 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
+**Logging (Java backend):** The app uses **SLF4J + Logback** with **`backend-java/src/main/resources/logback-spring.xml`**. All application logs are written to **stdout/stderr** (no log files in the container), so Docker, Kubernetes (`kubectl logs`), and agents such as **Datadog** can ingest the stream from the container runtime.
+
+- Default profile: human-readable lines with ISO-8601 timestamps.
+- For log platforms that prefer structured events, activate the **`json`** Spring profile (e.g. set `SPRING_PROFILES_ACTIVE` to `production,json` in ConfigMap or env). That emits **one JSON object per line** via the **Logstash Logback Encoder**.
+
 ### Frontend Dockerfile
 
 Create `frontend/Dockerfile`:
@@ -441,12 +446,7 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
-        volumeMounts:
-        - name: logs
-          mountPath: /app/logs
-      volumes:
-      - name: logs
-        emptyDir: {}
+        # Java backend logs only to stdout/stderr (see logback-spring.xml); no log file volume.
 ```
 
 ### Backend Service

@@ -72,6 +72,9 @@ dependencies {
     // Load repo-root .env into the Spring Environment (DEV_BOOTSTRAP_*, etc.) — same UX as Python/uvicorn
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 
+    // JSON log lines on stdout when profile "json" is active (Docker / K8s + Datadog, Loki, etc.)
+    implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
+
     // Google ADK (Agent Development Kit) - for building AI agents
     implementation 'com.google.adk:google-adk:0.7.0'
 

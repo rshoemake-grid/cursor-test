@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Container-friendly logging: stdout/stderr only (no log files under /app).
+  - Default: Spring Boot console pattern (ISO-8601 timestamps, levels, logger, message).
+  - Profile "json": one JSON object per line via LogstashEncoder (Datadog, Loki, Cloud Logging).
+
+  Enable JSON: spring.profiles.active=production,json
+  or: spring.profiles.include=json
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProfile name="!json">
+        <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+        <springProperty name="ROOT_LEVEL" source="logging.level.root" defaultValue="INFO"/>
+        <root level="${ROOT_LEVEL}">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="json">
+        <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeContext>false</includeContext>
+                <includeCallerData>false</includeCallerData>
+            </encoder>
+        </appender>
+        <springProperty name="ROOT_LEVEL" source="logging.level.root" defaultValue="INFO"/>
+        <root level="${ROOT_LEVEL}">
+            <appender-ref ref="CONSOLE_JSON"/>
+        </root>
+    </springProfile>
+</configuration>

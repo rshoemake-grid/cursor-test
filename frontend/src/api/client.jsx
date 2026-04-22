@@ -317,6 +317,21 @@ function createApiClient(options) {
         await http.post(storageEndpoints.gcpPubsubListSubscriptions(), body),
       );
     },
+    async listBigqueryDatasets(body) {
+      return extractData(
+        await http.post(storageEndpoints.bigqueryListDatasets(), body),
+      );
+    },
+    async listBigqueryTables(body) {
+      return extractData(
+        await http.post(storageEndpoints.bigqueryListTables(), body),
+      );
+    },
+    async listFirestoreCollections(body) {
+      return extractData(
+        await http.post(storageEndpoints.firestoreListCollections(), body),
+      );
+    },
     async listS3BucketObjects(body) {
       return extractData(
         await http.post(storageEndpoints.awsListObjects(), body),

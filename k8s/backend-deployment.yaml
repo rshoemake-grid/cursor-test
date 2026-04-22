@@ -135,9 +135,5 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
-        volumeMounts:
-        - name: logs
-          mountPath: /app/logs
-      volumes:
-      - name: logs
-        emptyDir: {}
+        # Logs: SLF4J/Logback → stdout/stderr only (see logback-spring.xml). Collect via
+        # kubectl logs / Datadog Agent / cluster log pipeline — no file volume needed.

@@ -13,6 +13,7 @@ Complete reference for all node types, their configuration options, inputs, outp
    - [AWS S3](#aws-s3)
    - [Local Filesystem](#local-filesystem)
    - [GCP Pub/Sub](#gcp-pubsub)
+   - [Workflow builder: datastore pickers](#workflow-builder-datastore-pickers)
 6. [Control Flow Nodes](#control-flow-nodes)
    - [Start Node](#start-node)
    - [End Node](#end-node)
@@ -465,6 +466,8 @@ interface InputConfig {
 **Mode Detection:**
 - **Read Mode**: No incoming edges with data, or `mode: "read"`
 - **Write Mode**: Has incoming edges with data, or `mode: "write"`
+
+**Workflow builder:** Storage-related node editors can open **Browse…** pickers that call authenticated **`POST /api/storage/…`** endpoints (see [API Reference](./API_REFERENCE.md#storage-explorer-authenticated)). That includes GCS buckets/objects, S3, local server paths, Pub/Sub topics/subscriptions, **BigQuery** datasets/tables, and **Firestore** root collections.
 
 ---
 
@@ -997,6 +1000,22 @@ interface GCPPubSubConfig {
   }
 }
 ```
+
+---
+
+### Workflow builder: datastore pickers
+
+The visual editor uses shared browser dialogs backed by the **storage explorer** API. You must be **signed in**; the API uses the same GCP credential rules as workflow nodes (optional service account JSON on the node, else Application Default Credentials on the API server).
+
+| Editor / field | Behavior |
+|----------------|----------|
+| **GCP Bucket** | Browse projects, buckets, and objects (`/api/storage/gcp/…`). |
+| **BigQuery** | Browse GCP projects (resource manager), **datasets**, and **tables** (write mode) via `/api/storage/bigquery/list-datasets` and `/api/storage/bigquery/list-tables`. |
+| **Firebase — Firestore** | Browse **root** collection IDs via `/api/storage/firestore/list-collections`. Deeper paths (e.g. `users/{id}/posts`) are typed manually after choosing a root collection. |
+| **Firebase — Storage** | Uses the same **GCS** bucket and object pickers as the GCP Bucket node (`project_id` + credentials from the Firebase editor). |
+| **Firebase — Realtime Database** | No browse API; set paths manually. |
+
+If the Python server returns **503** for BigQuery or Firestore, install **`google-cloud-bigquery`** and **`google-cloud-firestore`** (see root `requirements.txt`).
 
 ---
 

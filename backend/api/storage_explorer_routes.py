@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from backend.auth.auth import get_current_active_user
 from backend.database.models import UserDB
+from backend.inputs.datastore_explorer import DatastoreExplorer
 from backend.inputs.input_sources import (
     AWSS3Handler,
     GCPBucketHandler,
@@ -122,6 +123,25 @@ class ListBucketsResponse(BaseModel):
     """Flat list of buckets (same item shape as object rows for shared pickers)."""
 
     objects: List[StorageObjectInfo]
+
+
+class BigQueryListDatasetsRequest(BaseModel):
+    project_id: str = Field(..., min_length=1)
+    credentials: Optional[str] = None
+    max_results: int = Field(default=1000, ge=1, le=10000)
+
+
+class BigQueryListTablesRequest(BaseModel):
+    project_id: str = Field(..., min_length=1)
+    dataset_id: str = Field(..., min_length=1)
+    credentials: Optional[str] = None
+    max_results: int = Field(default=1000, ge=1, le=10000)
+
+
+class FirestoreListCollectionsRequest(BaseModel):
+    project_id: str = Field(..., min_length=1)
+    credentials: Optional[str] = None
+    max_results: int = Field(default=500, ge=1, le=2000)
 
 
 @router.post("/gcp/list-objects", response_model=GcpListObjectsResponse)
@@ -283,6 +303,94 @@ async def gcp_pubsub_list_subscriptions(
         raise HTTPException(
             status_code=502,
             detail=f"Could not list Pub/Sub subscriptions: {e!s}",
+        ) from e
+    return ListBucketsResponse(objects=[StorageObjectInfo(**o) for o in rows])
+
+
+@router.post("/bigquery/list-datasets", response_model=ListBucketsResponse)
+async def bigquery_list_datasets(
+    body: BigQueryListDatasetsRequest,
+    _user: UserDB = Depends(get_current_active_user),
+) -> ListBucketsResponse:
+    """List BigQuery datasets in a project (same credentials / ADC rules as GCS nodes)."""
+    config: dict = {
+        "credentials": body.credentials,
+        "project_id": body.project_id.strip(),
+    }
+    try:
+        rows = DatastoreExplorer.list_bigquery_datasets(
+            config,
+            max_results=body.max_results,
+        )
+    except ImportError as e:
+        logger.warning("BigQuery list-datasets: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("BigQuery list-datasets failed")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not list BigQuery datasets: {e!s}",
+        ) from e
+    return ListBucketsResponse(objects=[StorageObjectInfo(**o) for o in rows])
+
+
+@router.post("/bigquery/list-tables", response_model=ListBucketsResponse)
+async def bigquery_list_tables(
+    body: BigQueryListTablesRequest,
+    _user: UserDB = Depends(get_current_active_user),
+) -> ListBucketsResponse:
+    """List tables in a BigQuery dataset."""
+    config: dict = {
+        "credentials": body.credentials,
+        "project_id": body.project_id.strip(),
+    }
+    try:
+        rows = DatastoreExplorer.list_bigquery_tables(
+            config,
+            dataset_id=body.dataset_id.strip(),
+            max_results=body.max_results,
+        )
+    except ImportError as e:
+        logger.warning("BigQuery list-tables: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("BigQuery list-tables failed")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not list BigQuery tables: {e!s}",
+        ) from e
+    return ListBucketsResponse(objects=[StorageObjectInfo(**o) for o in rows])
+
+
+@router.post("/firestore/list-collections", response_model=ListBucketsResponse)
+async def firestore_list_collections(
+    body: FirestoreListCollectionsRequest,
+    _user: UserDB = Depends(get_current_active_user),
+) -> ListBucketsResponse:
+    """List root Firestore collection IDs for a project."""
+    config: dict = {
+        "credentials": body.credentials,
+        "project_id": body.project_id.strip(),
+    }
+    try:
+        rows = DatastoreExplorer.list_firestore_root_collections(
+            config,
+            max_results=body.max_results,
+        )
+    except ImportError as e:
+        logger.warning("Firestore list-collections: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("Firestore list-collections failed")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not list Firestore collections: {e!s}",
         ) from e
     return ListBucketsResponse(objects=[StorageObjectInfo(**o) for o in rows])
 
