@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { getPostAuthNavigationTarget } from "../utils/authNavigation";
 import {
   AuthGradientShell,
   AuthCard,
@@ -56,7 +57,11 @@ function AuthPage() {
           fullName.trim(),
         );
       }
-      navigate("/");
+      const { target, state } = getPostAuthNavigationTarget(
+        typeof window !== "undefined" ? window.sessionStorage : null,
+        location.state,
+      );
+      navigate(target, { replace: true, state });
     } catch (err) {
       setError(err.message);
     } finally {

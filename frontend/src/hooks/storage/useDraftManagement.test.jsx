@@ -3,6 +3,7 @@ import {
   useDraftManagement,
   loadDraftsFromStorage,
   saveDraftsToStorage,
+  shouldApplyDraftCanvas,
 } from "./useDraftManagement";
 import { getLocalStorageItem, setLocalStorageItem } from "./useLocalStorage";
 jest.mock("./useLocalStorage", () => ({
@@ -28,13 +29,51 @@ describe("useDraftManagement", () => {
     mockGetLocalStorageItem.mockReturnValue({});
     mockNormalizeNodeForStorage.mockImplementation((node) => node);
   });
-  it("should load draft when tabId matches", () => {
+  it("should load draft when tabId matches and tab is unsaved", () => {
     const draft = {
       nodes: mockNodes,
       edges: mockEdges,
       workflowId: "workflow-1",
       workflowName: "Test Workflow",
       workflowDescription: "Test Description",
+      isUnsaved: true,
+    };
+    mockGetLocalStorageItem.mockReturnValue({
+      "tab-1": draft,
+    });
+    renderHook(() =>
+      useDraftManagement({
+        tabId: "tab-1",
+        workflowId: "workflow-1",
+        nodes: [],
+        edges: [],
+        localWorkflowId: null,
+        localWorkflowName: "Untitled Workflow",
+        localWorkflowDescription: "",
+        tabIsUnsaved: true,
+        setNodes: mockSetNodes,
+        setEdges: mockSetEdges,
+        setLocalWorkflowId: mockSetLocalWorkflowId,
+        setLocalWorkflowName: mockSetLocalWorkflowName,
+        setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+        normalizeNodeForStorage: mockNormalizeNodeForStorage,
+      }),
+    );
+    expect(mockSetNodes).toHaveBeenCalledWith(mockNodes);
+    expect(mockSetEdges).toHaveBeenCalledWith(mockEdges);
+    expect(mockSetLocalWorkflowId).toHaveBeenCalledWith("workflow-1");
+    expect(mockSetLocalWorkflowName).toHaveBeenCalledWith("Test Workflow");
+    expect(mockSetLocalWorkflowDescription).toHaveBeenCalledWith(
+      "Test Description",
+    );
+  });
+  it("does not overlay draft onto a saved tab (avoids stale empty drafts blanking canvas)", () => {
+    const draft = {
+      nodes: mockNodes,
+      edges: mockEdges,
+      workflowId: "workflow-1",
+      workflowName: "Stale Name",
+      workflowDescription: "",
       isUnsaved: false,
     };
     mockGetLocalStorageItem.mockReturnValue({
@@ -58,13 +97,11 @@ describe("useDraftManagement", () => {
         normalizeNodeForStorage: mockNormalizeNodeForStorage,
       }),
     );
-    expect(mockSetNodes).toHaveBeenCalledWith(mockNodes);
-    expect(mockSetEdges).toHaveBeenCalledWith(mockEdges);
-    expect(mockSetLocalWorkflowId).toHaveBeenCalledWith("workflow-1");
-    expect(mockSetLocalWorkflowName).toHaveBeenCalledWith("Test Workflow");
-    expect(mockSetLocalWorkflowDescription).toHaveBeenCalledWith(
-      "Test Description",
-    );
+    expect(mockSetNodes).not.toHaveBeenCalled();
+    expect(mockSetEdges).not.toHaveBeenCalled();
+    expect(mockSetLocalWorkflowId).not.toHaveBeenCalled();
+    expect(mockSetLocalWorkflowName).not.toHaveBeenCalled();
+    expect(mockSetLocalWorkflowDescription).not.toHaveBeenCalled();
   });
   it("should not load draft when workflowId does not match", () => {
     const draft = {
@@ -424,5 +461,19 @@ describe("saveDraftsToStorage", () => {
       drafts,
       void 0,
     );
+  });
+});
+describe("shouldApplyDraftCanvas", () => {
+  it("is false for saved tab even when ids match", () => {
+    const draft = { workflowId: "w1", nodes: [] };
+    expect(shouldApplyDraftCanvas(draft, "w1", false)).toBe(false);
+  });
+  it("is true for unsaved tab when ids match", () => {
+    const draft = { workflowId: "w1", nodes: [] };
+    expect(shouldApplyDraftCanvas(draft, "w1", true)).toBe(true);
+  });
+  it("is true when workflowId is not yet set (recovery)", () => {
+    const draft = { workflowId: "w1", nodes: [] };
+    expect(shouldApplyDraftCanvas(draft, null, false)).toBe(true);
   });
 });

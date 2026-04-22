@@ -2253,7 +2253,7 @@ describe("WorkflowTabs", () => {
         expect(mockHttpClient.post).toHaveBeenCalled();
       }, 3e3);
     });
-    it("should not publish over HTTP when guest tabs are cleared of saved workflow ids", async () => {
+    it("should not publish over HTTP when guest is not signed in", async () => {
       mockUseAuth.mockReturnValue({
         isAuthenticated: false,
         authHydrated: true,
@@ -2305,7 +2305,7 @@ describe("WorkflowTabs", () => {
       }
       await waitForWithTimeout(() => {
         expect(showError).toHaveBeenCalledWith(
-          expect.stringContaining("Save the workflow before publishing"),
+          expect.stringContaining("Sign in to publish"),
         );
       });
       expect(mockHttpClient.post).not.toHaveBeenCalled();

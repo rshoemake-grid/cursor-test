@@ -9,11 +9,12 @@ function mergeGeminiProviderModelsFromTemplate(providers) {
   if (!Array.isArray(providers)) {
     return providers;
   }
+  const list = providers.filter((p) => p != null);
   const tmpl = PROVIDER_TEMPLATES.gemini;
   if (!tmpl || !Array.isArray(tmpl.models) || tmpl.models.length === 0) {
-    return providers;
+    return list;
   }
-  return providers.map((p) => {
+  return list.map((p) => {
     if (p.type !== "gemini") {
       return p;
     }

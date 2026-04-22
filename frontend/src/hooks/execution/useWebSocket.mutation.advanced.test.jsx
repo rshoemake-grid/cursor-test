@@ -303,7 +303,7 @@ describe("useWebSocket - mutation.advanced", () => {
         expect(wsInstances.length).toBeGreaterThan(0);
       }
     });
-    it("should verify message.error && onError check - message.error is falsy", async () => {
+    it("should call onError with fallback when message.error is falsy", async () => {
       const onError = jest.fn();
       renderHook(() =>
         useWebSocket({
@@ -327,7 +327,7 @@ describe("useWebSocket - mutation.advanced", () => {
           ws.simulateMessage(message);
           await advanceTimersByTime(50);
         });
-        expect(onError).not.toHaveBeenCalled();
+        expect(onError).toHaveBeenCalledWith("Execution error");
       }
     });
     it("should verify message.error && onError check - onError is undefined", async () => {
@@ -1886,7 +1886,7 @@ describe("useWebSocket - mutation.advanced", () => {
         expect(onError).toHaveBeenCalledWith("Test error message");
       }
     });
-    it("should verify message.error && onError - message.error is falsy", async () => {
+    it("should call onError with fallback when message.error is missing", async () => {
       const onError = jest.fn();
       renderHook(() =>
         useWebSocket({
@@ -1909,7 +1909,7 @@ describe("useWebSocket - mutation.advanced", () => {
           });
           await advanceTimersByTime(50);
         });
-        expect(onError).not.toHaveBeenCalled();
+        expect(onError).toHaveBeenCalledWith("Execution error");
       }
     });
     it("should verify wasClean && code === 1000 - both conditions true", async () => {

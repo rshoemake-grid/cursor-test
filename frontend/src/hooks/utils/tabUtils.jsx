@@ -10,7 +10,7 @@ function createNewTab() {
 }
 function createTabWithWorkflow(workflowId, name = "Loading...") {
   return {
-    id: `workflow-${Date.now()}`,
+    id: `workflow-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
     name,
     workflowId,
     isUnsaved: false,

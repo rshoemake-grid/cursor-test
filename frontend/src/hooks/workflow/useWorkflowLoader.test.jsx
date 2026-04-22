@@ -2,6 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { useWorkflowLoader } from "./useWorkflowLoader";
 import { api } from "../../api/client";
 import { logger } from "../../utils/logger";
+import { showError } from "../../utils/notifications";
 import {
   initializeReactFlowNodes,
   formatEdgesForReactFlow,
@@ -16,6 +17,9 @@ jest.mock("../../utils/logger", () => ({
     debug: jest.fn(),
     error: jest.fn(),
   },
+}));
+jest.mock("../../utils/notifications", () => ({
+  showError: jest.fn(),
 }));
 jest.mock("../../utils/workflowFormat", () => ({
   initializeReactFlowNodes: jest.fn(),
@@ -37,6 +41,7 @@ describe("useWorkflowLoader", () => {
   });
   const mockWorkflowNodeToNode = jest.fn(defaultWorkflowNodeToNodeImpl);
   const mockOnWorkflowLoaded = jest.fn();
+  const mockShowError = showError;
   const mockIsLoadingRef = { current: false };
   const mockLastLoadedWorkflowIdRef = { current: null };
   beforeEach(() => {
@@ -102,6 +107,43 @@ describe("useWorkflowLoader", () => {
       expect(api.getWorkflow).not.toHaveBeenCalled();
       expect(mockLastLoadedWorkflowIdRef.current).toBeNull();
       expect(mockIsLoadingRef.current).toBe(false);
+    });
+    it("refetches saved workflow when isAuthenticated becomes true", async () => {
+      const mockWorkflow = {
+        id: "workflow-1",
+        name: "Test Workflow",
+        description: "",
+        nodes: [{ id: "n1", type: "agent", data: {} }],
+        edges: [],
+        variables: {},
+      };
+      api.getWorkflow.mockResolvedValue(mockWorkflow);
+      const { rerender } = renderHook(
+        ({ auth }) =>
+          useWorkflowLoader({
+            workflowId: "workflow-1",
+            tabIsUnsaved: false,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: mockOnWorkflowLoaded,
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+            isAuthenticated: auth,
+          }),
+        { initialProps: { auth: false } },
+      );
+      expect(api.getWorkflow).not.toHaveBeenCalled();
+      rerender({ auth: true });
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(api.getWorkflow).toHaveBeenCalledWith("workflow-1");
     });
     it("should not load if workflowId matches lastLoadedWorkflowId", () => {
       mockLastLoadedWorkflowIdRef.current = "workflow-1";
@@ -459,6 +501,9 @@ describe("useWorkflowLoader", () => {
         error,
       );
       expect(mockIsLoadingRef.current).toBe(false);
+      expect(mockShowError).toHaveBeenCalledWith(
+        "Could not load workflow (workflow-1): Failed to load workflow",
+      );
     });
     it("should log loaded nodes", async () => {
       const mockWorkflow = {

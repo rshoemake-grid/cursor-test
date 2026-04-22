@@ -7,6 +7,7 @@ const waitForWithTimeout = (callback, timeout = 2e3) => {
 import { BrowserRouter } from "react-router-dom";
 import AuthPage from "./AuthPage";
 import { useAuth } from "../contexts/AuthContext";
+import { STORAGE_KEYS } from "../config/constants";
 jest.mock("../contexts/AuthContext", () => ({
   useAuth: jest.fn(),
 }));
@@ -24,6 +25,7 @@ describe("AuthPage", () => {
   const mockNavigate = jest.fn();
   beforeEach(() => {
     jest.clearAllMocks();
+    sessionStorage.clear();
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       user: null,
@@ -55,6 +57,45 @@ describe("AuthPage", () => {
     const createAccountElements = screen.getAllByText("Create Account");
     expect(createAccountElements.length).toBeGreaterThan(0);
     expect(screen.getByPlaceholderText(/your@email.com/)).toBeInTheDocument();
+  });
+  it("navigates to post-auth target from session snapshot after login", async () => {
+    mockLogin.mockResolvedValue(void 0);
+    const ctx = {
+      pathname: "/settings",
+      search: "",
+      currentView: "builder",
+      executionId: null,
+      selectedWorkflowId: null,
+    };
+    sessionStorage.setItem(
+      STORAGE_KEYS.AUTH_RETURN_CONTEXT,
+      JSON.stringify(ctx),
+    );
+    renderWithRouter(<AuthPage />);
+    const usernameInput = screen.getByPlaceholderText("Enter your username");
+    const passwordInput = screen.getByPlaceholderText(
+      "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    );
+    const submitButton = screen.getByRole("button", {
+      name: /Sign In/,
+    });
+    fireEvent.change(usernameInput, {
+      target: { value: "testuser" },
+    });
+    fireEvent.change(passwordInput, {
+      target: { value: "password123" },
+    });
+    fireEvent.click(submitButton);
+    await waitForWithTimeout(() => {
+      expect(sessionStorage.getItem(STORAGE_KEYS.AUTH_RETURN_CONTEXT)).toBeNull();
+      expect(mockNavigate).toHaveBeenCalledWith(
+        "/settings",
+        expect.objectContaining({
+          replace: true,
+          state: { authRestore: ctx },
+        }),
+      );
+    });
   });
   it("should handle login", async () => {
     mockLogin.mockResolvedValue(void 0);

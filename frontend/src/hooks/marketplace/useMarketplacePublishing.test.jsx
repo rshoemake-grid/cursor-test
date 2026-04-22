@@ -253,7 +253,7 @@ describe("useMarketplacePublishing", () => {
         }),
       );
     });
-    it("should verify token ? Authorization : {} check - token is null", async () => {
+    it("should require sign-in when token is null", async () => {
       const activeTab = {
         id: "tab-1",
         workflowId: "workflow-1",
@@ -271,13 +271,10 @@ describe("useMarketplacePublishing", () => {
       await act(async () => {
         await result.current.handlePublish(mockEvent);
       });
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.any(Object),
-        expect.not.objectContaining({
-          Authorization: expect.any(String),
-        }),
+      expect(mockShowError).toHaveBeenCalledWith(
+        "Sign in to publish workflows to the marketplace.",
       );
+      expect(mockHttpClient.post).not.toHaveBeenCalled();
     });
     it("should verify response.ok check - response.ok is true", async () => {
       const activeTab = {
@@ -693,7 +690,7 @@ describe("useMarketplacePublishing", () => {
         const headers = postCall[2];
         expect(headers).toHaveProperty("Authorization", "Bearer test-token");
       });
-      it("should verify exact ternary: token ? { Authorization: ... } : {} - token is null", async () => {
+      it("should not call publish when token is null", async () => {
         const activeTab = {
           id: "tab-1",
           workflowId: "workflow-1",
@@ -711,9 +708,10 @@ describe("useMarketplacePublishing", () => {
         await act(async () => {
           await result.current.handlePublish(mockEvent);
         });
-        const postCall = mockHttpClient.post.mock.calls[0];
-        const headers = postCall[2];
-        expect(headers).not.toHaveProperty("Authorization");
+        expect(mockShowError).toHaveBeenCalledWith(
+          "Sign in to publish workflows to the marketplace.",
+        );
+        expect(mockHttpClient.post).not.toHaveBeenCalled();
       });
     });
     describe("handlePublish - exact logical OR in payload", () => {

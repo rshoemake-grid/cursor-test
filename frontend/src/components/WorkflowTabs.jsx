@@ -68,13 +68,7 @@ function WorkflowTabs({
   );
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
-  const { token, isAuthenticated, authHydrated } = useAuth();
-  const wasAuthenticatedThisSessionRef = useRef(false);
-  useEffect(() => {
-    if (isAuthenticated) {
-      wasAuthenticatedThisSessionRef.current = true;
-    }
-  }, [isAuthenticated]);
+  const { token, isAuthenticated } = useAuth();
   const resetTabsForLoggedOutPrivacy = useCallback(() => {
     setTabs((prev) => {
       if (!prev.some((t) => t.workflowId != null)) {
@@ -90,7 +84,6 @@ function WorkflowTabs({
   }, [setTabs, setActiveTabId]);
   useEffect(() => {
     const onLoggedOut = () => {
-      wasAuthenticatedThisSessionRef.current = false;
       resetTabsForLoggedOutPrivacy();
     };
     if (typeof window !== "undefined") {
@@ -101,19 +94,6 @@ function WorkflowTabs({
     }
     return void 0;
   }, [resetTabsForLoggedOutPrivacy]);
-  useEffect(() => {
-    if (!authHydrated || isAuthenticated) {
-      return;
-    }
-    if (wasAuthenticatedThisSessionRef.current) {
-      return;
-    }
-    resetTabsForLoggedOutPrivacy();
-  }, [
-    authHydrated,
-    isAuthenticated,
-    resetTabsForLoggedOutPrivacy,
-  ]);
   useTabInitialization({
     tabs,
     activeTabId,

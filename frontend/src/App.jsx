@@ -6,7 +6,7 @@ import {
   useSearchParams,
   useLocation,
 } from "react-router-dom";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { Provider } from "react-redux";
 import WorkflowTabs from "./components/WorkflowTabs";
 import WorkflowList from "./components/WorkflowList";
@@ -56,6 +56,7 @@ import {
   SignInLink,
   Main,
 } from "./App.styled";
+import { STORAGE_KEYS } from "./config/constants";
 
 function AuthSessionRedirect() {
   const navigate = useNavigate();
@@ -65,13 +66,17 @@ function AuthSessionRedirect() {
       if (location.pathname === "/auth") {
         return;
       }
-      navigate("/auth", { replace: true, state: { sessionExpired: true } });
+      const from = `${location.pathname}${location.search}${location.hash}`;
+      navigate("/auth", {
+        replace: true,
+        state: { sessionExpired: true, from },
+      });
     };
     window.addEventListener("auth:unauthorized", onUnauthorized);
     return () => {
       window.removeEventListener("auth:unauthorized", onUnauthorized);
     };
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, location.search, location.hash]);
   return null;
 }
 
@@ -87,6 +92,71 @@ function AuthenticatedLayout() {
   const location = useLocation();
   const processedWorkflowFromUrl = useRef(null);
   const workflowLoadKeyRef = useRef(0);
+
+  useLayoutEffect(() => {
+    const persistReturnContext = () => {
+      try {
+        const payload = {
+          pathname: location.pathname,
+          search: location.search || "",
+          hash: location.hash || "",
+          currentView,
+          executionId,
+          selectedWorkflowId,
+        };
+        sessionStorage.setItem(
+          STORAGE_KEYS.AUTH_RETURN_CONTEXT,
+          JSON.stringify(payload),
+        );
+      } catch {
+        /* ignore */
+      }
+    };
+    window.addEventListener("auth:unauthorized", persistReturnContext, true);
+    return () => {
+      window.removeEventListener(
+        "auth:unauthorized",
+        persistReturnContext,
+        true,
+      );
+    };
+  }, [
+    location.pathname,
+    location.search,
+    location.hash,
+    currentView,
+    executionId,
+    selectedWorkflowId,
+  ]);
+
+  useEffect(() => {
+    const r = location.state?.authRestore;
+    if (!r || typeof r !== "object") {
+      return;
+    }
+    if (location.pathname !== "/") {
+      navigate(`${location.pathname}${location.search || ""}`, {
+        replace: true,
+        state: {},
+      });
+      return;
+    }
+    const v = r.currentView;
+    if (v === "list" || v === "builder" || v === "execution") {
+      setCurrentView(v);
+    }
+    if (r.executionId) {
+      setExecutionId(r.executionId);
+    }
+    if (r.selectedWorkflowId) {
+      setSelectedWorkflowId(r.selectedWorkflowId);
+      setWorkflowLoadKey((k) => k + 1);
+    }
+    navigate(`${location.pathname}${location.search || ""}`, {
+      replace: true,
+      state: {},
+    });
+  }, [location.state, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     const workflowId = searchParams.get("workflow");

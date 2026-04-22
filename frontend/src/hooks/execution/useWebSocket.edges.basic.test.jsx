@@ -449,7 +449,7 @@ describe("useWebSocket - edges.basic", () => {
         expect(statusCalls.length).toBe(0);
       }
     });
-    it("should handle error message without error field", async () => {
+    it("should call onError with fallback when error message omits error field", async () => {
       const onError = jest.fn();
       renderHook(() =>
         useWebSocket({
@@ -471,7 +471,7 @@ describe("useWebSocket - edges.basic", () => {
           );
         }
         await advanceTimersByTime(50);
-        expect(onError).not.toHaveBeenCalled();
+        expect(onError).toHaveBeenCalledWith("Execution error");
       }
     });
     it("should handle completion message without result field", async () => {
@@ -788,7 +788,7 @@ describe("useWebSocket - edges.basic", () => {
         expect(onError).toHaveBeenCalledWith("Something went wrong");
       }
     });
-    it("should not call onError when error field is missing", async () => {
+    it("should call onError with fallback when error field is missing", async () => {
       const onError = jest.fn();
       renderHook(() =>
         useWebSocket({
@@ -811,7 +811,7 @@ describe("useWebSocket - edges.basic", () => {
           );
         }
         await advanceTimersByTime(50);
-        expect(onError).not.toHaveBeenCalled();
+        expect(onError).toHaveBeenCalledWith("Execution error");
       }
     });
     it("should not call onError when callback is not provided", async () => {

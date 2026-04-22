@@ -44,6 +44,10 @@ function useMarketplacePublishing({
   const handlePublish = useCallback(
     async (event) => {
       event.preventDefault();
+      if (token === null || token === void 0 || token === "") {
+        showError("Sign in to publish workflows to the marketplace.");
+        return;
+      }
       if (
         activeTab === null ||
         activeTab === void 0 ||

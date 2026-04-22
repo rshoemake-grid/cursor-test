@@ -192,7 +192,6 @@ function AWSS3Editor({ node, onConfigUpdate }) {
               "object_key",
             )}
             placeholder="path/to/file.txt or leave blank for all objects"
-            aria-label="S3 object key"
             style={{ flex: 1, minWidth: 0 }}
           />
           <EditorSecondaryFullButton
@@ -303,7 +302,6 @@ function AWSS3Editor({ node, onConfigUpdate }) {
               "region",
             )}
             placeholder={INPUT_REGION.DEFAULT}
-            aria-label="AWS region"
             style={{ flex: 1, minWidth: 0 }}
           />
           <EditorSecondaryFullButton

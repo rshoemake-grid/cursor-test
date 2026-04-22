@@ -70,7 +70,7 @@ describe("AWSS3Editor", () => {
       const node = createAWSS3Node();
       render(<AWSS3Editor node={node} onConfigUpdate={mockOnConfigUpdate} />);
       expect(screen.getByLabelText("AWS S3 bucket name")).toBeInTheDocument();
-      expect(screen.getByLabelText("S3 object key")).toBeInTheDocument();
+      expect(screen.getByRole("textbox", { name: /^Object Key$/i })).toBeInTheDocument();
       expect(screen.getByLabelText("AWS Access Key ID")).toBeInTheDocument();
       expect(
         screen.getByLabelText("AWS Secret Access Key"),
@@ -103,7 +103,7 @@ describe("AWSS3Editor", () => {
         object_key: "path/to/object",
       });
       render(<AWSS3Editor node={node} onConfigUpdate={mockOnConfigUpdate} />);
-      const objectKeyInput = screen.getByLabelText("S3 object key");
+      const objectKeyInput = screen.getByRole("textbox", { name: /^Object Key$/i });
       expect(objectKeyInput.value).toBe("path/to/object");
     });
     it("should display current access key ID value", () => {
@@ -154,7 +154,7 @@ describe("AWSS3Editor", () => {
         object_key: void 0,
       });
       render(<AWSS3Editor node={node} onConfigUpdate={mockOnConfigUpdate} />);
-      const objectKeyInput = screen.getByLabelText("S3 object key");
+      const objectKeyInput = screen.getByRole("textbox", { name: /^Object Key$/i });
       expect(objectKeyInput.value).toBe(EMPTY_STRING);
     });
     it("should use default region when not provided", () => {
@@ -193,7 +193,7 @@ describe("AWSS3Editor", () => {
     it("should call onConfigUpdate when object key changes", () => {
       const node = createAWSS3Node();
       render(<AWSS3Editor node={node} onConfigUpdate={mockOnConfigUpdate} />);
-      const objectKeyInput = screen.getByLabelText("S3 object key");
+      const objectKeyInput = screen.getByRole("textbox", { name: /^Object Key$/i });
       fireEvent.change(objectKeyInput, {
         target: {
           value: "new/key",
@@ -339,7 +339,7 @@ describe("AWSS3Editor", () => {
         object_key: "",
       });
       render(<AWSS3Editor node={node} onConfigUpdate={mockOnConfigUpdate} />);
-      const objectKeyInput = screen.getByLabelText("S3 object key");
+      const objectKeyInput = screen.getByRole("textbox", { name: /^Object Key$/i });
       expect(objectKeyInput).toHaveAttribute(
         "placeholder",
         "path/to/file.txt or leave blank for all objects",

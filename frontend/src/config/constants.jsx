@@ -60,6 +60,8 @@ const STORAGE_KEYS = {
   AUTH_TOKEN: "auth_token",
   AUTH_USER: "auth_user",
   AUTH_REMEMBER_ME: "auth_remember_me",
+  /** Session snapshot before redirect to login (pathname, builder sub-view, etc.) */
+  AUTH_RETURN_CONTEXT: "authReturnContext",
   SESSION_TOKEN: "session_token",
   PUBLISHED_AGENTS: "publishedAgents",
   REPOSITORY_AGENTS: "repositoryAgents",

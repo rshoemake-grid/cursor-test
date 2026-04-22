@@ -70,7 +70,7 @@ describe("tabUtils", () => {
         executions: [],
         activeExecutionId: null,
       });
-      expect(tab.id).toMatch(/^workflow-\d+$/);
+      expect(tab.id).toMatch(/^workflow-\d+-[a-z0-9]+$/);
     });
     it("should create a tab with custom name", () => {
       const tab = createTabWithWorkflow("workflow-123", "Custom Name");

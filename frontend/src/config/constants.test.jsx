@@ -45,6 +45,7 @@ describe("constants", () => {
       expect(STORAGE_KEYS.LLM_SETTINGS).toBe("llm_settings");
       expect(STORAGE_KEYS.WORKFLOW_DRAFTS).toBe("workflowDrafts");
       expect(STORAGE_KEYS.AUTH_TOKEN).toBe("auth_token");
+      expect(STORAGE_KEYS.AUTH_RETURN_CONTEXT).toBe("authReturnContext");
       expect(STORAGE_KEYS.SESSION_TOKEN).toBe("session_token");
     });
   });

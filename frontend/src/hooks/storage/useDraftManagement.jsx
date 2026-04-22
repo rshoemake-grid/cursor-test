@@ -26,6 +26,19 @@ function shouldHydrateDraftFromStorage(draft, workflowId) {
     draftWorkflowId !== "";
   return idsMatch || restoreSavedWhilePropIdMissing;
 }
+
+/**
+ * Apply draft nodes/edges only when the tab is unsaved or we don't have a server id yet.
+ * For saved tabs (server workflow id + isUnsaved false), {@code useWorkflowLoader} is the
+ * source of truth — stale or empty drafts were blanking some tabs while still "logged in".
+ */
+function shouldApplyDraftCanvas(draft, workflowId, tabIsUnsaved) {
+  if (!shouldHydrateDraftFromStorage(draft, workflowId)) {
+    return false;
+  }
+  const noServerWorkflowYet = workflowId == null || workflowId === "";
+  return tabIsUnsaved === true || noServerWorkflowYet;
+}
 function useDraftManagement({
   tabDraftsRef: externalDraftsRef,
   tabId,
@@ -97,7 +110,7 @@ function useDraftManagement({
     }
     dRef.current = loadDraftsFromStorage(so);
     const draft = dRef.current[tabId];
-    if (shouldHydrateDraftFromStorage(draft, workflowId)) {
+    if (shouldApplyDraftCanvas(draft, workflowId, tabIsUnsaved)) {
       const nodeList = draft.nodes ?? [];
       log.debug("[useDraftManagement] Loading draft nodes:", nodeList.length);
       setN(nodeList.map(norm));
@@ -113,7 +126,7 @@ function useDraftManagement({
       setLWDesc("");
     }
     hydratedRef.current = true;
-  }, [tabId, workflowId]);
+  }, [tabId, workflowId, tabIsUnsaved]);
 
   useEffect(() => {
     const tid = tabId;
@@ -160,4 +173,9 @@ function useDraftManagement({
     saveDraftsToStorage,
   };
 }
-export { loadDraftsFromStorage, saveDraftsToStorage, useDraftManagement };
+export {
+  loadDraftsFromStorage,
+  saveDraftsToStorage,
+  useDraftManagement,
+  shouldApplyDraftCanvas,
+};

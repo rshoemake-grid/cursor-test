@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import {
   createNewTab,
   createTabWithWorkflow,
-  findTabByWorkflowId,
   tabExists,
 } from "../utils/tabUtils";
 function useTabInitialization({
@@ -34,14 +33,8 @@ function useTabInitialization({
     if (!initialWorkflowId || workflowLoadKey === void 0) {
       return;
     }
-    const existingForWorkflow = findTabByWorkflowId(
-      tabsRef.current,
-      initialWorkflowId,
-    );
-    if (existingForWorkflow) {
-      setActiveTabId(existingForWorkflow.id);
-      return;
-    }
+    // Always open a new tab from the workflow list, even if this workflow is already
+    // open — same as opening the same file twice in an editor.
     const uniqueKey = `${initialWorkflowId}-${workflowLoadKey}`;
     if (processedKeys.current.has(uniqueKey)) {
       return;

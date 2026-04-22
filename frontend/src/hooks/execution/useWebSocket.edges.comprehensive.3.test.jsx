@@ -256,7 +256,7 @@ describe("useWebSocket - edges.comprehensive.3", () => {
           expect(onCompletion).toHaveBeenCalledWith(null);
         }
       });
-      it("should handle error message with null error", async () => {
+      it("should call onError with fallback when error payload is null", async () => {
         const onError = jest.fn();
         renderHook(() =>
           useWebSocket({
@@ -271,7 +271,7 @@ describe("useWebSocket - edges.comprehensive.3", () => {
             execution_id: "exec-1",
             error: null,
           });
-          expect(onError).not.toHaveBeenCalled();
+          expect(onError).toHaveBeenCalledWith("Execution error");
         }
       });
       it("should handle unknown message type", async () => {

@@ -163,12 +163,14 @@ describe("InputNodeEditor", () => {
         />,
       );
       expect(screen.getByLabelText(/AWS S3 bucket name/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Object key/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("textbox", { name: /^Object Key$/i }),
+      ).toBeInTheDocument();
       expect(screen.getByLabelText(/AWS Access Key ID/i)).toBeInTheDocument();
       expect(
         screen.getByLabelText(/AWS Secret Access Key/i),
       ).toBeInTheDocument();
-      expect(screen.getByLabelText(/AWS Region/i)).toBeInTheDocument();
+      expect(screen.getByRole("textbox", { name: /^AWS Region$/i })).toBeInTheDocument();
     });
     it("should display current AWS S3 values", () => {
       render(
@@ -179,7 +181,7 @@ describe("InputNodeEditor", () => {
       );
       const bucketInput = screen.getByLabelText(/AWS S3 bucket name/i);
       expect(bucketInput.value).toBe("aws-bucket");
-      const regionInput = screen.getByLabelText(/AWS Region/i);
+      const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
       expect(regionInput.value).toBe("us-west-2");
     });
     it("should call onConfigUpdate when AWS fields change", () => {
@@ -216,7 +218,7 @@ describe("InputNodeEditor", () => {
           onConfigUpdate={mockOnConfigUpdate}
         />,
       );
-      const regionInput = screen.getByLabelText(/AWS Region/i);
+      const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
       expect(regionInput.value).toBe("us-east-1");
     });
   });
@@ -724,7 +726,7 @@ describe("InputNodeEditor", () => {
       render(
         <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
-      const regionInput = screen.getByLabelText(/AWS region/i);
+      const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
       expect(regionInput.value).toBe("us-east-1");
     });
     it("should handle overwrite default value for Local FileSystem", () => {
@@ -824,12 +826,14 @@ describe("InputNodeEditor", () => {
         <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
       expect(screen.getByLabelText(/AWS S3 bucket name/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/S3 object key/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("textbox", { name: /^Object Key$/i }),
+      ).toBeInTheDocument();
       expect(screen.getByLabelText(/AWS access key ID/i)).toBeInTheDocument();
       expect(
         screen.getByLabelText(/AWS secret access key/i),
       ).toBeInTheDocument();
-      expect(screen.getByLabelText(/AWS region/i)).toBeInTheDocument();
+      expect(screen.getByRole("textbox", { name: /^AWS Region$/i })).toBeInTheDocument();
     });
     it("should handle all GCP Pub/Sub fields", () => {
       const node = {
@@ -1234,7 +1238,7 @@ describe("InputNodeEditor", () => {
       render(
         <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
-      const regionInput = screen.getByLabelText(/AWS region/i);
+      const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
       expect(regionInput.value).toBe("us-east-1");
     });
     it("should handle mode default value", () => {
@@ -1604,10 +1608,12 @@ describe("InputNodeEditor", () => {
         <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
       const bucketInput = screen.getByLabelText(/AWS S3 bucket name/i);
-      const objectKeyInput = screen.getByLabelText(/S3 object key/i);
+      const objectKeyInput = screen.getByRole("textbox", {
+        name: /^Object Key$/i,
+      });
       const accessKeyInput = screen.getByLabelText(/AWS access key ID/i);
       const secretKeyInput = screen.getByLabelText(/AWS secret access key/i);
-      const regionInput = screen.getByLabelText(/AWS region/i);
+      const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
       fireEvent.change(bucketInput, {
         target: {
           value: "bucket",
@@ -2126,7 +2132,7 @@ describe("InputNodeEditor", () => {
       render(
         <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
-      const regionInput = screen.getByLabelText(/AWS region/i);
+      const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
       expect(regionInput.value).toBe("us-east-1");
     });
     it("should handle mode default value edge cases", () => {
@@ -2502,7 +2508,7 @@ describe("InputNodeEditor", () => {
         const { unmount } = render(
           <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
         );
-        const regionInput = screen.getByLabelText(/AWS region/i);
+        const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
         expect(regionInput.value).toBe("us-east-1");
         unmount();
       }
@@ -2812,7 +2818,7 @@ describe("InputNodeEditor", () => {
       render(
         <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
-      const regionInput = screen.getByLabelText(/AWS region/i);
+      const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
       expect(regionInput.value).toBe("us-east-1");
     });
     it("should handle mode default with all node types that use it", () => {
@@ -3641,7 +3647,7 @@ describe("InputNodeEditor", () => {
       render(
         <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
-      const regionInput = screen.getByLabelText(/Region/i);
+      const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
       expect(regionInput.value).toBe("us-east-1");
     });
     it("should verify exact default value for modeValue", () => {
@@ -3767,7 +3773,7 @@ describe("InputNodeEditor", () => {
       render(
         <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
-      const regionInput = screen.getByLabelText(/Region/i);
+      const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
       expect(regionInput.value).toBe("us-east-1");
     });
     it("should verify all || operators with truthy values", () => {
@@ -3871,7 +3877,7 @@ describe("InputNodeEditor", () => {
       render(
         <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
-      const regionInput = screen.getByLabelText(/Region/i);
+      const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
       expect(regionInput.value).toBe("us-east-1");
     });
     it('should verify mode || "read" with undefined mode', () => {
@@ -4131,7 +4137,7 @@ describe("InputNodeEditor", () => {
         screen.getByLabelText(/Bucket Name/i),
         screen.getByLabelText(/Object Path/i),
         screen.queryByLabelText(/GCP Credentials/i),
-        screen.queryByLabelText(/Object Key/i),
+        screen.queryByRole("textbox", { name: /^Object Key$/i }),
         screen.queryByLabelText(/Access Key ID/i),
         screen.queryByLabelText(/Secret Access Key/i),
         screen.queryByLabelText(/Project ID/i),
@@ -4159,7 +4165,7 @@ describe("InputNodeEditor", () => {
       render(
         <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
-      const objectKeyInput = screen.queryByLabelText(/Object Key/i);
+      const objectKeyInput = screen.queryByRole("textbox", { name: /^Object Key$/i });
       if (objectKeyInput) {
         expect(objectKeyInput.value).toBe("test-key");
         objectKeyInput.focus();
@@ -4231,7 +4237,7 @@ describe("InputNodeEditor", () => {
       render(
         <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
-      const regionInput = screen.getByLabelText(/Region/i);
+      const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
       expect(regionInput.value).toBe("us-west-2");
       regionInput.focus();
       expect(document.activeElement).toBe(regionInput);
@@ -4759,7 +4765,7 @@ describe("InputNodeEditor", () => {
         render(
           <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
         );
-        const regionInput = screen.getByLabelText(/Region/i);
+        const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
         expect(regionInput.value).toBe("us-east-1");
       });
       it('should verify useState("read") exact string literal', () => {
@@ -4841,7 +4847,7 @@ describe("InputNodeEditor", () => {
         render(
           <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
         );
-        const regionInput = screen.getByLabelText(/Region/i);
+        const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
         expect(regionInput.value).toBe("us-east-1");
       });
       it('should verify inputConfig.mode || "read" exact pattern', () => {
@@ -5524,7 +5530,7 @@ describe("InputNodeEditor", () => {
         render(
           <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
         );
-        const regionInput = screen.getByLabelText(/Region/i);
+        const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
         expect(regionInput.placeholder).toBe("us-east-1");
       });
       it('should verify exact placeholder "/path/to/file.txt"', () => {
@@ -5797,7 +5803,7 @@ describe("InputNodeEditor", () => {
         render(
           <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
         );
-        const regionInput = screen.getByLabelText(/AWS Region/i);
+        const regionInput = screen.getByRole("textbox", { name: /^AWS Region$/i });
         expect(regionInput.value).toBe("us-east-1");
       });
       it("should handle inputConfig.mode || read when mode is null", () => {

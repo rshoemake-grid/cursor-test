@@ -161,7 +161,7 @@ describe("WorkflowChat", () => {
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />);
     expect(screen.getByPlaceholderText(/Sign in to chat/)).toBeDisabled();
     expect(screen.getByLabelText(/max iterations/i)).toBeDisabled();
-    expect(screen.getByText("Send")).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Send$/ })).toBeDisabled();
     expect(
       screen.getByRole("link", {
         name: /sign in/i,
@@ -179,7 +179,7 @@ describe("WorkflowChat", () => {
       screen.getByPlaceholderText(/Type your message/),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/max iterations/i)).toHaveValue(20);
-    expect(screen.getByText("Send")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Send$/ })).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
         name: /push to talk/i,
@@ -208,7 +208,7 @@ describe("WorkflowChat", () => {
         value: "Hello",
       },
     });
-    fireEvent.click(screen.getByText("Send"));
+    fireEvent.click(screen.getByRole("button", { name: /^Send$/ }));
     await waitForWithTimeout(() => {
       expect(window.speechSynthesis.speak).toHaveBeenCalled();
     });
@@ -393,7 +393,7 @@ describe("WorkflowChat", () => {
         value: "Hi",
       },
     });
-    fireEvent.click(screen.getByText("Send"));
+    fireEvent.click(screen.getByRole("button", { name: /^Send$/ }));
     await waitForWithTimeout(() => {
       expect(
         screen.getByRole("button", {
@@ -421,7 +421,8 @@ describe("WorkflowChat", () => {
   });
   it("should coerce missing message content when sending so API always gets string content", async () => {
     const { safeStorageGet } = require("../utils/storageHelpers");
-    safeStorageGet.mockReturnValueOnce([
+    const { getChatHistoryKey } = require("../config/constants");
+    const historyPayload = [
       {
         role: "assistant",
       },
@@ -429,7 +430,17 @@ describe("WorkflowChat", () => {
         role: "user",
         content: "Hi",
       },
-    ]);
+    ];
+    const historyKey = getChatHistoryKey("workflow-1");
+    safeStorageGet.mockImplementation((storage, key, defaultValue) => {
+      if (key === historyKey) {
+        return historyPayload;
+      }
+      if (Array.isArray(defaultValue)) {
+        return defaultValue;
+      }
+      return defaultValue ?? null;
+    });
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />);
     const input = screen.getByPlaceholderText(/Type your message/);
     fireEvent.change(input, {
@@ -437,7 +448,7 @@ describe("WorkflowChat", () => {
         value: "Next",
       },
     });
-    fireEvent.click(screen.getByText("Send"));
+    fireEvent.click(screen.getByRole("button", { name: /^Send$/ }));
     await waitForWithTimeout(() => {
       expect(api.chat).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -452,6 +463,10 @@ describe("WorkflowChat", () => {
               role: "user",
               content: "Hi",
             },
+            {
+              role: "user",
+              content: "Next",
+            },
           ],
         }),
       );
@@ -465,7 +480,7 @@ describe("WorkflowChat", () => {
         value: "Test message",
       },
     });
-    const sendButton = screen.getByText("Send");
+    const sendButton = screen.getByRole("button", { name: /^Send$/ });
     fireEvent.click(sendButton);
     await waitForWithTimeout(() => {
       expect(api.chat).toHaveBeenCalledWith(
@@ -490,7 +505,7 @@ describe("WorkflowChat", () => {
         value: "Hi",
       },
     });
-    fireEvent.click(screen.getByText("Send"));
+    fireEvent.click(screen.getByRole("button", { name: /^Send$/ }));
     await waitForWithTimeout(() => {
       expect(api.chat).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -533,7 +548,7 @@ describe("WorkflowChat", () => {
         value: "Hi",
       },
     });
-    fireEvent.click(screen.getByText("Send"));
+    fireEvent.click(screen.getByRole("button", { name: /^Send$/ }));
     await waitForWithTimeout(() => {
       expect(api.chat).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -597,7 +612,7 @@ describe("WorkflowChat", () => {
   });
   it("should not send empty message", () => {
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />);
-    const sendButton = screen.getByText("Send");
+    const sendButton = screen.getByRole("button", { name: /^Send$/ });
     expect(sendButton).toBeDisabled();
   });
   it("should display user and assistant messages", async () => {
@@ -611,7 +626,7 @@ describe("WorkflowChat", () => {
         value: "User message",
       },
     });
-    const sendButton = screen.getByText("Send");
+    const sendButton = screen.getByRole("button", { name: /^Send$/ });
     fireEvent.click(sendButton);
     await waitForWithTimeout(() => {
       expect(screen.getByText("User message")).toBeInTheDocument();
@@ -631,7 +646,7 @@ describe("WorkflowChat", () => {
         value: "Test message",
       },
     });
-    const sendButton = screen.getByText("Send");
+    const sendButton = screen.getByRole("button", { name: /^Send$/ });
     fireEvent.click(sendButton);
     await waitForWithTimeout(() => {
       expect(screen.getByText(/HTTP error/)).toBeInTheDocument();
@@ -657,7 +672,7 @@ describe("WorkflowChat", () => {
         value: "Test message",
       },
     });
-    const sendButton = screen.getByText("Send");
+    const sendButton = screen.getByRole("button", { name: /^Send$/ });
     fireEvent.click(sendButton);
     await waitForWithTimeout(() => {
       expect(mockOnWorkflowUpdate).toHaveBeenCalledWith({
@@ -677,7 +692,7 @@ describe("WorkflowChat", () => {
         value: "Test message",
       },
     });
-    const sendButton = screen.getByText("Send");
+    const sendButton = screen.getByRole("button", { name: /^Send$/ });
     fireEvent.click(sendButton);
     await waitForWithTimeout(() => {
       const saved = localStorage.getItem("chat_history_workflow-1");
@@ -729,7 +744,7 @@ describe("WorkflowChat", () => {
         value: "Test message",
       },
     });
-    const sendButton = screen.getByText("Send");
+    const sendButton = screen.getByRole("button", { name: /^Send$/ });
     fireEvent.click(sendButton);
     await waitForWithTimeout(() => {
       expect(screen.queryByText("Send")).not.toBeInTheDocument();
@@ -738,7 +753,7 @@ describe("WorkflowChat", () => {
       message: "Response",
     });
     await waitForWithTimeout(() => {
-      expect(screen.getByText("Send")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^Send$/ })).toBeInTheDocument();
     }, 2e3);
   });
   it("should handle non-Error exception", async () => {
@@ -752,7 +767,7 @@ describe("WorkflowChat", () => {
         value: "Test message",
       },
     });
-    const sendButton = screen.getByText("Send");
+    const sendButton = screen.getByRole("button", { name: /^Send$/ });
     fireEvent.click(sendButton);
     await waitForWithTimeout(() => {
       expect(screen.getByText(/Unknown error/)).toBeInTheDocument();
@@ -779,7 +794,7 @@ describe("WorkflowChat", () => {
         value: "Test message",
       },
     });
-    const sendButton = screen.getByText("Send");
+    const sendButton = screen.getByRole("button", { name: /^Send$/ });
     fireEvent.click(sendButton);
     await waitForWithTimeout(() => {
       expect(screen.getByText("Response")).toBeInTheDocument();
@@ -797,7 +812,7 @@ describe("WorkflowChat", () => {
         value: "Test message",
       },
     });
-    const sendButton = screen.getByText("Send");
+    const sendButton = screen.getByRole("button", { name: /^Send$/ });
     fireEvent.click(sendButton);
     await waitForWithTimeout(() => {
       expect(screen.getByText(/Network error/)).toBeInTheDocument();
@@ -811,7 +826,7 @@ describe("WorkflowChat", () => {
         value: "   ",
       },
     });
-    const sendButton = screen.getByText("Send");
+    const sendButton = screen.getByRole("button", { name: /^Send$/ });
     expect(sendButton).toBeDisabled();
   });
   it("should not send when isLoading is true", async () => {
@@ -827,7 +842,7 @@ describe("WorkflowChat", () => {
         value: "Test message",
       },
     });
-    const sendButton = screen.getByText("Send");
+    const sendButton = screen.getByRole("button", { name: /^Send$/ });
     fireEvent.click(sendButton);
     await waitForWithTimeout(() => {
       expect(sendButton).toBeDisabled();
@@ -875,7 +890,7 @@ describe("WorkflowChat", () => {
           value: "Test message",
         },
       });
-      const sendButton = screen.getByText("Send");
+      const sendButton = screen.getByRole("button", { name: /^Send$/ });
       fireEvent.click(sendButton);
       await waitForWithTimeout(() => {
         expect(api.chat).toHaveBeenCalled();
@@ -912,7 +927,7 @@ describe("WorkflowChat", () => {
           value: "Test message",
         },
       });
-      const sendButton = screen.getByText("Send");
+      const sendButton = screen.getByRole("button", { name: /^Send$/ });
       fireEvent.click(sendButton);
       await waitForWithTimeout(() => {
         expect(screen.getByText("Response")).toBeInTheDocument();
@@ -956,7 +971,7 @@ describe("WorkflowChat", () => {
           value: "Test message",
         },
       });
-      const sendButton = screen.getByText("Send");
+      const sendButton = screen.getByRole("button", { name: /^Send$/ });
       fireEvent.click(sendButton);
       await waitForWithTimeout(() => {
         expect(screen.getByText("Response")).toBeInTheDocument();
@@ -973,7 +988,7 @@ describe("WorkflowChat", () => {
           value: "Test message",
         },
       });
-      const sendButton = screen.getByText("Send");
+      const sendButton = screen.getByRole("button", { name: /^Send$/ });
       fireEvent.click(sendButton);
       await waitForWithTimeout(() => {
         expect(screen.getByText(/Network error/)).toBeInTheDocument();
@@ -1006,7 +1021,7 @@ describe("WorkflowChat", () => {
           value: "Test message",
         },
       });
-      const sendButton = screen.getByText("Send");
+      const sendButton = screen.getByRole("button", { name: /^Send$/ });
       fireEvent.click(sendButton);
       await waitForWithTimeout(() => {
         expect(mockStorage.setItem).toHaveBeenCalledWith(
