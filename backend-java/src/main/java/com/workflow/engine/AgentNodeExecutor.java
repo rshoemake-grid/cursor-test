@@ -3,6 +3,7 @@ package com.workflow.engine;
 import com.workflow.dto.AgentConfig;
 import com.workflow.dto.Node;
 import com.workflow.service.SettingsService;
+import com.workflow.util.AgentAdkRouting;
 import com.workflow.util.ErrorMessages;
 import com.workflow.util.LlmConfigUtils;
 import com.workflow.util.LlmVertexGeminiSupport;
@@ -80,13 +81,10 @@ public class AgentNodeExecutor implements NodeExecutor {
 
         String model = ObjectUtils.orDefault(agentModel, LlmConfigUtils.getModel(effectiveConfig));
 
-        String agentKind =
-                ObjectUtils.toStringOrDefault(ObjectUtils.safeGet(cfg, AgentConfig::getAgentType), "workflow")
-                        .trim()
-                        .toLowerCase(Locale.ROOT);
+        boolean viaAdk = AgentAdkRouting.shouldExecuteViaAdk(cfg);
 
         Map<String, Object> adkLlmConfig = null;
-        if ("adk".equals(agentKind)) {
+        if (viaAdk) {
             adkLlmConfig = resolveAdkLlmConfigSameAsChat(effectiveConfig, model, ctx);
             if (LlmVertexGeminiSupport.isGeminiType(adkLlmConfig)) {
                 LlmConfigUtils.validateApiKey(adkLlmConfig, environment);
@@ -100,7 +98,7 @@ public class AgentNodeExecutor implements NodeExecutor {
         String systemPrompt = ObjectUtils.orDefault(ObjectUtils.safeGet(cfg, AgentConfig::getSystemPrompt), "");
 
         String userText;
-        if ("adk".equals(agentKind)) {
+        if (viaAdk) {
             userText = AdkWorkflowInputConverter.toUserMessage(inputs);
         } else {
             Object userContent = InputResolver.getFirstOf(inputs, "message", "data", "output");
@@ -110,7 +108,7 @@ public class AgentNodeExecutor implements NodeExecutor {
             userText = String.valueOf(userContent);
         }
 
-        if ("adk".equals(agentKind)) {
+        if (viaAdk) {
             log.info("Agent node {}: executing via Google ADK (LlmAgent + InMemoryRunner)", node.getId());
             return adkRunner.run(node, cfg, userText, ctx, adkLlmConfig);
         }
@@ -182,21 +180,31 @@ public class AgentNodeExecutor implements NodeExecutor {
      */
     private Map<String, Object> resolveAdkLlmConfigSameAsChat(
             Map<String, Object> effectiveConfig, String model, NodeExecutionContext ctx) {
-        if (settingsService == null || ctx.userId() == null) {
-            return effectiveConfig;
+        List<Optional<Map<String, Object>>> ordered = new ArrayList<>();
+        if (settingsService != null && ctx.userId() != null) {
+            ordered.add(settingsService.getLlmConfigForWorkflowChat(ctx.userId()));
+            ordered.add(settingsService.getActiveLlmConfig(ctx.userId()));
         }
-        Optional<Map<String, Object>> chatOpt = settingsService.getLlmConfigForWorkflowChat(ctx.userId());
-        if (chatOpt.isEmpty()) {
-            return effectiveConfig;
+        ordered.add(Optional.ofNullable(effectiveConfig));
+
+        for (Optional<Map<String, Object>> opt : ordered) {
+            if (opt.isEmpty()) {
+                continue;
+            }
+            Map<String, Object> base = opt.get();
+            if (base.isEmpty()) {
+                continue;
+            }
+            String ctype =
+                    ObjectUtils.toStringOrDefault(base.get("type"), "openai").trim().toLowerCase(Locale.ROOT);
+            if (!"gemini".equals(ctype)) {
+                continue;
+            }
+            Map<String, Object> geminiMap = new HashMap<>(base);
+            geminiMap.put("model", model);
+            log.debug("ADK agent node: Gemini auth from settings chain (model={}).", model);
+            return geminiMap;
         }
-        Map<String, Object> chatMap = new HashMap<>(chatOpt.get());
-        String ctype =
-                ObjectUtils.toStringOrDefault(chatMap.get("type"), "openai").trim().toLowerCase(Locale.ROOT);
-        if (!"gemini".equals(ctype)) {
-            return effectiveConfig;
-        }
-        chatMap.put("model", model);
-        log.debug("ADK agent node: Gemini auth from workflow chat provider settings (model={}).", model);
-        return chatMap;
+        return effectiveConfig;
     }
 }

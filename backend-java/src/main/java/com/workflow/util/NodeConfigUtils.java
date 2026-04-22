@@ -54,7 +54,17 @@ public final class NodeConfigUtils {
         if (data == null) {
             return null;
         }
-        return data.get(key);
+        Object v = data.get(key);
+        if (v == null && "agent_config".equals(key)) {
+            v = data.get("agentConfig");
+        }
+        if (v == null && "loop_config".equals(key)) {
+            v = data.get("loopConfig");
+        }
+        if (v == null && "condition_config".equals(key)) {
+            v = data.get("conditionConfig");
+        }
+        return v;
     }
 
     private static AgentConfig mapToAgentConfig(Object raw, ObjectMapper objectMapper) {

@@ -73,7 +73,7 @@ public class AdkAgentRunner implements AdkRunner {
         ADKAgentConfig adk = cfg.getAdkConfig();
         if (adk == null) {
             throw new IllegalStateException(
-                    "Node " + node.getId() + " uses agent_type adk but adk_config is missing.");
+                    "Node " + node.getId() + " is configured for ADK execution but adk_config is missing.");
         }
         String agentName =
                 Optional.ofNullable(adk.getName())

@@ -149,6 +149,40 @@ class AgentNodeExecutorTest {
     }
 
     @Test
+    void execute_routesToAdkRunnerWhenWorkflowTypeWithAdkName() {
+        MockEnvironment env = new MockEnvironment().withProperty("GEMINI_API_KEY", "gemini-test-key");
+        AdkRunner adkRunner = mock(AdkRunner.class);
+        when(adkRunner.run(
+                        any(Node.class),
+                        any(AgentConfig.class),
+                        any(),
+                        any(NodeExecutionContext.class),
+                        any()))
+                .thenReturn("adk-inferred");
+
+        AgentNodeExecutor exec =
+                new AgentNodeExecutor(
+                        new CapturingLlmClient(),
+                        env,
+                        null,
+                        new com.fasterxml.jackson.databind.ObjectMapper(),
+                        adkRunner);
+
+        Node node = adkWorkflowInferenceNode("infer-1");
+        Map<String, Object> ctxLlm = new HashMap<>();
+        ctxLlm.put("type", "gemini");
+        ctxLlm.put("api_key", "gemini-test-key");
+        ctxLlm.put("base_url", "https://generativelanguage.googleapis.com/v1beta");
+        ctxLlm.put("model", "gemini-2.0-flash");
+        NodeExecutionContext ctx = new NodeExecutionContext(ctxLlm, null, List.of(), Map.of());
+
+        Object out = exec.execute(node, Map.of("message", "hi"), new ExecutionState(), ctx);
+
+        assertEquals("adk-inferred", out);
+        verify(adkRunner).run(eq(node), any(AgentConfig.class), eq("hi"), eq(ctx), any());
+    }
+
+    @Test
     void execute_routesToAdkRunnerWhenAgentTypeAdk() {
         MockEnvironment env = new MockEnvironment().withProperty("GEMINI_API_KEY", "gemini-test-key");
         AdkRunner adkRunner = mock(AdkRunner.class);
@@ -300,6 +334,17 @@ class AgentNodeExecutorTest {
         ADKAgentConfig adk = new ADKAgentConfig();
         adk.setName("adk-test");
         adk.setInstruction("do the thing");
+        n.getAgentConfig().setAdkConfig(adk);
+        return n;
+    }
+
+    /** Python parity: agent_type may stay {@code workflow} when adk_config.name is set. */
+    private static Node adkWorkflowInferenceNode(String id) {
+        Node n = agentNode("gemini-2.0-flash", "fallback system", id);
+        n.getAgentConfig().setAgentType("workflow");
+        ADKAgentConfig adk = new ADKAgentConfig();
+        adk.setName("inferred-adk");
+        adk.setInstruction("run bundle");
         n.getAgentConfig().setAdkConfig(adk);
         return n;
     }

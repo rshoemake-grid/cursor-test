@@ -79,4 +79,27 @@ class NodeConfigUtilsTest {
         assertEquals("gpt-4o", n.getAgentConfig().getModel());
         assertEquals("hi", n.getAgentConfig().getSystemPrompt());
     }
+
+    @Test
+    void dataCamelCaseAgentConfigWithNestedAdkConfigResolves() {
+        Node n = new Node();
+        n.setId("n-camel");
+        n.setType(NodeType.AGENT);
+        Map<String, Object> adk = new LinkedHashMap<>();
+        adk.put("name", "bundle-x");
+        adk.put("instruction", "go");
+        Map<String, Object> agent = new LinkedHashMap<>();
+        agent.put("model", "gemini-pro");
+        agent.put("agentType", "workflow");
+        agent.put("adkConfig", adk);
+        n.setData(Map.of("agentConfig", agent));
+        AgentConfig cfg = NodeConfigUtils.resolveAgentConfig(n, objectMapper);
+        assertNotNull(cfg);
+        assertEquals("gemini-pro", cfg.getModel());
+        assertEquals("workflow", cfg.getAgentType());
+        assertNotNull(cfg.getAdkConfig());
+        assertEquals("bundle-x", cfg.getAdkConfig().getName());
+        assertEquals("go", cfg.getAdkConfig().getInstruction());
+        assertTrue(AgentAdkRouting.shouldExecuteViaAdk(cfg));
+    }
 }
