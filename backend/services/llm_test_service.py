@@ -85,7 +85,7 @@ async def test_anthropic(base_url: str, api_key: str, model: str) -> Dict[str, s
 async def test_gemini(base_url: str, api_key: str, model: str) -> Dict[str, str]:
     """Test Google Gemini API connection (AI Studio key) or Vertex :generateContent with ADC when key is empty."""
     body = {
-        "contents": [{"parts": [{"text": "Hello"}]}],
+        "contents": [{"role": "user", "parts": [{"text": "Hello"}]}],
         "generationConfig": {"maxOutputTokens": 5},
     }
     if (api_key or "").strip():

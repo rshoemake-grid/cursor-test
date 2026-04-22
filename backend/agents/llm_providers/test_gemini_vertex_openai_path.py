@@ -99,6 +99,7 @@ async def test_vertex_image_output_model_still_uses_generate_content(monkeypatch
                 return json.loads(self.text)
 
         posted["model"] = model
+        posted["contents"] = json_body.get("contents")
         return R()
 
     monkeypatch.setattr(
@@ -116,6 +117,7 @@ async def test_vertex_image_output_model_still_uses_generate_content(monkeypatch
     )
     assert openai_called["v"] is False
     assert "flash-image" in posted["model"].lower() or "image" in posted["model"].lower()
+    assert posted["contents"][0]["role"] == "user"
     assert out == "img-ok"
 
 
@@ -150,6 +152,7 @@ async def test_vertex_flash_lite_uses_generate_content_not_openai_chat(monkeypat
 
         posted["model"] = model
         posted["body_keys"] = list(json_body.keys())
+        posted["contents"] = json_body.get("contents")
         return R()
 
     monkeypatch.setattr(
@@ -172,4 +175,5 @@ async def test_vertex_flash_lite_uses_generate_content_not_openai_chat(monkeypat
     assert openai_called["v"] is False
     assert posted["model"] == "gemini-2.5-flash-lite"
     assert "contents" in posted["body_keys"]
+    assert posted["contents"][0]["role"] == "user"
     assert out == "lite-ok"

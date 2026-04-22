@@ -848,7 +848,9 @@ class GeminiProviderStrategy(ILLMProviderStrategy):
             f"GRAND TOTAL: {final_total_tokens:,} tokens (limit: 1,048,576)"
         )
 
-        contents = [{"parts": parts}]
+        # Vertex :generateContent requires each Content to declare role "user" or "model";
+        # AI Studio may omit it, but enterprise Vertex returns 400 otherwise.
+        contents = [{"role": "user", "parts": parts}]
         request_data = {"contents": contents}
 
         if agent_config.system_prompt:
