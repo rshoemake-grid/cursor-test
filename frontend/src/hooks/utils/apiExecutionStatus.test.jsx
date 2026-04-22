@@ -46,6 +46,16 @@ describe("mapApiStatusToExecutionUiStatus", () => {
     ).toBe("failed");
   });
 
+  it("infers terminal from completedAt (camelCase) when status still running", () => {
+    expect(
+      mapApiStatusToExecutionUiStatus({
+        status: "running",
+        completedAt: "2026-01-01T00:00:00Z",
+        error: null,
+      }),
+    ).toBe("completed");
+  });
+
   it("returns null for unknown status without completed_at", () => {
     expect(mapApiStatusToExecutionUiStatus({ status: "unknown" })).toBeNull();
   });
@@ -97,5 +107,26 @@ describe("hydrateExecutionLogsIfEmpty", () => {
     const out = await hydrateExecutionLogsIfEmpty(apiClient, snapshot);
     expect(apiClient.getExecutionLogs).not.toHaveBeenCalled();
     expect(out).toBe(snapshot);
+  });
+
+  it("fetches logs using executionId camelCase and completedAt", async () => {
+    const apiClient = {
+      getExecutionLogs: jest.fn().mockResolvedValue({
+        logs: [{ level: "ERROR", message: "x", timestamp: "2026-01-01T00:00:00Z" }],
+      }),
+    };
+    const snapshot = {
+      executionId: "e1",
+      status: "failed",
+      completedAt: "2026-01-01T00:00:01Z",
+      error: "boom",
+      logs: [],
+    };
+    const out = await hydrateExecutionLogsIfEmpty(apiClient, snapshot);
+    expect(apiClient.getExecutionLogs).toHaveBeenCalledWith("e1", {
+      limit: 10000,
+      offset: 0,
+    });
+    expect(out.logs).toHaveLength(1);
   });
 });

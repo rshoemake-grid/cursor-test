@@ -40,7 +40,12 @@ class WorkflowExecutorPersistPeekTest {
         WorkflowInputSourceService inputSvc = new WorkflowInputSourceService("", om);
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(blockingClient, null, null, om),
+                        new AgentNodeExecutor(
+                                blockingClient,
+                                null,
+                                null,
+                                om,
+                                new AdkAgentRunner(new org.springframework.mock.env.MockEnvironment())),
                         new ConditionNodeExecutor(om),
                         new LoopNodeExecutor(om),
                         new ToolNodeExecutor(),

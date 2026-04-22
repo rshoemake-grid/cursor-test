@@ -58,10 +58,47 @@ public final class LlmConfigUtils {
         if (LlmVertexGeminiSupport.geminiUsesVertexAdc(ObjectUtils.orEmptyMap(config), env)) {
             return;
         }
+        if (LlmVertexGeminiSupport.isGeminiType(ObjectUtils.orEmptyMap(config))
+                && LlmVertexGeminiSupport.geminiAuthViaAdcServiceAccountJson(env)) {
+            return;
+        }
         String key = getApiKeyWithEnvFallback(ObjectUtils.orEmptyMap(config), env);
         if (key == null || key.isBlank()) {
             throw new IllegalStateException(ErrorMessages.NO_LLM_API_KEY);
         }
+    }
+
+    /**
+     * Gemini API key from node LLM config or {@code GEMINI_API_KEY} / {@code GOOGLE_API_KEY} only (not OpenAI env).
+     * Used for Google ADK paths that always call Gemini.
+     */
+    public static String geminiApiKeyOnly(Map<String, Object> config, Environment env) {
+        String k = getApiKey(config);
+        if (k != null && !k.isBlank()) {
+            return k;
+        }
+        if (env == null) {
+            return null;
+        }
+        return firstNonBlank(env.getProperty("GEMINI_API_KEY"), env.getProperty("GOOGLE_API_KEY"));
+    }
+
+    /**
+     * ADK agents use Gemini only. Accept AI Studio API key, Vertex + ADC (no key), or {@code GOOGLE_APPLICATION_CREDENTIALS}
+     * JSON plus a resolvable project id.
+     */
+    public static void validateAdkGeminiAuth(Map<String, Object> config, Environment env) {
+        String gk = geminiApiKeyOnly(ObjectUtils.orEmptyMap(config), env);
+        if (gk != null && !gk.isBlank()) {
+            return;
+        }
+        if (LlmVertexGeminiSupport.geminiUsesVertexAdc(ObjectUtils.orEmptyMap(config), env)) {
+            return;
+        }
+        if (LlmVertexGeminiSupport.geminiAuthViaAdcServiceAccountJson(env)) {
+            return;
+        }
+        throw new IllegalStateException(ErrorMessages.NO_LLM_API_KEY);
     }
 
     /**

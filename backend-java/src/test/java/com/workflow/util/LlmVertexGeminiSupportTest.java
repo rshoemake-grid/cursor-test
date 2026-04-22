@@ -3,35 +3,42 @@ package com.workflow.util;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class LlmVertexGeminiSupportTest {
 
     @Test
-    void geminiModelRequiresVertexGenerateContent_flashLite_true() {
-        assertTrue(LlmVertexGeminiSupport.geminiModelRequiresVertexGenerateContent("gemini-2.5-flash-lite"));
-        assertTrue(LlmVertexGeminiSupport.geminiModelRequiresVertexGenerateContent("google/gemini-2.5-flash-lite"));
-        assertTrue(LlmVertexGeminiSupport.geminiModelRequiresVertexGenerateContent("gemini-3.1-flash-lite-preview"));
+    void readProjectIdFromCredentialsJsonFile_extractsProjectId() throws Exception {
+        Path p = Files.createTempFile("creds", ".json");
+        Files.writeString(p, "{\n  \"project_id\": \"my-gcp-project\",\n  \"type\": \"service_account\"\n}");
+        assertEquals("my-gcp-project", LlmVertexGeminiSupport.readProjectIdFromCredentialsJsonFile(p.toString()));
     }
 
     @Test
-    void geminiModelRequiresVertexGenerateContent_flashImage_true() {
-        assertTrue(LlmVertexGeminiSupport.geminiModelRequiresVertexGenerateContent("gemini-2.5-flash-image"));
+    void resolveProjectIdForVertex_prefersEnvOverJsonFile() throws Exception {
+        Path p = Files.createTempFile("creds2", ".json");
+        Files.writeString(p, "{\"project_id\": \"from-file\"}");
+        MockEnvironment env =
+                new MockEnvironment()
+                        .withProperty("GOOGLE_CLOUD_PROJECT", "from-env")
+                        .withProperty("GOOGLE_APPLICATION_CREDENTIALS", p.toString());
+        assertEquals("from-env", LlmVertexGeminiSupport.resolveProjectIdForVertex(env));
     }
 
     @Test
-    void geminiModelRequiresVertexGenerateContent_standardFlash_false() {
-        assertFalse(LlmVertexGeminiSupport.geminiModelRequiresVertexGenerateContent("gemini-2.5-flash"));
-        assertFalse(LlmVertexGeminiSupport.geminiModelRequiresVertexGenerateContent("google/gemini-2.5-flash"));
+    void resolveProjectIdForVertex_usesJsonWhenEnvUnset() throws Exception {
+        Path p = Files.createTempFile("creds3", ".json");
+        Files.writeString(p, "{\"project_id\": \"only-in-json\"}");
+        MockEnvironment env = new MockEnvironment().withProperty("GOOGLE_APPLICATION_CREDENTIALS", p.toString());
+        assertEquals("only-in-json", LlmVertexGeminiSupport.resolveProjectIdForVertex(env));
     }
 
     @Test
-    void resolveLocationForModel_gemini3FlashLitePreview_usesGlobal() {
-        MockEnvironment env = new MockEnvironment()
-                .withProperty("GCP_PROJECT", "p1")
-                .withProperty("VERTEX_LOCATION", "us-central1");
-        assertTrue(LlmVertexGeminiSupport.vertexGenerateContentUrl(env, "gemini-3.1-flash-lite-preview")
-                .contains("/locations/global/"));
+    void readProjectIdFromCredentialsJsonFile_invalidPath_returnsNull() {
+        assertNull(LlmVertexGeminiSupport.readProjectIdFromCredentialsJsonFile("/no/such/file.json"));
     }
 }

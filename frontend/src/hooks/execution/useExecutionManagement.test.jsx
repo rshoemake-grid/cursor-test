@@ -1120,7 +1120,7 @@ describe("useExecutionManagement", () => {
         });
         expect(mockSetTabs).toHaveBeenCalled();
       });
-      it("should handle activeTabId as null", () => {
+      it("should attach execution when activeTabId is null but there is a single tab", () => {
         const { result } = renderHook(() =>
           useExecutionManagement({
             tabs: [mockTab],
@@ -1133,9 +1133,33 @@ describe("useExecutionManagement", () => {
         act(() => {
           result.current.handleExecutionStart("exec-1");
         });
+        expect(mockSetTabs).toHaveBeenCalled();
+        const setTabsCall = mockSetTabs.mock.calls[0][0];
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([mockTab])
+            : setTabsCall;
+        const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
+        expect(updatedTab.executions[0].id).toBe("exec-1");
+      });
+      it("should not attach when activeTabId is null and multiple tabs exist without workflowId", () => {
+        const tabA = { ...mockTab, id: "tab-a", workflowId: "wf-a" };
+        const tabB = { ...mockTab, id: "tab-b", workflowId: "wf-b" };
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabA, tabB],
+            activeTabId: null,
+            setTabs: mockSetTabs,
+            tabsRef: { current: [tabA, tabB] },
+            onExecutionStart: mockOnExecutionStart,
+          }),
+        );
+        act(() => {
+          result.current.handleExecutionStart("exec-1");
+        });
         expect(mockSetTabs).not.toHaveBeenCalled();
       });
-      it("should handle tab.id not matching activeTabId", () => {
+      it("should attach to the sole tab when activeTabId does not match any tab id", () => {
         const otherTab = {
           ...mockTab,
           id: "tab-2",
@@ -1145,14 +1169,21 @@ describe("useExecutionManagement", () => {
             tabs: [otherTab],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
-            tabsRef: mockTabsRef,
+            tabsRef: { current: [otherTab] },
             onExecutionStart: mockOnExecutionStart,
           }),
         );
         act(() => {
           result.current.handleExecutionStart("exec-1");
         });
-        expect(mockSetTabs).not.toHaveBeenCalled();
+        expect(mockSetTabs).toHaveBeenCalled();
+        const setTabsCall = mockSetTabs.mock.calls[0][0];
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([otherTab])
+            : setTabsCall;
+        const updatedTab = updatedTabs.find((t) => t.id === "tab-2");
+        expect(updatedTab.executions[0].id).toBe("exec-1");
       });
     });
     describe("handleClearExecutions edge cases", () => {

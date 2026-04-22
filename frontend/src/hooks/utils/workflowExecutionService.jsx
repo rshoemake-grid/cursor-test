@@ -33,16 +33,20 @@ class WorkflowExecutionService {
       inputs,
     });
     if (onExecutionStart) {
-      onExecutionStart(tempExecutionId);
+      onExecutionStart(tempExecutionId, workflowId);
     }
     const execution = await this.api.executeWorkflow(workflowId, inputs);
     this.logger.debug("[WorkflowExecution] Execution response:", execution);
+    const serverExecutionId =
+      execution?.execution_id ?? execution?.executionId ?? null;
     const finalExecutionId =
-      execution?.execution_id && execution.execution_id !== tempExecutionId
-        ? execution.execution_id
+      serverExecutionId != null &&
+      serverExecutionId !== "" &&
+      serverExecutionId !== tempExecutionId
+        ? serverExecutionId
         : tempExecutionId;
     if (finalExecutionId !== tempExecutionId && onExecutionStart) {
-      onExecutionStart(finalExecutionId);
+      onExecutionStart(finalExecutionId, workflowId);
     }
     return {
       executionId: finalExecutionId,

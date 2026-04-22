@@ -22,32 +22,147 @@ import {
   EditorSecondaryFullButton,
 } from "../../styles/editorForm.styled";
 import { normalizeAdkConfig, adkConfigTextField } from "../../utils/adkConfigUtils";
+
+/** Avoid overwriting local ADK field state while typing (refs may be unset on some styled inputs). */
+function isEditorControlFocused(active, refObj, htmlId) {
+  if (active == null) {
+    return false;
+  }
+  if (htmlId != null && active.id === htmlId) {
+    return true;
+  }
+  return refObj?.current != null && active === refObj.current;
+}
+
 function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
   const systemPromptRef = useRef(null);
   const maxTokensRef = useRef(null);
+  const temperatureRef = useRef(null);
+  const modelRef = useRef(null);
+  const agentTypeRef = useRef(null);
+  const adkNameRef = useRef(null);
+  const adkDescRef = useRef(null);
+  const adkToolsRef = useRef(null);
+  /** True while user is editing (survives re-renders that drop focus briefly). */
+  const systemPromptDirtyRef = useRef(false);
+  const maxTokensDirtyRef = useRef(false);
+  const temperatureDirtyRef = useRef(false);
+  const modelDirtyRef = useRef(false);
+  const agentTypeDirtyRef = useRef(false);
+  const adkNameDirtyRef = useRef(false);
+  const adkDescDirtyRef = useRef(false);
+  const adkToolsDirtyRef = useRef(false);
   const [systemPromptValue, setSystemPromptValue] = useState("");
   const [maxTokensValue, setMaxTokensValue] = useState("");
+  const [temperatureValue, setTemperatureValue] = useState(0.7);
+  const [modelValue, setModelValue] = useState("gpt-4o-mini");
+  const [agentTypeValue, setAgentTypeValue] = useState("workflow");
+  const [adkNameValue, setAdkNameValue] = useState("");
+  const [adkDescValue, setAdkDescValue] = useState("");
+  const [adkToolsDisplay, setAdkToolsDisplay] = useState("");
+
+  const defaultModelValue =
+    availableModels.length > 0 ? availableModels[0].value : "gpt-4o-mini";
+
+  function hydrateLocalStateFromNode(agentNode) {
+    const cfg = agentNode.data.agent_config || {};
+    const ac = normalizeAdkConfig(cfg.adk_config);
+    const isAdkNode = cfg.agent_type === "adk";
+    setAgentTypeValue(cfg.agent_type || "workflow");
+    setSystemPromptValue(
+      isAdkNode
+        ? (typeof ac.instruction === "string" ? ac.instruction : "") ||
+            cfg.system_prompt ||
+            ""
+        : cfg.system_prompt || "",
+    );
+    setMaxTokensValue(cfg.max_tokens || "");
+    setAdkNameValue(adkConfigTextField(ac, "name"));
+    setAdkDescValue(adkConfigTextField(ac, "description"));
+    setAdkToolsDisplay(
+      Array.isArray(ac.adk_tools) ? ac.adk_tools.join(", ") : "",
+    );
+    setTemperatureValue(cfg.temperature ?? 0.7);
+    setModelValue(cfg.model || defaultModelValue);
+  }
+
   useEffect(() => {
+    systemPromptDirtyRef.current = false;
+    maxTokensDirtyRef.current = false;
+    temperatureDirtyRef.current = false;
+    modelDirtyRef.current = false;
+    agentTypeDirtyRef.current = false;
+    adkNameDirtyRef.current = false;
+    adkDescDirtyRef.current = false;
+    adkToolsDirtyRef.current = false;
+    hydrateLocalStateFromNode(node);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-hydrate when switching nodes; availableModels captured for default model
+  }, [node.id]);
+
+  useEffect(() => {
+    const active = document.activeElement;
     const agentConfig2 = node.data.agent_config || {};
-    if (document.activeElement !== systemPromptRef.current) {
-      const ac2 = normalizeAdkConfig(agentConfig2.adk_config);
-      const isAdk = agentConfig2.agent_type === "adk";
-      const fromInstruction =
-        typeof ac2.instruction === "string" ? ac2.instruction : "";
-      const prompt = isAdk
-        ? fromInstruction || agentConfig2.system_prompt || ""
-        : agentConfig2.system_prompt || "";
+    const ac2 = normalizeAdkConfig(agentConfig2.adk_config);
+    const isAdk = agentConfig2.agent_type === "adk";
+    const fromInstruction =
+      typeof ac2.instruction === "string" ? ac2.instruction : "";
+    const prompt = isAdk
+      ? fromInstruction || agentConfig2.system_prompt || ""
+      : agentConfig2.system_prompt || "";
+
+    const systemGuard =
+      !systemPromptDirtyRef.current &&
+      !isEditorControlFocused(active, systemPromptRef, "agent-system-prompt");
+    if (systemGuard) {
       setSystemPromptValue(prompt);
     }
-    if (document.activeElement !== maxTokensRef.current) {
+    const maxGuard =
+      !maxTokensDirtyRef.current &&
+      !isEditorControlFocused(active, maxTokensRef, "agent-max-tokens");
+    if (maxGuard) {
       setMaxTokensValue(agentConfig2.max_tokens || "");
     }
-  }, [node.data.agent_config]);
+    const tempGuard =
+      !temperatureDirtyRef.current &&
+      !isEditorControlFocused(active, temperatureRef, "agent-temperature");
+    if (tempGuard) {
+      setTemperatureValue(agentConfig2.temperature ?? 0.7);
+    }
+    const modelGuard =
+      !modelDirtyRef.current &&
+      !isEditorControlFocused(active, modelRef, "agent-model");
+    if (modelGuard) {
+      setModelValue(agentConfig2.model || defaultModelValue);
+    }
+    const typeGuard =
+      !agentTypeDirtyRef.current &&
+      !isEditorControlFocused(active, agentTypeRef, "agent-type");
+    if (typeGuard) {
+      setAgentTypeValue(agentConfig2.agent_type || "workflow");
+    }
+    const nameGuard =
+      !adkNameDirtyRef.current &&
+      !isEditorControlFocused(active, adkNameRef, "adk-name");
+    if (nameGuard) {
+      setAdkNameValue(adkConfigTextField(ac2, "name"));
+    }
+    const descGuard =
+      !adkDescDirtyRef.current &&
+      !isEditorControlFocused(active, adkDescRef, "adk-description");
+    if (descGuard) {
+      setAdkDescValue(adkConfigTextField(ac2, "description"));
+    }
+    const toolsGuard =
+      !adkToolsDirtyRef.current &&
+      !isEditorControlFocused(active, adkToolsRef, "adk-tools");
+    if (toolsGuard) {
+      setAdkToolsDisplay(
+        Array.isArray(ac2.adk_tools) ? ac2.adk_tools.join(", ") : "",
+      );
+    }
+  }, [node.data.agent_config, defaultModelValue]);
   const agentConfig = node.data.agent_config || {};
-  const agentType = agentConfig.agent_type || "workflow";
-  const currentModel =
-    agentConfig.model ||
-    (availableModels.length > 0 ? availableModels[0].value : "gpt-4o-mini");
+  const agentType = agentTypeValue;
   const adkConfig = normalizeAdkConfig(agentConfig.adk_config);
   const handleExportConfig = useCallback(() => {
     const exportData = {
@@ -75,9 +190,17 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
         <EditorLabel htmlFor="agent-type">Agent Type</EditorLabel>
         <EditorSelect
           id="agent-type"
-          value={agentType}
+          ref={agentTypeRef}
+          value={agentTypeValue}
+          onFocus={() => {
+            agentTypeDirtyRef.current = true;
+          }}
+          onBlur={() => {
+            agentTypeDirtyRef.current = false;
+          }}
           onChange={(e) => {
             const nextType = e.target.value;
+            setAgentTypeValue(nextType);
             const next = { ...agentConfig, agent_type: nextType };
             if (nextType === "adk") {
               const ac = normalizeAdkConfig(agentConfig.adk_config);
@@ -113,17 +236,26 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
             </EditorLabel>
             <EditorInputCompact
               id="adk-name"
+              ref={adkNameRef}
               type="text"
-              value={adkConfigTextField(adkConfig, "name")}
-              onChange={(e) =>
+              value={adkNameValue}
+              onFocus={() => {
+                adkNameDirtyRef.current = true;
+              }}
+              onBlur={() => {
+                adkNameDirtyRef.current = false;
+              }}
+              onChange={(e) => {
+                const v = e.target.value;
+                setAdkNameValue(v);
                 onUpdate("agent_config", {
                   ...agentConfig,
                   adk_config: {
                     ...adkConfig,
-                    name: e.target.value,
+                    name: v,
                   },
-                })
-              }
+                });
+              }}
               placeholder="e.g., assistant_agent"
               required={true}
               aria-label="ADK agent name"
@@ -135,17 +267,26 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
             </EditorLabel>
             <EditorInputCompact
               id="adk-description"
+              ref={adkDescRef}
               type="text"
-              value={adkConfigTextField(adkConfig, "description")}
-              onChange={(e) =>
+              value={adkDescValue}
+              onFocus={() => {
+                adkDescDirtyRef.current = true;
+              }}
+              onBlur={() => {
+                adkDescDirtyRef.current = false;
+              }}
+              onChange={(e) => {
+                const v = e.target.value;
+                setAdkDescValue(v);
                 onUpdate("agent_config", {
                   ...agentConfig,
                   adk_config: {
                     ...adkConfig,
-                    description: e.target.value,
+                    description: v,
                   },
-                })
-              }
+                });
+              }}
               placeholder="Brief description of the agent"
               aria-label="ADK description"
             />
@@ -156,24 +297,29 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
             </EditorLabel>
             <EditorInputCompact
               id="adk-tools"
+              ref={adkToolsRef}
               type="text"
-              value={
-                Array.isArray(adkConfig.adk_tools)
-                  ? adkConfig.adk_tools.join(", ")
-                  : ""
-              }
-              onChange={(e) =>
+              value={adkToolsDisplay}
+              onFocus={() => {
+                adkToolsDirtyRef.current = true;
+              }}
+              onBlur={() => {
+                adkToolsDirtyRef.current = false;
+              }}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setAdkToolsDisplay(raw);
                 onUpdate("agent_config", {
                   ...agentConfig,
                   adk_config: {
                     ...adkConfig,
-                    adk_tools: e.target.value
+                    adk_tools: raw
                       .split(",")
                       .map((t) => t.trim())
                       .filter((t) => t),
                   },
-                })
-              }
+                });
+              }}
               placeholder="google_search, load_web_page"
             />
             <EditorHint>
@@ -186,13 +332,22 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
         <EditorLabel htmlFor="agent-model">Model</EditorLabel>
         <EditorSelect
           id="agent-model"
-          value={currentModel}
-          onChange={(e) =>
+          ref={modelRef}
+          value={modelValue}
+          onFocus={() => {
+            modelDirtyRef.current = true;
+          }}
+          onBlur={() => {
+            modelDirtyRef.current = false;
+          }}
+          onChange={(e) => {
+            const v = e.target.value;
+            setModelValue(v);
             onUpdate("agent_config", {
               ...agentConfig,
-              model: e.target.value,
-            })
-          }
+              model: v,
+            });
+          }}
           aria-label="Select LLM model for agent"
         >
           {availableModels.length > 0 ? (
@@ -224,6 +379,12 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
           id="agent-system-prompt"
           ref={systemPromptRef}
           value={systemPromptValue}
+          onFocus={() => {
+            systemPromptDirtyRef.current = true;
+          }}
+          onBlur={() => {
+            systemPromptDirtyRef.current = false;
+          }}
           onChange={(e) => {
             const newValue = e.target.value;
             setSystemPromptValue(newValue);
@@ -251,25 +412,37 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
       </EditorFieldGroup>
       <EditorFieldGroup $mt="md">
         <EditorLabel htmlFor="agent-temperature">
-          Temperature: {agentConfig.temperature?.toFixed(1) || "0.7"}
+          Temperature:{" "}
+          {typeof temperatureValue === "number"
+            ? temperatureValue.toFixed(1)
+            : "0.7"}
         </EditorLabel>
         <EditorRangeInput
           id="agent-temperature"
+          ref={temperatureRef}
           type="range"
           min="0"
           max="1"
           step="0.1"
-          value={agentConfig.temperature || 0.7}
-          onChange={(e) =>
+          value={temperatureValue}
+          onFocus={() => {
+            temperatureDirtyRef.current = true;
+          }}
+          onBlur={() => {
+            temperatureDirtyRef.current = false;
+          }}
+          onChange={(e) => {
+            const t = parseFloat(e.target.value);
+            setTemperatureValue(t);
             onUpdate("agent_config", {
               ...agentConfig,
-              temperature: parseFloat(e.target.value),
-            })
-          }
+              temperature: t,
+            });
+          }}
           aria-label="Temperature control for agent creativity"
           aria-valuemin={0}
           aria-valuemax={1}
-          aria-valuenow={agentConfig.temperature || 0.7}
+          aria-valuenow={temperatureValue}
         />
         <EditorRangeScaleRow>
           <span>Focused (0.0)</span>
@@ -283,6 +456,12 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
           ref={maxTokensRef}
           type="number"
           value={maxTokensValue}
+          onFocus={() => {
+            maxTokensDirtyRef.current = true;
+          }}
+          onBlur={() => {
+            maxTokensDirtyRef.current = false;
+          }}
           onChange={(e) => {
             const newValue = e.target.value ? parseInt(e.target.value) : void 0;
             setMaxTokensValue(e.target.value);

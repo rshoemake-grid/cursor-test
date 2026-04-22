@@ -129,6 +129,33 @@ public final class ErrorMessages {
         return "API error " + statusCode + ". Check provider configuration.";
     }
 
+    private static final int EXECUTION_ERROR_DETAIL_MAX_LEN = 2000;
+
+    /**
+     * User-visible execution failure detail for persisted state / WebSocket (trimmed, capped).
+     */
+    public static String executionFailureDetail(Throwable throwable) {
+        if (throwable == null) {
+            return EXECUTION_FAILED;
+        }
+        String msg = throwable.getMessage();
+        if (msg != null && !msg.isBlank()) {
+            return truncateExecutionDetail(msg.trim());
+        }
+        String simple = throwable.getClass().getSimpleName();
+        if (simple != null && !simple.isBlank()) {
+            return truncateExecutionDetail(simple);
+        }
+        return EXECUTION_FAILED;
+    }
+
+    private static String truncateExecutionDetail(String s) {
+        if (s.length() <= EXECUTION_ERROR_DETAIL_MAX_LEN) {
+            return s;
+        }
+        return s.substring(0, EXECUTION_ERROR_DETAIL_MAX_LEN) + "…";
+    }
+
     public static final String SETTINGS_SAVED_SUCCESS = "Settings saved successfully";
     public static final String CONNECTED_SUCCESSFULLY = "Connected successfully!";
     public static final String PASSWORD_RESET_TOKEN_DEV_MESSAGE = "Password reset token generated. In production, this would be sent via email.";

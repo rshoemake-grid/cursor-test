@@ -6,9 +6,13 @@ import org.springframework.web.util.UriUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Vertex AI Gemini via Application Default Credentials (OAuth). Used when Gemini {@code api_key} is absent
@@ -17,6 +21,8 @@ import java.util.Map;
 public final class LlmVertexGeminiSupport {
 
     private static final String CLOUD_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
+    private static final Pattern PROJECT_ID_IN_JSON =
+            Pattern.compile("\"project_id\"\\s*:\\s*\"([^\"]+)\"");
 
     private LlmVertexGeminiSupport() {
     }
@@ -27,6 +33,64 @@ public final class LlmVertexGeminiSupport {
         }
         String p = firstNonBlank(env.getProperty("GOOGLE_CLOUD_PROJECT"), env.getProperty("GCP_PROJECT"));
         return p != null && !p.isBlank() ? p.trim() : null;
+    }
+
+    /**
+     * Path from {@code GOOGLE_APPLICATION_CREDENTIALS} when it points to a regular file (service-account JSON or ADC).
+     */
+    public static String resolveApplicationDefaultCredentialsPath(Environment env) {
+        String p =
+                firstNonBlank(
+                        env != null ? env.getProperty("GOOGLE_APPLICATION_CREDENTIALS") : null,
+                        System.getenv("GOOGLE_APPLICATION_CREDENTIALS"));
+        if (p == null || p.isBlank()) {
+            return null;
+        }
+        Path path = Path.of(p.trim());
+        return Files.isRegularFile(path) ? path.toString() : null;
+    }
+
+    public static boolean applicationDefaultCredentialsFilePresent(Environment env) {
+        return resolveApplicationDefaultCredentialsPath(env) != null;
+    }
+
+    /**
+     * Reads {@code project_id} from a service-account JSON when not set via {@link #resolveProject(Environment)}.
+     */
+    static String readProjectIdFromCredentialsJsonFile(String credentialsPath) {
+        if (credentialsPath == null || credentialsPath.isBlank()) {
+            return null;
+        }
+        try {
+            String text = Files.readString(Path.of(credentialsPath));
+            Matcher m = PROJECT_ID_IN_JSON.matcher(text);
+            return m.find() ? m.group(1).trim() : null;
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /**
+     * GCP project for Vertex: env ({@code GOOGLE_CLOUD_PROJECT} / {@code GCP_PROJECT}) or {@code project_id} in the
+     * ADC JSON file.
+     */
+    public static String resolveProjectIdForVertex(Environment env) {
+        String p = resolveProject(env);
+        if (p != null) {
+            return p;
+        }
+        String credPath = resolveApplicationDefaultCredentialsPath(env);
+        if (credPath == null) {
+            return null;
+        }
+        return readProjectIdFromCredentialsJsonFile(credPath);
+    }
+
+    /**
+     * True when an ADC credentials file is present and a Vertex project id can be resolved (env or JSON).
+     */
+    public static boolean geminiAuthViaAdcServiceAccountJson(Environment env) {
+        return applicationDefaultCredentialsFilePresent(env) && resolveProjectIdForVertex(env) != null;
     }
 
     public static String resolveLocation(Environment env) {
@@ -148,7 +212,7 @@ public final class LlmVertexGeminiSupport {
         return "google/" + m;
     }
 
-    static String vertexGenerateContentModelId(String model) {
+    public static String vertexGenerateContentModelId(String model) {
         String m = ObjectUtils.orDefault(model, "").trim();
         if (m.startsWith("google/")) {
             return m.substring("google/".length());

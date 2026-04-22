@@ -289,6 +289,52 @@ describe("AgentNodeEditor", () => {
         }),
       );
     });
+    it("should not clobber ADK Agent Name while that input is focused (stale prop rerender)", () => {
+      const adkNode = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config,
+            agent_type: "adk",
+            adk_config: { name: "" },
+          },
+        },
+      };
+      const { rerender } = render(
+        <AgentNodeEditor
+          node={adkNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      const nameInput = screen.getByPlaceholderText(/e\.g\., assistant_agent/i);
+      fireEvent.focus(nameInput);
+      fireEvent.change(nameInput, { target: { value: "typing_in_progress" } });
+      const staleParentNode = {
+        ...adkNode,
+        data: {
+          ...adkNode.data,
+          agent_config: {
+            ...adkNode.data.agent_config,
+            adk_config: { name: "" },
+          },
+        },
+      };
+      rerender(
+        <AgentNodeEditor
+          node={staleParentNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      const nameAfterRerender = screen.getByPlaceholderText(
+        /e\.g\., assistant_agent/i,
+      );
+      expect(nameAfterRerender).toHaveValue("typing_in_progress");
+    });
     it("should treat adk_config JSON string as object so name field is not corrupted", () => {
       const adkNode = {
         ...mockNode,
@@ -720,7 +766,7 @@ describe("AgentNodeEditor", () => {
     const temperatureSlider = screen.getByLabelText(/temperature/i);
     await waitForWithTimeout(() => {
       expect(temperatureSlider).toBeInTheDocument();
-      expect(temperatureSlider.value).toBe("0.7");
+      expect(temperatureSlider.value).toBe("0");
     });
   });
   it("should handle temperature value of 1", () => {
@@ -1020,7 +1066,7 @@ describe("AgentNodeEditor", () => {
       const maxTokensInput = screen.getByLabelText(/max tokens/i);
       expect(maxTokensInput.value).toBe("");
     });
-    it("should handle temperature || operator with 0", () => {
+    it("should handle temperature 0 as a valid slider value (not coerced to default)", () => {
       const nodeWithZeroTemp = {
         ...mockNode,
         data: {
@@ -1040,7 +1086,7 @@ describe("AgentNodeEditor", () => {
         />,
       );
       const temperatureSlider = screen.getByLabelText(/temperature/i);
-      expect(temperatureSlider.value).toBe("0.7");
+      expect(temperatureSlider.value).toBe("0");
     });
     it("should handle temperature || operator with undefined", () => {
       const nodeWithoutTemp = {

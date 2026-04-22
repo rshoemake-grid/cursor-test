@@ -75,8 +75,20 @@ describe("ExecutionStateManager", () => {
       expect(result[0].executions).toHaveLength(1);
       expect(result[0].activeExecutionId).toBe("exec-1");
     });
-    it("should not modify tabs when active tab not found", () => {
+    it("should attach to the only tab when activeTabId is stale (single-tab fallback)", () => {
       const tabs = [createMockTab("workflow-1")];
+      const result = manager.handleExecutionStart(
+        tabs,
+        "non-existent-tab",
+        "exec-1",
+      );
+      expect(result[0].executions).toHaveLength(1);
+      expect(result[0].executions[0].id).toBe("exec-1");
+    });
+    it("should not modify tabs when target cannot be resolved", () => {
+      const tab1 = createMockTab("workflow-1");
+      const tab2 = createMockTab("workflow-2");
+      const tabs = [tab1, tab2];
       const result = manager.handleExecutionStart(
         tabs,
         "non-existent-tab",
@@ -84,6 +96,19 @@ describe("ExecutionStateManager", () => {
       );
       expect(result).toEqual(tabs);
       expect(result[0].executions).toHaveLength(0);
+      expect(result[1].executions).toHaveLength(0);
+    });
+    it("should resolve tab by workflowId when activeTabId does not match", () => {
+      const tabs = [createMockTab("workflow-1"), createMockTab("workflow-2")];
+      const result = manager.handleExecutionStart(
+        tabs,
+        "non-existent-tab",
+        "exec-1",
+        "workflow-2",
+      );
+      expect(result[0].executions).toHaveLength(0);
+      expect(result[1].executions).toHaveLength(1);
+      expect(result[1].executions[0].id).toBe("exec-1");
     });
     it("should not modify non-active tabs", () => {
       const tab1 = createMockTab("workflow-1");
@@ -580,6 +605,29 @@ describe("ExecutionStateManager", () => {
         },
       );
       expect(result[0].executions[0].status).toBe("failed");
+    });
+    it("should apply completedAt from camelCase API payload", () => {
+      const exec = {
+        id: "exec-1",
+        status: "running",
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      };
+      const tabs = [createMockTab("workflow-1", [exec])];
+      const result = manager.mergeExecutionFromServer(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        {
+          status: "completed",
+          logs: [],
+          completedAt: "2026-01-01T12:00:00Z",
+        },
+      );
+      expect(result[0].executions[0].completedAt).toEqual(
+        new Date("2026-01-01T12:00:00Z"),
+      );
     });
   });
   describe("handleExecutionNodeUpdate", () => {

@@ -28,7 +28,12 @@ class WorkflowExecutorTest {
         WorkflowInputSourceService inputSvc = new WorkflowInputSourceService("", new ObjectMapper());
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(mockLlmClient, null, null, new ObjectMapper()),
+                        new AgentNodeExecutor(
+                                mockLlmClient,
+                                null,
+                                null,
+                                new ObjectMapper(),
+                                new AdkAgentRunner(new org.springframework.mock.env.MockEnvironment())),
                         new ConditionNodeExecutor(new ObjectMapper()),
                         new LoopNodeExecutor(new ObjectMapper()),
                         new ToolNodeExecutor(),
@@ -296,7 +301,12 @@ class WorkflowExecutorTest {
         NodeTypeParser nodeTypeParser = new NodeTypeParser();
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(failingClient, null, null, new ObjectMapper()),
+                        new AgentNodeExecutor(
+                                failingClient,
+                                null,
+                                null,
+                                new ObjectMapper(),
+                                new AdkAgentRunner(new org.springframework.mock.env.MockEnvironment())),
                         new ConditionNodeExecutor(new ObjectMapper()),
                         new LoopNodeExecutor(new ObjectMapper()),
                         new ToolNodeExecutor()),
@@ -342,7 +352,8 @@ class WorkflowExecutorTest {
         WorkflowInputSourceService inputSvc = new WorkflowInputSourceService("", new ObjectMapper());
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(slow, null, null, new ObjectMapper()),
+                        new AgentNodeExecutor(
+                                slow, null, null, new ObjectMapper(), new AdkAgentRunner(new org.springframework.mock.env.MockEnvironment())),
                         new ConditionNodeExecutor(new ObjectMapper()),
                         new LoopNodeExecutor(new ObjectMapper()),
                         new ToolNodeExecutor(),

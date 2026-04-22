@@ -251,7 +251,10 @@ describe("useWorkflowExecution", () => {
       });
       await waitForWithTimeout(() => {
         expect(mockOnExecutionStart).toHaveBeenCalledTimes(2);
-        expect(mockOnExecutionStart).toHaveBeenLastCalledWith("exec-123");
+        expect(mockOnExecutionStart).toHaveBeenLastCalledWith(
+          "exec-123",
+          "workflow-id",
+        );
       });
     });
     it("should handle execution errors", async () => {
@@ -416,6 +419,7 @@ describe("useWorkflowExecution", () => {
         expect(mockOnExecutionStart).toHaveBeenCalledTimes(1);
         expect(mockOnExecutionStart).toHaveBeenCalledWith(
           expect.stringMatching(/^pending-/),
+          "workflow-id",
         );
       });
     });
@@ -1893,7 +1897,10 @@ describe("useWorkflowExecution", () => {
         });
       });
       await waitForWithTimeout(() => {
-        expect(mockOnExecutionStart).toHaveBeenCalledWith(realExecutionId);
+        expect(mockOnExecutionStart).toHaveBeenCalledWith(
+          realExecutionId,
+          "workflow-id",
+        );
       });
     });
     it("should verify exact logical AND execution.execution_id && execution.execution_id !== tempExecutionId - execution_id is null", async () => {
@@ -2635,7 +2642,10 @@ describe("useWorkflowExecution", () => {
         });
       });
       await waitForWithTimeout(() => {
-        expect(mockOnExecutionStart).toHaveBeenCalledWith("exec-123");
+        expect(mockOnExecutionStart).toHaveBeenCalledWith(
+          "exec-123",
+          "workflow-id",
+        );
       });
     });
     it("should verify exact .catch callback receives error parameter", async () => {
@@ -2880,7 +2890,10 @@ describe("useWorkflowExecution", () => {
         });
       });
       await waitForWithTimeout(() => {
-        expect(mockOnExecutionStart).toHaveBeenCalledWith("exec-123");
+        expect(mockOnExecutionStart).toHaveBeenCalledWith(
+          "exec-123",
+          "workflow-id",
+        );
       });
     });
     it("should verify exact error.response?.data?.detail property access", async () => {
@@ -3113,7 +3126,10 @@ describe("useWorkflowExecution", () => {
         });
       });
       await waitForWithTimeout(() => {
-        expect(mockOnExecutionStart).toHaveBeenCalledWith("exec-456");
+        expect(mockOnExecutionStart).toHaveBeenCalledWith(
+          "exec-456",
+          "workflow-id",
+        );
       });
     });
     it("should verify exact currentWorkflowId variable assignment", async () => {
@@ -3575,7 +3591,10 @@ describe("useWorkflowExecution", () => {
         });
       });
       await waitForWithTimeout(() => {
-        expect(mockOnExecutionStart).toHaveBeenCalledWith("exec-789");
+        expect(mockOnExecutionStart).toHaveBeenCalledWith(
+          "exec-789",
+          "workflow-id",
+        );
       });
     });
     it("should verify exact template literal Failed to execute workflow: ${errorMessage}", async () => {
@@ -4072,7 +4091,10 @@ describe("useWorkflowExecution", () => {
           });
         });
         await waitForWithTimeout(() => {
-          expect(mockOnExecutionStart).toHaveBeenCalledWith("exec-123");
+          expect(mockOnExecutionStart).toHaveBeenCalledWith(
+            "exec-123",
+            "workflow-id",
+          );
         });
       });
       it("should verify exact if (execution.execution_id && execution.execution_id !== tempExecutionId) - first false", async () => {
@@ -4340,7 +4362,10 @@ describe("useWorkflowExecution", () => {
             expect(mockOnExecutionStart).toHaveBeenCalledTimes(2);
           });
         });
-        expect(mockOnExecutionStart).toHaveBeenCalledWith("real-execution-id");
+        expect(mockOnExecutionStart).toHaveBeenCalledWith(
+          "real-execution-id",
+          "workflow-id",
+        );
       });
       it("should verify exact execution.execution_id === tempExecutionId comparison", async () => {
         mockWorkflowIdRef.current = "workflow-id";
@@ -4788,6 +4813,7 @@ describe("useWorkflowExecution", () => {
         expect(mockOnExecutionStart).toHaveBeenCalledTimes(1);
         expect(mockOnExecutionStart).toHaveBeenCalledWith(
           expect.stringMatching(/^pending-/),
+          "workflow-id",
         );
       });
       it("should verify exact execution && execution.execution_id && execution.execution_id !== tempExecutionId check - execution.execution_id is null", async () => {
@@ -4818,6 +4844,7 @@ describe("useWorkflowExecution", () => {
         expect(mockOnExecutionStart).toHaveBeenCalledTimes(1);
         expect(mockOnExecutionStart).toHaveBeenCalledWith(
           expect.stringMatching(/^pending-/),
+          "workflow-id",
         );
       });
       it("should verify exact execution && execution.execution_id && execution.execution_id !== tempExecutionId check - execution.execution_id is undefined", async () => {
@@ -4848,6 +4875,7 @@ describe("useWorkflowExecution", () => {
         expect(mockOnExecutionStart).toHaveBeenCalledTimes(1);
         expect(mockOnExecutionStart).toHaveBeenCalledWith(
           expect.stringMatching(/^pending-/),
+          "workflow-id",
         );
       });
       it("should verify exact execution && execution.execution_id && execution.execution_id !== tempExecutionId check - execution.execution_id === tempExecutionId", async () => {
@@ -4887,6 +4915,7 @@ describe("useWorkflowExecution", () => {
         expect(mockOnExecutionStart).toHaveBeenCalledTimes(1);
         expect(mockOnExecutionStart).toHaveBeenCalledWith(
           expect.stringMatching(/^pending-/),
+          "workflow-id",
         );
       });
       it('should verify exact error?.response?.data?.detail || error?.message || "Unknown error" check - error.response.data.detail exists', async () => {
@@ -5195,7 +5224,10 @@ describe("useWorkflowExecution", () => {
             expect(mockApi.executeWorkflow).toHaveBeenCalled();
           });
         });
-        expect(mockOnExecutionStart).toHaveBeenCalledWith(realExecutionId);
+        expect(mockOnExecutionStart).toHaveBeenCalledWith(
+          realExecutionId,
+          "workflow-id",
+        );
       });
       it("should verify execution.execution_id === tempExecutionId (should not update)", async () => {
         mockWorkflowIdRef.current = "workflow-id";
@@ -5849,7 +5881,10 @@ describe("useWorkflowExecution", () => {
           });
         });
         expect(mockOnExecutionStart2).toHaveBeenCalled();
-        expect(mockOnExecutionStart2).toHaveBeenCalledWith("exec-123");
+        expect(mockOnExecutionStart2).toHaveBeenCalledWith(
+          "exec-123",
+          "workflow-1",
+        );
       });
       it("should verify exact conditional: if (execution && execution.execution_id && execution.execution_id !== tempExecutionId)", async () => {
         const mockOnExecutionStart2 = jest.fn();

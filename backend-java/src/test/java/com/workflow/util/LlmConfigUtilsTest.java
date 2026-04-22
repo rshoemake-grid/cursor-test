@@ -3,11 +3,14 @@ package com.workflow.util;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LlmConfigUtilsTest {
@@ -91,5 +94,44 @@ class LlmConfigUtilsTest {
         assertTrue(ctx.url().startsWith("https://aiplatform.googleapis.com/v1/projects/p-test/locations/global/"));
         assertTrue(ctx.url().endsWith("/endpoints/openapi/chat/completions"));
         assertEquals("google/gemini-3.1-pro-preview", ctx.model());
+    }
+
+    @Test
+    void validateAdkGeminiAuth_geminiApiKeyInEnv_ok() {
+        MockEnvironment env = new MockEnvironment().withProperty("GEMINI_API_KEY", "gk-test");
+        assertDoesNotThrow(() -> LlmConfigUtils.validateAdkGeminiAuth(Map.of("type", "openai"), env));
+    }
+
+    @Test
+    void validateAdkGeminiAuth_adcJsonPathAndProject_ok() throws Exception {
+        Path json = Files.createTempFile("sa", ".json");
+        Files.writeString(json, "{\"type\":\"service_account\",\"project_id\":\"from-json\"}");
+        MockEnvironment env =
+                new MockEnvironment()
+                        .withProperty("GOOGLE_APPLICATION_CREDENTIALS", json.toString())
+                        .withProperty("GOOGLE_CLOUD_PROJECT", "env-proj");
+        assertDoesNotThrow(() -> LlmConfigUtils.validateAdkGeminiAuth(Map.of(), env));
+    }
+
+    @Test
+    void validateApiKey_geminiType_adcJsonPathAndProject_ok_sameAsWorkflowChat() throws Exception {
+        Path json = Files.createTempFile("sa-chat", ".json");
+        Files.writeString(json, "{\"type\":\"service_account\",\"project_id\":\"from-json\"}");
+        MockEnvironment env =
+                new MockEnvironment()
+                        .withProperty("GOOGLE_APPLICATION_CREDENTIALS", json.toString())
+                        .withProperty("GOOGLE_CLOUD_PROJECT", "env-proj");
+        Map<String, Object> cfg = Map.of("type", "gemini", "api_key", "", "model", "gemini-2.0-flash");
+        assertDoesNotThrow(() -> LlmConfigUtils.validateApiKey(cfg, env));
+    }
+
+    @Test
+    void validateAdkGeminiAuth_noCredentials_throws() {
+        MockEnvironment env = new MockEnvironment();
+        IllegalStateException ex =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> LlmConfigUtils.validateAdkGeminiAuth(Map.of("type", "gemini"), env));
+        assertEquals(ErrorMessages.NO_LLM_API_KEY, ex.getMessage());
     }
 }

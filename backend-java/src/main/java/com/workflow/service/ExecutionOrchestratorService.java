@@ -93,8 +93,9 @@ public class ExecutionOrchestratorService {
             executionService.updateExecutionState(executionId, state);
         } catch (Exception e) {
             log.error("Background execution {} failed: {}", executionId, e.getMessage(), e);
-            executionService.appendLogAndUpdateExecutionState(executionId, userId, ExecutionLogConstants.LOG_LEVEL_ERROR, null, ErrorMessages.EXECUTION_FAILED,
-                    ExecutionStatus.FAILED.getValue(), ErrorMessages.EXECUTION_FAILED);
+            String detail = ErrorMessages.executionFailureDetail(e);
+            executionService.appendLogAndUpdateExecutionState(executionId, userId, ExecutionLogConstants.LOG_LEVEL_ERROR, null, detail,
+                    ExecutionStatus.FAILED.getValue(), detail);
         } finally {
             if (snapshotThread != null) {
                 snapshotThread.interrupt();

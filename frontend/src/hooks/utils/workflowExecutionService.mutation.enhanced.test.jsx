@@ -34,8 +34,8 @@ describe("WorkflowExecutionService - Enhanced Mutation Killers", () => {
           onExecutionStart,
           // Provided
         });
-        expect(onExecutionStart).toHaveBeenCalledWith("pending-123");
-        expect(onExecutionStart).toHaveBeenCalledWith("exec-123");
+        expect(onExecutionStart).toHaveBeenCalledWith("pending-123", "workflow-1");
+        expect(onExecutionStart).toHaveBeenCalledWith("exec-123", "workflow-1");
       });
       it("should verify exact falsy check - onExecutionStart is undefined", async () => {
         const execution = {
@@ -76,7 +76,7 @@ describe("WorkflowExecutionService - Enhanced Mutation Killers", () => {
           onExecutionStart,
         });
         expect(result.executionId).toBe("pending-123");
-        expect(onExecutionStart).toHaveBeenCalledWith("pending-123");
+        expect(onExecutionStart).toHaveBeenCalledWith("pending-123", "workflow-1");
         expect(onExecutionStart).toHaveBeenCalledTimes(1);
       });
       it("should verify optional chaining - execution is undefined", async () => {
@@ -89,7 +89,7 @@ describe("WorkflowExecutionService - Enhanced Mutation Killers", () => {
           onExecutionStart,
         });
         expect(result.executionId).toBe("pending-123");
-        expect(onExecutionStart).toHaveBeenCalledWith("pending-123");
+        expect(onExecutionStart).toHaveBeenCalledWith("pending-123", "workflow-1");
         expect(onExecutionStart).toHaveBeenCalledTimes(1);
       });
       it("should verify optional chaining - execution.execution_id is null", async () => {
@@ -104,7 +104,7 @@ describe("WorkflowExecutionService - Enhanced Mutation Killers", () => {
           onExecutionStart,
         });
         expect(result.executionId).toBe("pending-123");
-        expect(onExecutionStart).toHaveBeenCalledWith("pending-123");
+        expect(onExecutionStart).toHaveBeenCalledWith("pending-123", "workflow-1");
         expect(onExecutionStart).toHaveBeenCalledTimes(1);
       });
       it("should verify optional chaining - execution.execution_id is undefined", async () => {
@@ -119,7 +119,7 @@ describe("WorkflowExecutionService - Enhanced Mutation Killers", () => {
           onExecutionStart,
         });
         expect(result.executionId).toBe("pending-123");
-        expect(onExecutionStart).toHaveBeenCalledWith("pending-123");
+        expect(onExecutionStart).toHaveBeenCalledWith("pending-123", "workflow-1");
         expect(onExecutionStart).toHaveBeenCalledTimes(1);
       });
       it("should verify optional chaining - execution.execution_id exists", async () => {
@@ -134,8 +134,8 @@ describe("WorkflowExecutionService - Enhanced Mutation Killers", () => {
           onExecutionStart,
         });
         expect(result.executionId).toBe("exec-123");
-        expect(onExecutionStart).toHaveBeenCalledWith("pending-123");
-        expect(onExecutionStart).toHaveBeenCalledWith("exec-123");
+        expect(onExecutionStart).toHaveBeenCalledWith("pending-123", "workflow-1");
+        expect(onExecutionStart).toHaveBeenCalledWith("exec-123", "workflow-1");
       });
     });
     describe("execution.execution_id !== tempExecutionId comparison", () => {
@@ -153,7 +153,7 @@ describe("WorkflowExecutionService - Enhanced Mutation Killers", () => {
         });
         expect(result.executionId).toBe("exec-123");
         expect(result.executionId).not.toBe("pending-123");
-        expect(onExecutionStart).toHaveBeenCalledWith("exec-123");
+        expect(onExecutionStart).toHaveBeenCalledWith("exec-123", "workflow-1");
       });
       it("should verify exact equality - execution_id same as temp", async () => {
         const onExecutionStart = jest.fn();
@@ -185,7 +185,7 @@ describe("WorkflowExecutionService - Enhanced Mutation Killers", () => {
           onExecutionStart,
           // Provided
         });
-        expect(onExecutionStart).toHaveBeenCalledWith("exec-123");
+        expect(onExecutionStart).toHaveBeenCalledWith("exec-123", "workflow-1");
         expect(onExecutionStart).toHaveBeenCalledTimes(2);
       });
       it("should verify first condition false - same ID", async () => {

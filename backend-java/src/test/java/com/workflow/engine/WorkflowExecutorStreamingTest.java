@@ -60,7 +60,12 @@ class WorkflowExecutorStreamingTest {
         WorkflowInputSourceService inputSvc = new WorkflowInputSourceService("", om);
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(mockLlmClient, null, null, om),
+                        new AgentNodeExecutor(
+                                mockLlmClient,
+                                null,
+                                null,
+                                om,
+                                new AdkAgentRunner(new org.springframework.mock.env.MockEnvironment())),
                         new ConditionNodeExecutor(om),
                         new LoopNodeExecutor(om),
                         new ToolNodeExecutor(),

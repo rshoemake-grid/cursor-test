@@ -25,12 +25,13 @@ function useExecutionManagement({
   // Match tabsRef: update every render so synchronous onExecutionStart sees the current tab (useEffect alone runs too late).
   activeTabIdRef.current = activeTabId;
   const handleExecutionStart = useCallback(
-    (executionId) => {
+    (executionId, workflowId) => {
       const prevTabs = tabsRef.current;
       const updatedTabs = stateManager.handleExecutionStart(
         prevTabs,
         activeTabIdRef.current,
         executionId,
+        workflowId,
       );
       if (updatedTabs === prevTabs) {
         return;

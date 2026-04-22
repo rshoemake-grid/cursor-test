@@ -255,7 +255,10 @@ describe("useWorkflowExecution - No Coverage Paths", () => {
         result.current.handleConfirmExecute();
         await new Promise((resolve) => setTimeout(resolve, 50));
       });
-      expect(mockOnExecutionStart).toHaveBeenCalledWith("exec-123");
+      expect(mockOnExecutionStart).toHaveBeenCalledWith(
+        "exec-123",
+        "workflow-123",
+      );
     });
   });
   describe("executeWorkflow - authentication and validation paths", () => {

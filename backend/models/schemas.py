@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class NodeType(str, Enum):
@@ -30,23 +30,50 @@ class ExecutionStatus(str, Enum):
 
 class ADKAgentConfig(BaseModel):
     """Configuration for Google ADK agent"""
+
+    model_config = ConfigDict(populate_by_name=True)
+
     name: str
     description: Optional[str] = None
     instruction: Optional[str] = None  # Maps to system_prompt
-    sub_agents: List[str] = Field(default_factory=list)  # List of sub-agent config paths or IDs
-    adk_tools: List[str] = Field(default_factory=list)  # ADK built-in tools (google_search, etc.)
-    yaml_config: Optional[str] = None  # Raw YAML config if provided
+    sub_agents: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("sub_agents", "subAgents"),
+    )
+    adk_tools: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("adk_tools", "adkTools"),
+    )
+    yaml_config: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("yaml_config", "yamlConfig"),
+    )
 
 
 class AgentConfig(BaseModel):
     """Configuration for an agent node"""
-    agent_type: str = "workflow"  # "workflow" (default) or "adk"
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    agent_type: str = Field(
+        default="workflow",
+        validation_alias=AliasChoices("agent_type", "agentType"),
+    )  # "workflow" (default) or "adk"
     model: str = "gpt-4o-mini"
-    system_prompt: Optional[str] = None
+    system_prompt: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("system_prompt", "systemPrompt"),
+    )
     temperature: float = 0.7
-    max_tokens: Optional[int] = None
+    max_tokens: Optional[int] = Field(
+        default=None,
+        validation_alias=AliasChoices("max_tokens", "maxTokens"),
+    )
     tools: List[str] = Field(default_factory=list)
-    adk_config: Optional[ADKAgentConfig] = None  # ADK-specific configuration
+    adk_config: Optional[ADKAgentConfig] = Field(
+        default=None,
+        validation_alias=AliasChoices("adk_config", "adkConfig"),
+    )
 
 
 class InputMapping(BaseModel):

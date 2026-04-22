@@ -25,14 +25,40 @@ class ExecutionStateManager {
     this.logger = injectedLogger;
   }
   /**
+   * Prefer the tab for the workflow being executed so a stale activeTabId
+   * does not suppress the execution row in the console.
+   */
+  resolveExecutionTargetTabId(tabs, activeTabId, workflowId) {
+    if (workflowId != null && workflowId !== "") {
+      const byWorkflow = tabs.find((t) => t.workflowId === workflowId);
+      if (byWorkflow) {
+        return byWorkflow.id;
+      }
+    }
+    if (activeTabId != null && activeTabId !== "") {
+      const byActive = tabs.find((t) => t.id === activeTabId);
+      if (byActive) {
+        return activeTabId;
+      }
+    }
+    if (tabs.length === 1) {
+      return tabs[0].id;
+    }
+    return null;
+  }
+  /**
    * Handle execution start - add to active tab's executions
    * Single Responsibility: Only handles execution start logic
    */
-  handleExecutionStart(tabs, activeTabId, executionId) {
-    const activeTab = tabs.find((t) => t.id === activeTabId);
-    if (!activeTab) return tabs;
+  handleExecutionStart(tabs, activeTabId, executionId, workflowId) {
+    const targetTabId = this.resolveExecutionTargetTabId(
+      tabs,
+      activeTabId,
+      workflowId,
+    );
+    if (!targetTabId) return tabs;
     return tabs.map((tab) => {
-      if (tab.id !== activeTabId) return tab;
+      if (tab.id !== targetTabId) return tab;
       const execList = tab.executions ?? [];
       if (isRealExecutionId(executionId)) {
         const pendingExecutions = execList
@@ -241,16 +267,18 @@ class ExecutionStateManager {
                 ? String(api.error)
                 : undefined;
 
+            const apiNodeStates = api?.node_states ?? api?.nodeStates;
             const hasApiNodes =
-              api?.node_states != null &&
-              typeof api.node_states === "object" &&
-              Object.keys(api.node_states).length > 0;
-            const nextNodes = hasApiNodes ? api.node_states : (exec.nodes ?? {});
+              apiNodeStates != null &&
+              typeof apiNodeStates === "object" &&
+              Object.keys(apiNodeStates).length > 0;
+            const nextNodes = hasApiNodes ? apiNodeStates : (exec.nodes ?? {});
 
+            const apiCompletedAtRaw = api?.completed_at ?? api?.completedAt;
             const hasCompletedAt =
-              api?.completed_at != null && api?.completed_at !== "";
+              apiCompletedAtRaw != null && apiCompletedAtRaw !== "";
             const nextCompletedAt = hasCompletedAt
-              ? new Date(api.completed_at)
+              ? new Date(apiCompletedAtRaw)
               : exec.completedAt;
 
             return {

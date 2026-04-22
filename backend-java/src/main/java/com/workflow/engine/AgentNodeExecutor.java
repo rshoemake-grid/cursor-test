@@ -38,13 +38,19 @@ public class AgentNodeExecutor implements NodeExecutor {
     private final Environment environment;
     private final SettingsService settingsService;
     private final ObjectMapper objectMapper;
+    private final AdkRunner adkRunner;
 
-    public AgentNodeExecutor(LlmApiClient llmClient, Environment environment, SettingsService settingsService,
-                             ObjectMapper objectMapper) {
+    public AgentNodeExecutor(
+            LlmApiClient llmClient,
+            Environment environment,
+            SettingsService settingsService,
+            ObjectMapper objectMapper,
+            AdkRunner adkRunner) {
         this.llmClient = llmClient;
         this.environment = environment;
         this.settingsService = settingsService;
         this.objectMapper = objectMapper;
+        this.adkRunner = adkRunner;
     }
 
     @Override
@@ -73,14 +79,41 @@ public class AgentNodeExecutor implements NodeExecutor {
         }
 
         String model = ObjectUtils.orDefault(agentModel, LlmConfigUtils.getModel(effectiveConfig));
-        LlmConfigUtils.validateApiKey(effectiveConfig, environment);
+
+        String agentKind =
+                ObjectUtils.toStringOrDefault(ObjectUtils.safeGet(cfg, AgentConfig::getAgentType), "workflow")
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+
+        Map<String, Object> adkLlmConfig = null;
+        if ("adk".equals(agentKind)) {
+            adkLlmConfig = resolveAdkLlmConfigSameAsChat(effectiveConfig, model, ctx);
+            if (LlmVertexGeminiSupport.isGeminiType(adkLlmConfig)) {
+                LlmConfigUtils.validateApiKey(adkLlmConfig, environment);
+            } else {
+                LlmConfigUtils.validateAdkGeminiAuth(effectiveConfig, environment);
+            }
+        } else {
+            LlmConfigUtils.validateApiKey(effectiveConfig, environment);
+        }
 
         String systemPrompt = ObjectUtils.orDefault(ObjectUtils.safeGet(cfg, AgentConfig::getSystemPrompt), "");
-        Object userContent = InputResolver.getFirstOf(inputs, "message", "data", "output");
-        if (userContent == null) {
-            userContent = inputs.values().stream().findFirst().orElse("");
+
+        String userText;
+        if ("adk".equals(agentKind)) {
+            userText = AdkWorkflowInputConverter.toUserMessage(inputs);
+        } else {
+            Object userContent = InputResolver.getFirstOf(inputs, "message", "data", "output");
+            if (userContent == null) {
+                userContent = inputs.values().stream().findFirst().orElse("");
+            }
+            userText = String.valueOf(userContent);
         }
-        String userText = String.valueOf(userContent);
+
+        if ("adk".equals(agentKind)) {
+            log.info("Agent node {}: executing via Google ADK (LlmAgent + InMemoryRunner)", node.getId());
+            return adkRunner.run(node, cfg, userText, ctx, adkLlmConfig);
+        }
 
         int maxTokens = Optional.ofNullable(ObjectUtils.safeGet(cfg, AgentConfig::getMaxTokens)).orElse(1024);
         double temperature = Optional.ofNullable(ObjectUtils.safeGet(cfg, AgentConfig::getTemperature)).orElse(0.7);
@@ -140,5 +173,30 @@ public class AgentNodeExecutor implements NodeExecutor {
                 yield llmClient.chatCompletions(requestCtx.url(), requestCtx.apiKey(), requestCtx.model(), messages);
             }
         };
+    }
+
+    /**
+     * Uses the same stored LLM config as {@link com.workflow.service.WorkflowChatService#chat} when that config is a
+     * Gemini provider ({@link SettingsService#getLlmConfigForWorkflowChat}); agent node {@code model} still overrides
+     * the model id for the ADK call. Otherwise uses execution {@code effectiveConfig}.
+     */
+    private Map<String, Object> resolveAdkLlmConfigSameAsChat(
+            Map<String, Object> effectiveConfig, String model, NodeExecutionContext ctx) {
+        if (settingsService == null || ctx.userId() == null) {
+            return effectiveConfig;
+        }
+        Optional<Map<String, Object>> chatOpt = settingsService.getLlmConfigForWorkflowChat(ctx.userId());
+        if (chatOpt.isEmpty()) {
+            return effectiveConfig;
+        }
+        Map<String, Object> chatMap = new HashMap<>(chatOpt.get());
+        String ctype =
+                ObjectUtils.toStringOrDefault(chatMap.get("type"), "openai").trim().toLowerCase(Locale.ROOT);
+        if (!"gemini".equals(ctype)) {
+            return effectiveConfig;
+        }
+        chatMap.put("model", model);
+        log.debug("ADK agent node: Gemini auth from workflow chat provider settings (model={}).", model);
+        return chatMap;
     }
 }

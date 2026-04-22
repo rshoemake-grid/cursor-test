@@ -37,8 +37,8 @@ describe("WorkflowExecutionService", () => {
       expect(mockApi.executeWorkflow).toHaveBeenCalledWith("workflow-1", {
         key: "value",
       });
-      expect(onExecutionStart).toHaveBeenCalledWith("pending-123");
-      expect(onExecutionStart).toHaveBeenCalledWith("exec-123");
+      expect(onExecutionStart).toHaveBeenCalledWith("pending-123", "workflow-1");
+      expect(onExecutionStart).toHaveBeenCalledWith("exec-123", "workflow-1");
       expect(result.executionId).toBe("exec-123");
       expect(result.tempExecutionId).toBe("pending-123");
     });
@@ -54,7 +54,7 @@ describe("WorkflowExecutionService", () => {
         onExecutionStart,
       });
       expect(onExecutionStart).toHaveBeenCalledTimes(1);
-      expect(onExecutionStart).toHaveBeenCalledWith("pending-123");
+      expect(onExecutionStart).toHaveBeenCalledWith("pending-123", "workflow-1");
       expect(result.executionId).toBe("pending-123");
     });
     it("should not call onExecutionStart when not provided", async () => {
@@ -80,7 +80,21 @@ describe("WorkflowExecutionService", () => {
           onExecutionStart,
         }),
       ).rejects.toThrow("API Error");
-      expect(onExecutionStart).toHaveBeenCalledWith("pending-123");
+      expect(onExecutionStart).toHaveBeenCalledWith("pending-123", "workflow-1");
+    });
+    it("should accept camelCase executionId from Java API", async () => {
+      const execution = {
+        executionId: "exec-java-1",
+      };
+      mockApi.executeWorkflow.mockResolvedValue(execution);
+      const result = await service.executeWorkflow({
+        workflowId: "workflow-1",
+        inputs: {},
+        tempExecutionId: "pending-123",
+        onExecutionStart,
+      });
+      expect(result.executionId).toBe("exec-java-1");
+      expect(onExecutionStart).toHaveBeenCalledWith("exec-java-1", "workflow-1");
     });
   });
   describe("createTempExecutionId", () => {

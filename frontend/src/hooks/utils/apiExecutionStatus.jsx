@@ -4,6 +4,21 @@
  * DB rows where completed_at is set while status still shows running.
  */
 
+function apiExecutionCompletedAtRaw(execution) {
+  if (execution == null || typeof execution !== "object") {
+    return null;
+  }
+  const snake = execution.completed_at;
+  const camel = execution.completedAt;
+  const v =
+    snake != null && snake !== ""
+      ? snake
+      : camel != null && camel !== ""
+        ? camel
+        : null;
+  return v;
+}
+
 function normalizeApiExecutionStatusToken(raw) {
   if (raw == null) {
     return "";
@@ -36,8 +51,8 @@ function mapApiStatusToExecutionUiStatus(execution) {
   if (token === "cancelled") {
     return "cancelled";
   }
-  const hasCompletedAt =
-    execution.completed_at != null && execution.completed_at !== "";
+  const completedAtRaw = apiExecutionCompletedAtRaw(execution);
+  const hasCompletedAt = completedAtRaw != null && completedAtRaw !== "";
   if (
     hasCompletedAt === true &&
     (token === "running" || token === "pending" || token === "")
@@ -88,15 +103,16 @@ async function hydrateExecutionLogsIfEmpty(apiClient, snapshot) {
   if (apiClient == null || typeof apiClient.getExecutionLogs !== "function") {
     return snapshot;
   }
-  const id = snapshot.execution_id;
+  const id = snapshot.execution_id ?? snapshot.executionId;
   if (id == null || id === "") {
     return snapshot;
   }
   const mapped = mapApiStatusToExecutionUiStatus(snapshot);
   const hasErr =
     snapshot.error != null && String(snapshot.error).trim() !== "";
+  const snapCompletedAt = apiExecutionCompletedAtRaw(snapshot);
   const hasCompletedAt =
-    snapshot.completed_at != null && snapshot.completed_at !== "";
+    snapCompletedAt != null && snapCompletedAt !== "";
   const terminal =
     mapped === "failed" ||
     mapped === "completed" ||

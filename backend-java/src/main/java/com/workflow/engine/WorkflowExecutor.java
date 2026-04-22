@@ -390,15 +390,16 @@ public class WorkflowExecutor {
             output = nodeRegistry.execute(node, nodeInputs, readSnapshot, ctx);
         } catch (Exception e) {
             log.warn("Node {} failed: {}", node.getId(), e.getMessage());
+            String detail = ErrorMessages.executionFailureDetail(e);
             nodeState.setStatus(ExecutionStatus.FAILED.getValue());
-            nodeState.setError(ErrorMessages.EXECUTION_FAILED);
+            nodeState.setError(detail);
             nodeState.setCompletedAt(LocalDateTime.now());
             appendLog(canonicalState, streamUpdates, ExecutionLogConstants.LOG_LEVEL_ERROR, node.getId(),
-                    "Node failed: " + ObjectUtils.orDefault(e.getMessage(), ErrorMessages.EXECUTION_FAILED));
+                    "Node failed: " + detail);
             if (streamUpdates && streamBroadcaster != null) {
                 streamBroadcaster.broadcastNodeUpdate(canonicalState.getExecutionId(), node.getId(), nodeState.toMap());
             }
-            return new SingleNodeOutcome(nodeState, null, true, e.getMessage());
+            return new SingleNodeOutcome(nodeState, null, true, detail);
         }
 
         nodeState.setStatus(ExecutionStatus.COMPLETED.getValue());
