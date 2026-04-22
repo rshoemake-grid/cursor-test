@@ -6,36 +6,41 @@ import {
 } from "./executionIdValidation";
 import { safeGetTabsRefCurrent } from "./safeRefs";
 import { mapApiStatusToExecutionUiStatus } from "./apiExecutionStatus";
+
+/** Default cap: counts only ticks where at least one execution is still "running" (~3h at 2s). */
+const DEFAULT_MAX_POLL_ITERATIONS = 5400;
+
 function useExecutionPolling({
   tabsRef,
   setTabs,
   apiClient,
   logger: injectedLogger = logger,
   pollInterval = 2e3,
+  maxIterations = DEFAULT_MAX_POLL_ITERATIONS,
 }) {
   useEffect(() => {
     const isPositive = pollInterval > 0;
     const isWithinLimit = pollInterval < 6e4;
     const isValidInterval = isPositive === true && isWithinLimit === true;
     const safePollInterval = isValidInterval === true ? pollInterval : 2e3;
+    const safeMaxIterations =
+      typeof maxIterations === "number" &&
+      maxIterations > 0 &&
+      maxIterations <= 1_000_000
+        ? Math.floor(maxIterations)
+        : DEFAULT_MAX_POLL_ITERATIONS;
     let iterationCount = 0;
-    const MAX_ITERATIONS = 1e3;
     const interval = setInterval(async () => {
-      iterationCount++;
-      const exceedsMaxIterations = iterationCount > MAX_ITERATIONS;
-      if (exceedsMaxIterations === true) {
-        injectedLogger.warn(
-          `[WorkflowTabs] Max polling iterations (${MAX_ITERATIONS}) reached, stopping polling`,
-        );
-        clearInterval(interval);
-        return;
-      }
       const currentTabs = safeGetTabsRefCurrent(tabsRef);
       if (currentTabs === null) {
+        iterationCount = 0;
         return;
       }
       const isArray = Array.isArray(currentTabs) === true;
-      if (isArray === false) return;
+      if (isArray === false) {
+        iterationCount = 0;
+        return;
+      }
       const runningExecutions = currentTabs.flatMap((tab) => {
         const hasTab = tab !== null && tab !== void 0;
         const hasExecutions =
@@ -66,7 +71,19 @@ function useExecutionPolling({
         });
       });
       const hasRunningExecutions = runningExecutions.length > 0;
-      if (hasRunningExecutions === false) return;
+      if (hasRunningExecutions === false) {
+        iterationCount = 0;
+        return;
+      }
+      iterationCount++;
+      const exceedsMaxIterations = iterationCount > safeMaxIterations;
+      if (exceedsMaxIterations === true) {
+        injectedLogger.warn(
+          `[WorkflowTabs] Max polling iterations (${safeMaxIterations}) reached while executions still running, stopping polling`,
+        );
+        clearInterval(interval);
+        return;
+      }
       const exceedsLimit = runningExecutions.length > 50;
       if (exceedsLimit === true) {
         injectedLogger.warn(
@@ -173,6 +190,6 @@ function useExecutionPolling({
         clearInterval(interval);
       }
     };
-  }, [tabsRef, setTabs, apiClient, injectedLogger, pollInterval]);
+  }, [tabsRef, setTabs, apiClient, injectedLogger, pollInterval, maxIterations]);
 }
-export { useExecutionPolling };
+export { useExecutionPolling, DEFAULT_MAX_POLL_ITERATIONS };

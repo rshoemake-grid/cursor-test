@@ -49,7 +49,8 @@ describe("useExecutionPolling - Timeout Guards", () => {
           apiClient: mockApiClient,
           logger: mockLogger,
           pollInterval: 100,
-          // Fast interval for testing
+          maxIterations: 1000,
+          // Fast interval + lower cap for testing
         }),
       );
       for (let i = 0; i < 1001; i++) {
@@ -57,7 +58,9 @@ describe("useExecutionPolling - Timeout Guards", () => {
       }
       await waitFor(() => {
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining("Max polling iterations (1000) reached"),
+          expect.stringContaining(
+            "Max polling iterations (1000) reached while executions still running",
+          ),
         );
       });
       const callCountBefore = mockApiClient.getExecution.mock.calls.length;
@@ -65,6 +68,58 @@ describe("useExecutionPolling - Timeout Guards", () => {
       expect(mockApiClient.getExecution.mock.calls.length).toBe(
         callCountBefore,
       );
+    });
+    it("should reset iteration budget when idle so long sessions do not exhaust polling", async () => {
+      tabsRef.current = [
+        {
+          id: "tab-1",
+          executions: [],
+        },
+      ];
+      mockApiClient.getExecution.mockResolvedValue({
+        id: "exec-1",
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        node_states: {},
+        logs: [],
+      });
+      renderHook(() =>
+        useExecutionPolling({
+          tabsRef,
+          setTabs,
+          apiClient: mockApiClient,
+          logger: mockLogger,
+          pollInterval: 100,
+          maxIterations: 5,
+        }),
+      );
+      for (let i = 0; i < 20; i++) {
+        jest.advanceTimersByTime(100);
+      }
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+      tabsRef.current = [
+        {
+          id: "tab-1",
+          executions: [
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+            },
+          ],
+        },
+      ];
+      mockApiClient.getExecution.mockResolvedValue({
+        id: "exec-1",
+        status: "running",
+        completed_at: null,
+        node_states: {},
+        logs: [],
+      });
+      jest.advanceTimersByTime(100);
+      await waitFor(() => {
+        expect(mockApiClient.getExecution).toHaveBeenCalledWith("exec-1");
+      });
     });
   });
   describe("Invalid poll interval guard", () => {

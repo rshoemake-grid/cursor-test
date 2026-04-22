@@ -673,15 +673,16 @@ describe("useExecutionPolling", () => {
       };
       mockTabsRef.current = [createMockTab("workflow-1", [execution])];
       mockApi.getExecution.mockResolvedValue({ status: "running" });
+      const MAX_ITERATIONS = 1e3;
       renderHook(() =>
         useExecutionPolling({
           tabsRef: mockTabsRef,
           setTabs: mockSetTabs,
           apiClient: mockApi,
           pollInterval: 1e3,
+          maxIterations: MAX_ITERATIONS,
         }),
       );
-      const MAX_ITERATIONS = 1e3;
       for (let i = 0; i <= MAX_ITERATIONS; i++) {
         await act(async () => {
           jest.advanceTimersByTime(1e3);
@@ -690,7 +691,7 @@ describe("useExecutionPolling", () => {
       expect(mockApi.getExecution).toHaveBeenCalledTimes(MAX_ITERATIONS);
       expect(mockLoggerWarn).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Max polling iterations (${MAX_ITERATIONS}) reached`,
+          `Max polling iterations (${MAX_ITERATIONS}) reached while executions still running`,
         ),
       );
     });

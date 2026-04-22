@@ -85,6 +85,10 @@ def test_resolve_project_and_location_gemini_3_preview_uses_global(monkeypatch):
     assert loc == "global"
     _, loc2 = vertex_gemini.resolve_project_and_location("gemini-3-pro-preview")
     assert loc2 == "global"
+    _, loc_flash_lite = vertex_gemini.resolve_project_and_location(
+        "gemini-3.1-flash-lite-preview"
+    )
+    assert loc_flash_lite == "global"
 
 
 def test_vertex_openai_compat_base_url_global():

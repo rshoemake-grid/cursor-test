@@ -30,6 +30,7 @@ import {
   WorkflowEmptyMain,
   Icon16,
 } from "../styles/workflowBuilderShell.styled";
+import { canvasViewportStorageKey } from "../utils/canvasViewportStorageKey";
 function WorkflowTabs({
   initialWorkflowId,
   workflowLoadKey,
@@ -48,18 +49,21 @@ function WorkflowTabs({
     processedKeys,
   } = useWorkflowTabs();
   const builderRef = useRef(null);
-  /** tabId -> last React Flow viewport; pan/zoom is per-tab, not shared when switching. */
-  const tabViewportsRef = useRef(new Map());
+  /** Per-workflow (or per-unsaved-tab) React Flow viewport; same workflowId shares one pan/zoom. */
+  const canvasViewportsRef = useRef(new Map());
   const setActiveTabId = useCallback(
     (nextId) => {
       if (nextId !== activeTabId) {
         const vp = builderRef.current?.getViewport?.();
         if (vp && activeTabId) {
-          tabViewportsRef.current.set(activeTabId, {
-            x: vp.x,
-            y: vp.y,
-            zoom: vp.zoom,
-          });
+          const prevTab = tabsRef.current.find((t) => t.id === activeTabId);
+          if (prevTab) {
+            canvasViewportsRef.current.set(canvasViewportStorageKey(prevTab), {
+              x: vp.x,
+              y: vp.y,
+              zoom: vp.zoom,
+            });
+          }
         }
       }
       setActiveTabIdFromContext(nextId);
@@ -105,6 +109,29 @@ function WorkflowTabs({
     processedKeys,
     isAuthenticated,
   });
+  useEffect(() => {
+    const map = canvasViewportsRef.current;
+    for (const tab of tabs) {
+      const wf = tab.workflowId;
+      if (wf != null && wf !== "") {
+        const fromTab = canvasViewportStorageKey({
+          id: tab.id,
+          workflowId: null,
+        });
+        const toWf = canvasViewportStorageKey(tab);
+        if (map.has(fromTab) && fromTab !== toWf) {
+          map.set(toWf, map.get(fromTab));
+          map.delete(fromTab);
+        }
+      }
+    }
+    const validKeys = new Set(tabs.map((t) => canvasViewportStorageKey(t)));
+    for (const k of [...map.keys()]) {
+      if (!validKeys.has(k)) {
+        map.delete(k);
+      }
+    }
+  }, [tabs]);
   const tabOperations = useTabOperations({
     tabs,
     activeTabId,
@@ -148,7 +175,9 @@ function WorkflowTabs({
   );
   const activeTab = tabs.find((t) => t.id === activeTabId);
   const activeTabInitialViewport = activeTab
-    ? tabViewportsRef.current.get(activeTab.id) ?? null
+    ? canvasViewportsRef.current.get(
+        canvasViewportStorageKey(activeTab),
+      ) ?? null
     : null;
   const marketplacePublishing = useMarketplacePublishing({
     activeTab: activeTab
@@ -272,8 +301,34 @@ function WorkflowTabs({
             }))}
             callbacks={{
               onExecutionStart: handleExecutionStart,
-              onWorkflowSaved: (workflowId, name) =>
-                handleWorkflowSaved(activeTab.id, workflowId, name),
+              onWorkflowSaved: (workflowId, name) => {
+                const tabId = activeTab.id;
+                const tabOnlyKey = canvasViewportStorageKey({
+                  id: tabId,
+                  workflowId: null,
+                });
+                const savedKey = canvasViewportStorageKey({
+                  id: tabId,
+                  workflowId,
+                });
+                const vp =
+                  builderRef.current?.getViewport?.() ??
+                  canvasViewportsRef.current.get(tabOnlyKey);
+                if (
+                  vp != null &&
+                  Number.isFinite(vp.x) &&
+                  Number.isFinite(vp.y) &&
+                  Number.isFinite(vp.zoom)
+                ) {
+                  canvasViewportsRef.current.set(savedKey, {
+                    x: vp.x,
+                    y: vp.y,
+                    zoom: vp.zoom,
+                  });
+                  canvasViewportsRef.current.delete(tabOnlyKey);
+                }
+                handleWorkflowSaved(tabId, workflowId, name);
+              },
               onWorkflowModified: () => handleWorkflowModified(activeTab.id),
               onWorkflowLoaded: (workflowId, name) =>
                 handleLoadWorkflow(activeTab.id, workflowId, name),

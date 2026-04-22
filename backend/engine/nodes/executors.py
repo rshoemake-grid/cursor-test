@@ -73,7 +73,7 @@ async def execute_agent(executor: Any, node: Node, node_inputs: Dict[str, Any]) 
         node,
         llm_config=executor.llm_config,
         user_id=executor.user_id,
-        log_callback=None,
+        log_callback=executor._broadcaster.log,
         provider_resolver=executor.provider_resolver,
         settings_service=executor.settings_service,
     )

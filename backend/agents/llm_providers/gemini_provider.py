@@ -28,8 +28,16 @@ class GeminiProviderStrategy(ILLMProviderStrategy):
 
     @staticmethod
     def _gemini_model_requires_generate_content_api(model: str) -> bool:
-        """Models that need :generateContent (e.g. image output); not the OpenAI-compat chat API."""
+        """
+        Use Vertex :generateContent / AI Studio REST instead of the OpenAI-compat chat API.
+
+        Includes image-output models and **flash-lite** lines: the Vertex chat/completions
+        endpoint has been observed to stall indefinitely for ``*-flash-lite*`` while
+        ``:generateContent`` completes reliably for the same payload.
+        """
         m = (model or "").lower()
+        if "flash-lite" in m:
+            return True
         return any(
             sub in m
             for sub in ("flash-image", "pro-image", "nano-banana", "banana")

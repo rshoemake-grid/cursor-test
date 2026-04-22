@@ -67,7 +67,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: null,
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -89,7 +88,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -122,7 +120,6 @@ describe("useWorkflowLoader", () => {
         ({ auth }) =>
           useWorkflowLoader({
             workflowId: "workflow-1",
-            tabIsUnsaved: false,
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -150,7 +147,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -166,11 +162,11 @@ describe("useWorkflowLoader", () => {
       );
       expect(api.getWorkflow).not.toHaveBeenCalled();
     });
-    it("should not load if tabIsUnsaved is true", () => {
+    it("should not load if suppressServerLoad is true (draft is source of truth)", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: true,
+          suppressServerLoad: true,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -202,7 +198,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -246,7 +241,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -284,7 +278,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -316,7 +309,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -348,7 +340,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -380,7 +371,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -419,7 +409,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -454,7 +443,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -479,7 +467,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -521,7 +508,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -551,7 +537,6 @@ describe("useWorkflowLoader", () => {
       renderHook(() =>
         useWorkflowLoader({
           workflowId: null,
-          tabIsUnsaved: false,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -576,7 +561,6 @@ describe("useWorkflowLoader", () => {
         renderHook(() =>
           useWorkflowLoader({
             workflowId: "workflow-1",
-            tabIsUnsaved: false,
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -607,7 +591,6 @@ describe("useWorkflowLoader", () => {
           useWorkflowLoader({
             workflowId: "workflow-2",
             // Different from lastLoaded
-            tabIsUnsaved: false,
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -631,7 +614,6 @@ describe("useWorkflowLoader", () => {
           useWorkflowLoader({
             workflowId: null,
             // Falsy
-            tabIsUnsaved: false,
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -649,7 +631,7 @@ describe("useWorkflowLoader", () => {
         expect(mockLastLoadedWorkflowIdRef.current).toBeNull();
         expect(mockIsLoadingRef.current).toBe(false);
       });
-      it("should verify exact conditional: if (tabIsUnsaved)", () => {
+      it("should verify exact conditional: if (suppressServerLoad)", () => {
         const mockWorkflow = {
           id: "workflow-1",
           name: "Workflow 1",
@@ -662,7 +644,7 @@ describe("useWorkflowLoader", () => {
         renderHook(() =>
           useWorkflowLoader({
             workflowId: "workflow-1",
-            tabIsUnsaved: true,
+            suppressServerLoad: true,
             // Unsaved - should not load
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
@@ -695,7 +677,6 @@ describe("useWorkflowLoader", () => {
         renderHook(() =>
           useWorkflowLoader({
             workflowId: "workflow-1",
-            tabIsUnsaved: false,
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -729,7 +710,6 @@ describe("useWorkflowLoader", () => {
         renderHook(() =>
           useWorkflowLoader({
             workflowId: "workflow-1",
-            tabIsUnsaved: false,
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -763,7 +743,6 @@ describe("useWorkflowLoader", () => {
         renderHook(() =>
           useWorkflowLoader({
             workflowId: "workflow-1",
-            tabIsUnsaved: false,
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -798,7 +777,6 @@ describe("useWorkflowLoader", () => {
         renderHook(() =>
           useWorkflowLoader({
             workflowId: "workflow-1",
-            tabIsUnsaved: false,
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -834,7 +812,6 @@ describe("useWorkflowLoader", () => {
         renderHook(() =>
           useWorkflowLoader({
             workflowId: "workflow-1",
-            tabIsUnsaved: false,
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -871,7 +848,6 @@ describe("useWorkflowLoader", () => {
         renderHook(() =>
           useWorkflowLoader({
             workflowId: "workflow-1",
-            tabIsUnsaved: false,
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -908,7 +884,6 @@ describe("useWorkflowLoader", () => {
         renderHook(() =>
           useWorkflowLoader({
             workflowId: "workflow-1",
-            tabIsUnsaved: false,
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             setLocalWorkflowId: mockSetLocalWorkflowId,
@@ -938,7 +913,6 @@ describe("useWorkflowLoader", () => {
           useWorkflowLoader({
             workflowId: null,
             // Triggers else branch
-            tabIsUnsaved: false,
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             setLocalWorkflowId: mockSetLocalWorkflowId,

@@ -117,3 +117,59 @@ async def test_vertex_image_output_model_still_uses_generate_content(monkeypatch
     assert openai_called["v"] is False
     assert "flash-image" in posted["model"].lower() or "image" in posted["model"].lower()
     assert out == "img-ok"
+
+
+@pytest.mark.asyncio
+async def test_vertex_flash_lite_uses_generate_content_not_openai_chat(monkeypatch):
+    """Flash-lite on Vertex ADC must use :generateContent; OpenAI-compat chat can hang."""
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "test-proj")
+    monkeypatch.setenv("VERTEX_LOCATION", "us-central1")
+
+    openai_called = {"v": False}
+
+    def fake_create_vertex_client(_p, _l):
+        openai_called["v"] = True
+        raise AssertionError("OpenAI compat client must not be used for flash-lite on Vertex")
+
+    monkeypatch.setattr(
+        "backend.utils.vertex_gemini.create_vertex_async_openai_client",
+        fake_create_vertex_client,
+    )
+
+    posted = {}
+
+    async def fake_post_vertex(model, json_body, timeout=300.0):
+        class R:
+            status_code = 200
+            text = '{"candidates":[{"content":{"parts":[{"text":"lite-ok"}]}}]}'
+
+            def json(self):
+                import json
+
+                return json.loads(self.text)
+
+        posted["model"] = model
+        posted["body_keys"] = list(json_body.keys())
+        return R()
+
+    monkeypatch.setattr(
+        "backend.utils.vertex_gemini.post_vertex_generate_content",
+        fake_post_vertex,
+    )
+
+    strategy = GeminiProviderStrategy()
+    agent_config = type(
+        "AC",
+        (),
+        {"system_prompt": "echo", "temperature": 0.1, "max_tokens": 256},
+    )()
+    out = await strategy.execute(
+        "hello lite",
+        "gemini-2.5-flash-lite",
+        {"api_key": "", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+        agent_config,
+    )
+    assert openai_called["v"] is False
+    assert posted["model"] == "gemini-2.5-flash-lite"
+    assert "contents" in posted["body_keys"]
+    assert out == "lite-ok"

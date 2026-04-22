@@ -14,7 +14,7 @@ import {
 } from "../utils/logicalOr";
 function useWorkflowLoader({
   workflowId,
-  tabIsUnsaved,
+  suppressServerLoad = false,
   setNodes,
   setEdges,
   setLocalWorkflowId,
@@ -47,11 +47,7 @@ function useWorkflowLoader({
       }
       return;
     }
-    if (
-      authBecameTrue &&
-      workflowId &&
-      tabIsUnsaved !== true
-    ) {
+    if (authBecameTrue && workflowId && !suppressServerLoad) {
       lastLoadedWorkflowIdRef.current = null;
     }
     if (workflowId && workflowId === lastLoadedWorkflowIdRef.current) {
@@ -62,9 +58,9 @@ function useWorkflowLoader({
       return;
     }
     if (workflowId) {
-      if (tabIsUnsaved) {
+      if (suppressServerLoad) {
         logger.debug(
-          "[useWorkflowLoader] Skip fetch: tab is unsaved (draft only, no GET)",
+          "[useWorkflowLoader] Skip fetch: local draft is source of truth",
           { workflowId },
         );
         return;
@@ -125,7 +121,7 @@ function useWorkflowLoader({
     }
   }, [
     workflowId,
-    tabIsUnsaved,
+    suppressServerLoad,
     workflowNodeToNode,
     setNodes,
     setEdges,

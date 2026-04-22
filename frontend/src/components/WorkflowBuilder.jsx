@@ -27,7 +27,11 @@ import {
   useWorkflowLoader,
 } from "../hooks/workflow";
 import { useWorkflowExecution } from "../hooks/execution";
-import { useDraftManagement, loadDraftsFromStorage } from "../hooks/storage";
+import {
+  useDraftManagement,
+  loadDraftsFromStorage,
+  shouldApplyDraftCanvas,
+} from "../hooks/storage";
 import {
   useMarketplaceIntegration,
   useMarketplaceDialog,
@@ -264,9 +268,13 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
     [onEdgesChangeBase, notifyModified],
   );
   const workflowNodeToNode = workflowUpdates.workflowNodeToNode;
+  const draftForTab = tabDraftsRef.current[tabId];
+  const suppressServerLoad =
+    tabIsUnsaved === true &&
+    shouldApplyDraftCanvas(draftForTab, workflowId, tabIsUnsaved);
   useWorkflowLoader({
     workflowId,
-    tabIsUnsaved,
+    suppressServerLoad,
     setNodes,
     setEdges,
     setLocalWorkflowId,

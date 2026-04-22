@@ -2,7 +2,6 @@
 Unified LLM Agent - Supports OpenAI, Anthropic, Gemini, and Custom providers.
 Uses provider strategy pattern (OCP) and injectable provider resolution (DIP).
 """
-import asyncio
 import os
 from typing import Any, Awaitable, Callable, Dict, Optional
 
@@ -327,21 +326,29 @@ class UnifiedLLMAgent(BaseAgent):
         
         # Execute based on provider type and ensure we never return None
         try:
-            # Forward key logs to execution logs if callback available (non-blocking)
+            # Forward key logs to execution console (await so they appear before long LLM I/O)
             if self.log_callback:
                 try:
-                    asyncio.create_task(self.log_callback("INFO", self.node_id, f"Executing with provider '{provider_type}' and model '{model}'"))
+                    await self.log_callback(
+                        "INFO",
+                        self.node_id,
+                        f"Executing with provider '{provider_type}' and model '{model}'",
+                    )
                 except Exception as e:
                     logger.debug(f"Log callback failed (non-fatal): {e}")
             logger.info(f"Executing with provider '{provider_type}' and model '{model}'")
-            
+
             from .llm_providers.registry import ProviderRegistry
             strategy = ProviderRegistry.get(provider_type)
             if not strategy:
                 raise ValueError(f"Unknown provider type: {provider_type}")
             if provider_type == "gemini" and self.log_callback:
                 try:
-                    asyncio.create_task(self.log_callback("INFO", self.node_id, f"Calling Gemini API with model '{model}'"))
+                    await self.log_callback(
+                        "INFO",
+                        self.node_id,
+                        f"Calling Gemini API with model '{model}' (request may take up to several minutes)",
+                    )
                 except Exception as e:
                     logger.debug(f"Log callback failed (non-fatal): {e}")
             result = await strategy.execute(user_message, model, self.llm_config, self.config)
