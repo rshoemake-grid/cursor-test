@@ -232,8 +232,9 @@ function AuthenticatedLayout() {
   const executionActive =
     currentView === "execution" && location.pathname === "/";
 
-  const renderBuilderContent = () => (
-    <WorkflowTabsProvider>
+  /** Index route only. WorkflowTabsProvider wraps all routes in Main so tab state survives /settings, /marketplace, etc. */
+  const renderIndexContent = () => (
+    <>
       {currentView === "builder" && (
         <CanvasClipboardProvider>
           <WorkflowTabs
@@ -252,7 +253,7 @@ function AuthenticatedLayout() {
       {currentView === "execution" && executionId && (
         <ExecutionViewer executionId={executionId} />
       )}
-    </WorkflowTabsProvider>
+    </>
   );
 
   const handleLogoutClick = async () => {
@@ -360,13 +361,15 @@ function AuthenticatedLayout() {
       </Header>
 
       <Main>
-        <Routes>
-          <Route index element={renderBuilderContent()} />
-          <Route path="marketplace" element={<MarketplacePage />} />
-          <Route path="log" element={<LogPage />} />
-          <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-        </Routes>
+        <WorkflowTabsProvider>
+          <Routes>
+            <Route index element={renderIndexContent()} />
+            <Route path="marketplace" element={<MarketplacePage />} />
+            <Route path="log" element={<LogPage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Routes>
+        </WorkflowTabsProvider>
       </Main>
     </LayoutRoot>
   );

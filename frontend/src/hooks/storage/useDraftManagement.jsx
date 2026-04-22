@@ -1,4 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+// Persist runs in useEffect (not useLayoutEffect) so it sees nodes/edges after
+// the hydrate layout effect's setState has committed — otherwise the first
+// persist can save an empty graph and wipe the draft (blank canvas on remount).
 import { getLocalStorageItem, setLocalStorageItem } from "./useLocalStorage";
 import { logger as defaultLogger } from "../../utils/logger";
 const DRAFT_STORAGE_KEY = "workflowBuilderDrafts";
@@ -86,6 +89,19 @@ function useDraftManagement({
   };
 
   const hydratedRef = useRef(false);
+  /** Latest graph snapshot for synchronous flush (nav / tab hide can skip useEffect). */
+  const persistSliceRef = useRef({});
+  persistSliceRef.current = {
+    tabId,
+    nodes,
+    edges,
+    localWorkflowId,
+    localWorkflowName,
+    localWorkflowDescription,
+    tabIsUnsaved,
+    normalizeNodeForStorage,
+  };
+
   useLayoutEffect(() => {
     hydratedRef.current = false;
     const so = storageOptionsRef.current;
@@ -143,20 +159,53 @@ function useDraftManagement({
     };
   }, [tabId, draftsRef]);
 
-  useLayoutEffect(() => {
+  const flushDraftToStorageRef = useRef(() => {});
+  flushDraftToStorageRef.current = () => {
     if (!hydratedRef.current) {
       return;
     }
+    const p = persistSliceRef.current;
     const so = storageOptionsRef.current;
-    draftsRef.current[tabId] = {
-      nodes: nodes.map(normalizeNodeForStorage),
-      edges,
-      workflowId: localWorkflowId,
-      workflowName: localWorkflowName,
-      workflowDescription: localWorkflowDescription,
-      isUnsaved: tabIsUnsaved,
+    draftsRef.current[p.tabId] = {
+      nodes: p.nodes.map(p.normalizeNodeForStorage),
+      edges: p.edges,
+      workflowId: p.localWorkflowId,
+      workflowName: p.localWorkflowName,
+      workflowDescription: p.localWorkflowDescription,
+      isUnsaved: p.tabIsUnsaved,
     };
     saveDraftsToStorage(draftsRef.current, so);
+  };
+
+  useEffect(() => {
+    const flush = () => flushDraftToStorageRef.current();
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        flush();
+      }
+    };
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", onVisibility);
+    }
+    if (typeof window !== "undefined") {
+      window.addEventListener("pagehide", flush);
+    }
+    return () => {
+      flush();
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", onVisibility);
+      }
+      if (typeof window !== "undefined") {
+        window.removeEventListener("pagehide", flush);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hydratedRef.current) {
+      return;
+    }
+    flushDraftToStorageRef.current();
   }, [
     tabId,
     nodes,

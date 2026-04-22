@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -73,5 +74,55 @@ class WorkflowInputSourceServiceTest {
         assertEquals(2, list.size());
         assertTrue(list.contains(1) || list.contains(1L));
         assertTrue(list.contains(2) || list.contains(2L));
+    }
+
+    @Test
+    void localWrite_directoryWithFilePattern(@TempDir Path base) throws Exception {
+        WorkflowInputSourceService svc = new WorkflowInputSourceService(base.toString(), objectMapper);
+        Path dir = Files.createDirectories(base.resolve("outdir"));
+        svc.write(
+                "local_filesystem",
+                Map.of("file_path", dir.toString(), "file_pattern", "nested.json"),
+                Map.of("k", "v"));
+        Path written = dir.resolve("nested.json");
+        assertTrue(Files.exists(written));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> map = (Map<String, Object>) svc.read("local_filesystem", Map.of("file_path", written.toString()));
+        assertEquals("v", map.get("k"));
+    }
+
+    @Test
+    void localWrite_overwriteFalse_incrementsFilename(@TempDir Path base) throws Exception {
+        WorkflowInputSourceService svc = new WorkflowInputSourceService(base.toString(), objectMapper);
+        Path first = base.resolve("doc.txt");
+        Files.writeString(first, "orig");
+        svc.write(
+                "local_filesystem",
+                Map.of("file_path", first.toString(), "overwrite", false),
+                "second");
+        Path second = base.resolve("doc_1.txt");
+        assertEquals("orig", Files.readString(first));
+        assertEquals("second", Files.readString(second));
+    }
+
+    @Test
+    void localWrite_dataImageUrl_writesBinary(@TempDir Path base) throws Exception {
+        WorkflowInputSourceService svc = new WorkflowInputSourceService(base.toString(), objectMapper);
+        byte[] png = new byte[] {(byte) 0x89, 'P', 'N', 'G', 0, 0, 0};
+        String dataUrl = "data:image/png;base64," + Base64.getEncoder().encodeToString(png);
+        Path out = base.resolve("x.png");
+        Map<String, Object> meta =
+                svc.write("local_filesystem", Map.of("file_path", out.toString()), dataUrl);
+        assertEquals("image", meta.get("type"));
+        assertArrayEquals(png, Files.readAllBytes(out));
+    }
+
+    @Test
+    void localWrite_directoryWithoutPattern_throws(@TempDir Path base) throws Exception {
+        WorkflowInputSourceService svc = new WorkflowInputSourceService(base.toString(), objectMapper);
+        Path dir = Files.createDirectories(base.resolve("onlydir"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> svc.write("local_filesystem", Map.of("file_path", dir.toString()), "x"));
     }
 }

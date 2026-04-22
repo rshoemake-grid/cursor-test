@@ -32,6 +32,35 @@ def compute_local_browser_can_go_up(current: Path, base: Path) -> bool:
     return cur.parent != cur
 
 
+def resolve_local_filesystem_write_path(file_path: str) -> Path:
+    """
+    Resolve a target path for local filesystem writes.
+
+    When LOCAL_FILE_BASE_PATH is set, returns Path(...).resolve() so containment checks
+    match a canonical path under the configured base.
+
+    When unrestricted (no base), returns an absolute path via os.path.normpath only —
+    without following symlinks — so a cyclic/broken symlink in a parent directory is
+    less likely to block the workflow indefinitely during resolution.
+    """
+    if not file_path or not str(file_path).strip():
+        raise ValueError("file_path is required")
+    expanded = os.path.expanduser(str(file_path).strip())
+    if is_local_file_path_restricted():
+        return Path(expanded).resolve()
+    if os.path.isabs(expanded):
+        return Path(os.path.normpath(expanded))
+    return Path(os.path.normpath(os.path.join(os.getcwd(), expanded)))
+
+
+def combine_local_write_path_with_pattern(path: Path, file_pattern: str) -> Path:
+    """Join a directory path with file_pattern using the same symlink policy as writes."""
+    combined = path / file_pattern
+    if is_local_file_path_restricted():
+        return combined.resolve()
+    return Path(os.path.normpath(str(combined)))
+
+
 def validate_path_within_base(resolved_path: Path, base_path: Optional[Path] = None) -> None:
     """
     Ensure resolved_path is within base_path (prevents path traversal).

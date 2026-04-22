@@ -4,6 +4,7 @@ Supports GCP Buckets, AWS S3, GCP Pub/Sub, and Local File System.
 """
 import json
 import os
+import time
 import base64
 import mimetypes
 from datetime import datetime, timezone
@@ -34,8 +35,10 @@ except ImportError:
 
 from ..utils.logger import get_logger
 from ..utils.path_utils import (
+    combine_local_write_path_with_pattern,
     compute_local_browser_can_go_up,
     get_local_file_base_path,
+    resolve_local_filesystem_write_path,
     validate_path_within_base,
 )
 from .gcp_auth import (
@@ -977,16 +980,20 @@ class LocalFileSystemHandler(InputSourceHandler):
         if not file_path or file_path.strip() == '':
             raise ValueError("file_path is required for Local File System write. Please configure the file_path in the node's input_config or pass it as an execution input (e.g., {'file_path': '/path/to/file'}) before executing the workflow.")
         
-        # Expand user path (~) and resolve absolute path
-        file_path = os.path.expanduser(file_path)
-        path = Path(file_path).resolve()
+        t_resolve = time.monotonic()
+        path = resolve_local_filesystem_write_path(file_path)
+        logger.info(
+            "LocalFileSystemHandler.write: resolved path in %.3fs -> %s",
+            time.monotonic() - t_resolve,
+            path,
+        )
 
         # Path traversal protection
         validate_path_within_base(path)
 
         # If path is a directory and file_pattern is provided, combine them
         if path.is_dir() and file_pattern:
-            path = (path / file_pattern).resolve()
+            path = combine_local_write_path_with_pattern(path, file_pattern)
             validate_path_within_base(path)
         elif path.is_dir():
             # If it's a directory without a pattern, use a default filename
@@ -1019,7 +1026,13 @@ class LocalFileSystemHandler(InputSourceHandler):
             logger.debug(f"Overwrite enabled: will overwrite existing file {path}")
         
         # Create parent directory if it doesn't exist
+        t_mkdir = time.monotonic()
         path.parent.mkdir(parents=True, exist_ok=True)
+        logger.info(
+            "LocalFileSystemHandler.write: ensured parent dirs in %.3fs (parent=%s)",
+            time.monotonic() - t_mkdir,
+            path.parent,
+        )
         
         # Detect if data is an image (base64, URL, or binary)
         is_image = False
@@ -1124,9 +1137,15 @@ class LocalFileSystemHandler(InputSourceHandler):
             logger.debug(f"Writing image to {path}: {len(image_data)} bytes, mimetype: {detected_mimetype}")
             
             # Write binary data
+            t_io = time.monotonic()
             with open(path, 'wb') as f:
                 f.write(image_data)
-            
+            logger.info(
+                "LocalFileSystemHandler.write: binary write done in %.3fs (%s bytes)",
+                time.monotonic() - t_io,
+                len(image_data),
+            )
+
             return {"status": "success", "file_path": str(path), "mimetype": detected_mimetype, "type": "image"}
         
         content, _ = _serialize_for_write(data)
@@ -1150,9 +1169,16 @@ class LocalFileSystemHandler(InputSourceHandler):
         logger.debug(f"Writing to {path}: {len(content)} characters, data type: {type(data)}, mimetype: {mimetype}")
         
         # Write to file
+        t_io = time.monotonic()
         with open(path, 'w', encoding=encoding) as f:
             f.write(content)
-        
+        logger.info(
+            "LocalFileSystemHandler.write: text write done in %.3fs (%s chars, mimetype=%s)",
+            time.monotonic() - t_io,
+            len(content),
+            mimetype,
+        )
+
         return {"status": "success", "file_path": str(path), "mimetype": mimetype}
 
 

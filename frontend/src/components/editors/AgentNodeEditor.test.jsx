@@ -289,6 +289,39 @@ describe("AgentNodeEditor", () => {
         }),
       );
     });
+    it("should treat adk_config JSON string as object so name field is not corrupted", () => {
+      const adkNode = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config,
+            agent_type: "adk",
+            adk_config: '{"name":"from_json","instruction":"hello"}',
+          },
+        },
+      };
+      render(
+        <AgentNodeEditor
+          node={adkNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      const nameInput = screen.getByPlaceholderText(/e\.g\., assistant_agent/i);
+      expect(nameInput).toHaveValue("from_json");
+      fireEvent.change(nameInput, { target: { value: "renamed" } });
+      expect(mockOnUpdate).toHaveBeenCalledWith(
+        "agent_config",
+        expect.objectContaining({
+          adk_config: expect.objectContaining({
+            name: "renamed",
+            instruction: "hello",
+          }),
+        }),
+      );
+    });
     it("should show Instruction label when agent_type is adk", () => {
       const adkNode = {
         ...mockNode,

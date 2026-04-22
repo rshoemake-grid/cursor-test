@@ -21,6 +21,7 @@ import {
   EditorRangeScaleRow,
   EditorSecondaryFullButton,
 } from "../../styles/editorForm.styled";
+import { normalizeAdkConfig, adkConfigTextField } from "../../utils/adkConfigUtils";
 function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
   const systemPromptRef = useRef(null);
   const maxTokensRef = useRef(null);
@@ -29,7 +30,14 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
   useEffect(() => {
     const agentConfig2 = node.data.agent_config || {};
     if (document.activeElement !== systemPromptRef.current) {
-      setSystemPromptValue(agentConfig2.system_prompt || "");
+      const ac2 = normalizeAdkConfig(agentConfig2.adk_config);
+      const isAdk = agentConfig2.agent_type === "adk";
+      const fromInstruction =
+        typeof ac2.instruction === "string" ? ac2.instruction : "";
+      const prompt = isAdk
+        ? fromInstruction || agentConfig2.system_prompt || ""
+        : agentConfig2.system_prompt || "";
+      setSystemPromptValue(prompt);
     }
     if (document.activeElement !== maxTokensRef.current) {
       setMaxTokensValue(agentConfig2.max_tokens || "");
@@ -40,7 +48,7 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
   const currentModel =
     agentConfig.model ||
     (availableModels.length > 0 ? availableModels[0].value : "gpt-4o-mini");
-  const adkConfig = agentConfig.adk_config || {};
+  const adkConfig = normalizeAdkConfig(agentConfig.adk_config);
   const handleExportConfig = useCallback(() => {
     const exportData = {
       label: node.data.label || node.data.name || "Agent",
@@ -68,12 +76,23 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
         <EditorSelect
           id="agent-type"
           value={agentType}
-          onChange={(e) =>
-            onUpdate("agent_config", {
-              ...agentConfig,
-              agent_type: e.target.value,
-            })
-          }
+          onChange={(e) => {
+            const nextType = e.target.value;
+            const next = { ...agentConfig, agent_type: nextType };
+            if (nextType === "adk") {
+              const ac = normalizeAdkConfig(agentConfig.adk_config);
+              const instruction =
+                typeof ac.instruction === "string" && ac.instruction
+                  ? ac.instruction
+                  : agentConfig.system_prompt || "";
+              next.adk_config = {
+                ...ac,
+                name: adkConfigTextField(ac, "name"),
+                instruction,
+              };
+            }
+            onUpdate("agent_config", next);
+          }}
           aria-label="Select agent type"
         >
           <option value="workflow">Workflow Agent (Default)</option>
@@ -95,7 +114,7 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
             <EditorInputCompact
               id="adk-name"
               type="text"
-              value={typeof adkConfig.name === "string" ? adkConfig.name : ""}
+              value={adkConfigTextField(adkConfig, "name")}
               onChange={(e) =>
                 onUpdate("agent_config", {
                   ...agentConfig,
@@ -107,6 +126,7 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
               }
               placeholder="e.g., assistant_agent"
               required={true}
+              aria-label="ADK agent name"
             />
           </EditorFieldGroup>
           <EditorFieldGroup $mb="sm">
@@ -116,11 +136,7 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
             <EditorInputCompact
               id="adk-description"
               type="text"
-              value={
-                typeof adkConfig.description === "string"
-                  ? adkConfig.description
-                  : ""
-              }
+              value={adkConfigTextField(adkConfig, "description")}
               onChange={(e) =>
                 onUpdate("agent_config", {
                   ...agentConfig,
@@ -131,6 +147,7 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
                 })
               }
               placeholder="Brief description of the agent"
+              aria-label="ADK description"
             />
           </EditorFieldGroup>
           <EditorFieldGroup $mb="sm">
@@ -210,19 +227,17 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
           onChange={(e) => {
             const newValue = e.target.value;
             setSystemPromptValue(newValue);
-            const updatedConfig = {
-              ...agentConfig,
-              system_prompt: newValue,
-            };
-            if (agentType === "adk" && adkConfig) {
-              updatedConfig.adk_config = {
-                ...adkConfig,
-                instruction: newValue,
-              };
-            }
-            onConfigUpdate("agent_config", "system_prompt", newValue);
             if (agentType === "adk") {
-              onUpdate("agent_config", updatedConfig);
+              onUpdate("agent_config", {
+                ...agentConfig,
+                system_prompt: newValue,
+                adk_config: {
+                  ...adkConfig,
+                  instruction: newValue,
+                },
+              });
+            } else {
+              onConfigUpdate("agent_config", "system_prompt", newValue);
             }
           }}
           rows={4}

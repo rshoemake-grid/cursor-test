@@ -20,6 +20,8 @@ import com.google.pubsub.v1.PullResponse;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.ReceivedMessage;
 import com.google.pubsub.v1.TopicName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -38,7 +40,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,6 +54,8 @@ import java.util.stream.Stream;
  */
 @Service
 public class WorkflowInputSourceService {
+
+    private static final Logger log = LoggerFactory.getLogger(WorkflowInputSourceService.class);
 
     private static final String TYPE_GCP = "gcp_bucket";
     private static final String TYPE_AWS = "aws_s3";
@@ -63,7 +69,14 @@ public class WorkflowInputSourceService {
             @Value("${workflow.local-file-base-path:}") String configuredBase,
             ObjectMapper objectMapper) {
         if (configuredBase != null && !configuredBase.isBlank()) {
-            this.restrictedBase = Optional.of(Paths.get(configuredBase.trim()).toAbsolutePath().normalize());
+            Path raw = Paths.get(configuredBase.trim()).toAbsolutePath().normalize();
+            Optional<Path> baseOpt;
+            try {
+                baseOpt = Optional.of(raw.toFile().getCanonicalFile().toPath());
+            } catch (IOException e) {
+                baseOpt = Optional.of(raw);
+            }
+            this.restrictedBase = baseOpt;
         } else {
             this.restrictedBase = Optional.empty();
         }
@@ -223,9 +236,9 @@ public class WorkflowInputSourceService {
     }
 
     private Object readLocal(Map<String, Object> cfg) throws IOException {
-        Charset encoding = charsetFrom(cfg);
+        Charset encoding = LocalFilesystemWriteSupport.charsetFromConfig(cfg);
         String filePath = required(cfg, "file_path");
-        Path path = Paths.get(filePath.trim().replaceFirst("^~", System.getProperty("user.home"))).toAbsolutePath().normalize();
+        Path path = LocalFilesystemPathResolver.resolveWritePath(filePath, restrictedBase.isPresent());
         validateWithinBase(path);
         if (!Files.exists(path)) {
             throw new java.io.FileNotFoundException("File not found: " + path);
@@ -285,22 +298,83 @@ public class WorkflowInputSourceService {
         return results;
     }
 
-    private static Charset charsetFrom(Map<String, Object> cfg) {
-        String enc = stringVal(cfg.get("encoding"));
-        if (enc == null || enc.isBlank()) {
-            return StandardCharsets.UTF_8;
-        }
-        return Charset.forName(enc.trim());
-    }
-
     private Map<String, Object> writeLocal(Map<String, Object> cfg, Object data) throws IOException {
+        long t0 = System.nanoTime();
         String filePath = required(cfg, "file_path");
-        Path path = Paths.get(filePath.trim().replaceFirst("^~", System.getProperty("user.home"))).toAbsolutePath().normalize();
+        String filePattern = stringVal(cfg.get("file_pattern"));
+        if (filePattern == null) {
+            filePattern = "";
+        }
+        Charset encoding = LocalFilesystemWriteSupport.charsetFromConfig(cfg);
+        boolean overwrite = LocalFilesystemWriteSupport.parseOverwrite(cfg.get("overwrite"));
+        boolean pathRestricted = restrictedBase.isPresent();
+
+        Path path = LocalFilesystemPathResolver.resolveWritePath(filePath, pathRestricted);
+        log.info(
+                "LocalFileSystemHandler.write: resolved path in {}s -> {}",
+                (System.nanoTime() - t0) / 1_000_000_000.0,
+                path);
         validateWithinBase(path);
+
+        if (Files.isDirectory(path)) {
+            if (!filePattern.isBlank()) {
+                path = LocalFilesystemPathResolver.combineDirAndPattern(path, filePattern, pathRestricted);
+                validateWithinBase(path);
+            } else {
+                throw new IllegalArgumentException(
+                        "file_path '"
+                                + filePath
+                                + "' is a directory. Please provide a file_pattern or use a full file path.");
+            }
+        }
+
+        if (!overwrite && Files.exists(path)) {
+            path = LocalFilesystemWriteSupport.incrementFilenameIfExists(path);
+        } else if (overwrite && Files.exists(path)) {
+            log.debug("Overwrite enabled: will overwrite existing file {}", path);
+        }
+
+        long tMk = System.nanoTime();
         Files.createDirectories(path.getParent());
-        SerializedPayload p = serialize(data);
-        Files.write(path, p.bytes());
-        return Map.of("status", "success", "file_path", path.toString(), "mimetype", p.contentType());
+        log.info(
+                "LocalFileSystemHandler.write: ensured parent dirs in {}s (parent={})",
+                (System.nanoTime() - tMk) / 1_000_000_000.0,
+                path.getParent());
+
+        Optional<LocalFilesystemWriteSupport.DecodedImage> decoded =
+                LocalFilesystemWriteSupport.tryDecodeImage(data);
+        if (decoded.isPresent()) {
+            LocalFilesystemWriteSupport.DecodedImage img = decoded.get();
+            String mt = LocalFilesystemWriteSupport.imageMimetypeFromPath(path, img.mimetype());
+            long tIo = System.nanoTime();
+            Files.write(path, img.bytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            log.info(
+                    "LocalFileSystemHandler.write: binary write done in {}s ({} bytes)",
+                    (System.nanoTime() - tIo) / 1_000_000_000.0,
+                    img.bytes().length);
+            Map<String, Object> out = new HashMap<>();
+            out.put("status", "success");
+            out.put("file_path", path.toString());
+            out.put("mimetype", mt);
+            out.put("type", "image");
+            return out;
+        }
+
+        String content;
+        try {
+            content = LocalFilesystemWriteSupport.serializeForWrite(data, objectMapper);
+        } catch (JsonProcessingException e) {
+            throw new IOException(e);
+        }
+        String mimetype = LocalFilesystemWriteSupport.guessMimetype(path);
+        long tIo = System.nanoTime();
+        Files.writeString(path, content, encoding, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        log.info(
+                "LocalFileSystemHandler.write: text write done in {}s ({} chars, mimetype={})",
+                (System.nanoTime() - tIo) / 1_000_000_000.0,
+                content.length(),
+                mimetype);
+        return Map.of("status", "success", "file_path", path.toString(), "mimetype", mimetype);
     }
 
     private S3Client awsClient(Map<String, Object> cfg) {
