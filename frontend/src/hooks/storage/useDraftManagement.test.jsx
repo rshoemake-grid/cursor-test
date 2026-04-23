@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import {
   useDraftManagement,
   loadDraftsFromStorage,
@@ -364,6 +364,50 @@ describe("useDraftManagement", () => {
         isUnsaved: true,
       }),
     );
+  });
+  it("merges flush with latest storage so another tab's draft is not clobbered", async () => {
+    let stored = {
+      "tab-a": {
+        nodes: [{ id: "node-a", type: "agent", position: { x: 0, y: 0 }, data: {} }],
+        edges: [],
+        workflowId: null,
+        workflowName: "Tab A",
+        workflowDescription: "",
+        isUnsaved: true,
+      },
+    };
+    mockGetLocalStorageItem.mockImplementation(() => ({ ...stored }));
+    mockSetLocalStorageItem.mockImplementation((key, val) => {
+      if (key === "workflowBuilderDrafts" && val && typeof val === "object") {
+        stored = { ...val };
+      }
+    });
+    const tabBNodes = [
+      { id: "node-b", type: "agent", position: { x: 1, y: 1 }, data: {} },
+    ];
+    renderHook(() =>
+      useDraftManagement({
+        tabId: "tab-b",
+        workflowId: null,
+        nodes: tabBNodes,
+        edges: [],
+        localWorkflowId: null,
+        localWorkflowName: "Tab B",
+        localWorkflowDescription: "",
+        tabIsUnsaved: true,
+        setNodes: mockSetNodes,
+        setEdges: mockSetEdges,
+        setLocalWorkflowId: mockSetLocalWorkflowId,
+        setLocalWorkflowName: mockSetLocalWorkflowName,
+        setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+        normalizeNodeForStorage: mockNormalizeNodeForStorage,
+      }),
+    );
+    await waitFor(() => {
+      expect(stored["tab-b"]).toBeDefined();
+    });
+    expect(stored["tab-a"]?.nodes?.[0]?.id).toBe("node-a");
+    expect(stored["tab-b"]?.nodes?.[0]?.id).toBe("node-b");
   });
   it("should normalize nodes before saving", () => {
     const normalizedNode = { ...mockNodes[0], data: { normalized: true } };

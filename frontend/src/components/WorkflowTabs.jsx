@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { createNewTab } from "../hooks/utils/tabUtils";
 import { Plus } from "lucide-react";
@@ -48,13 +48,44 @@ function WorkflowTabs({
     setActiveTabId: setActiveTabIdFromContext,
     processedKeys,
   } = useWorkflowTabs();
+  /** Toolbar / TabBar actions target the active tab's imperative API. */
   const builderRef = useRef(null);
+  /** One WorkflowBuilder instance per tab — kept mounted so canvas state survives tab switches. */
+  const builderApisRef = useRef(new Map());
+  useLayoutEffect(() => {
+    builderRef.current = builderApisRef.current.get(activeTabId) ?? null;
+  }, [activeTabId, tabs]);
+  /** Stable callback per tabId so React does not detach refs every parent render. */
+  const builderRefCallbacksRef = useRef(new Map());
+  const getBuilderRefCallback = useCallback((tabId) => {
+    let cb = builderRefCallbacksRef.current.get(tabId);
+    if (!cb) {
+      cb = (instance) => {
+        if (instance) {
+          builderApisRef.current.set(tabId, instance);
+        } else {
+          builderApisRef.current.delete(tabId);
+        }
+      };
+      builderRefCallbacksRef.current.set(tabId, cb);
+    }
+    return cb;
+  }, []);
+  useEffect(() => {
+    const ids = new Set(tabs.map((t) => t.id));
+    for (const id of builderRefCallbacksRef.current.keys()) {
+      if (!ids.has(id)) {
+        builderRefCallbacksRef.current.delete(id);
+      }
+    }
+  }, [tabs]);
   /** Per-workflow (or per-unsaved-tab) React Flow viewport; same workflowId shares one pan/zoom. */
   const canvasViewportsRef = useRef(new Map());
   const setActiveTabId = useCallback(
     (nextId) => {
       if (nextId !== activeTabId) {
-        const vp = builderRef.current?.getViewport?.();
+        const api = builderApisRef.current.get(activeTabId);
+        const vp = api?.getViewport?.();
         if (vp && activeTabId) {
           const prevTab = tabsRef.current.find((t) => t.id === activeTabId);
           if (prevTab) {
@@ -161,24 +192,7 @@ function WorkflowTabs({
     handleExecutionStatusUpdate,
     handleExecutionNodeUpdate,
   } = executionManagement;
-  const handleActiveExecutionChange = useCallback(
-    (executionId) => {
-      setTabs((prev) =>
-        prev.map((t) =>
-          t.id === activeTabId
-            ? { ...t, activeExecutionId: executionId }
-            : t,
-        ),
-      );
-    },
-    [activeTabId, setTabs],
-  );
   const activeTab = tabs.find((t) => t.id === activeTabId);
-  const activeTabInitialViewport = activeTab
-    ? canvasViewportsRef.current.get(
-        canvasViewportStorageKey(activeTab),
-      ) ?? null
-    : null;
   const marketplacePublishing = useMarketplacePublishing({
     activeTab: activeTab
       ? {
@@ -280,69 +294,90 @@ function WorkflowTabs({
           onExport: () => builderRef.current?.exportWorkflow(),
         }}
       />
-      {activeTab && (
-        <WorkflowBuilderMain>
-          <WorkflowBuilder
-            key={activeTab.id}
-            ref={builderRef}
-            initialViewport={activeTabInitialViewport}
-            tab={{
-              tabId: activeTab.id,
-              workflowId: activeTab.workflowId,
-              tabName: activeTab.name,
-              tabIsUnsaved: activeTab.isUnsaved,
+      {tabs.map((tab) => {
+        const isActive = tab.id === activeTabId;
+        const initialVp =
+          canvasViewportsRef.current.get(canvasViewportStorageKey(tab)) ??
+          null;
+        return (
+          <WorkflowBuilderMain
+            key={tab.id}
+            style={{
+              display: isActive ? "flex" : "none",
+              flexDirection: "column",
             }}
-            workflowTabs={tabs.map((tab) => ({
-              tabId: tab.id,
-              workflowId: tab.workflowId,
-              workflowName: tab.name,
-              executions: tab.executions,
-              activeExecutionId: tab.activeExecutionId,
-            }))}
-            callbacks={{
-              onExecutionStart: handleExecutionStart,
-              onWorkflowSaved: (workflowId, name) => {
-                const tabId = activeTab.id;
-                const tabOnlyKey = canvasViewportStorageKey({
-                  id: tabId,
-                  workflowId: null,
-                });
-                const savedKey = canvasViewportStorageKey({
-                  id: tabId,
-                  workflowId,
-                });
-                const vp =
-                  builderRef.current?.getViewport?.() ??
-                  canvasViewportsRef.current.get(tabOnlyKey);
-                if (
-                  vp != null &&
-                  Number.isFinite(vp.x) &&
-                  Number.isFinite(vp.y) &&
-                  Number.isFinite(vp.zoom)
-                ) {
-                  canvasViewportsRef.current.set(savedKey, {
-                    x: vp.x,
-                    y: vp.y,
-                    zoom: vp.zoom,
+            aria-hidden={!isActive}
+          >
+            <WorkflowBuilder
+              ref={getBuilderRefCallback(tab.id)}
+              initialViewport={initialVp}
+              tab={{
+                tabId: tab.id,
+                workflowId: tab.workflowId,
+                tabName: tab.name,
+                tabIsUnsaved: tab.isUnsaved,
+              }}
+              workflowTabs={tabs.map((t) => ({
+                tabId: t.id,
+                workflowId: t.workflowId,
+                workflowName: t.name,
+                executions: t.executions,
+                activeExecutionId: t.activeExecutionId,
+              }))}
+              callbacks={{
+                onExecutionStart: handleExecutionStart,
+                onWorkflowSaved: (workflowId, name) => {
+                  const tabId = tab.id;
+                  const tabOnlyKey = canvasViewportStorageKey({
+                    id: tabId,
+                    workflowId: null,
                   });
-                  canvasViewportsRef.current.delete(tabOnlyKey);
-                }
-                handleWorkflowSaved(tabId, workflowId, name);
-              },
-              onWorkflowModified: () => handleWorkflowModified(activeTab.id),
-              onWorkflowLoaded: (workflowId, name) =>
-                handleLoadWorkflow(activeTab.id, workflowId, name),
-              onCloseWorkflow: handleCloseWorkflow,
-              onClearExecutions: handleClearExecutions,
-              onExecutionLogUpdate: handleExecutionLogUpdate,
-              onExecutionStatusUpdate: handleExecutionStatusUpdate,
-              onExecutionNodeUpdate: handleExecutionNodeUpdate,
-              onRemoveExecution: handleRemoveExecution,
-              onActiveExecutionChange: handleActiveExecutionChange,
-            }}
-          />
-        </WorkflowBuilderMain>
-      )}
+                  const savedKey = canvasViewportStorageKey({
+                    id: tabId,
+                    workflowId,
+                  });
+                  const api = builderApisRef.current.get(tabId);
+                  const vp =
+                    api?.getViewport?.() ??
+                    canvasViewportsRef.current.get(tabOnlyKey);
+                  if (
+                    vp != null &&
+                    Number.isFinite(vp.x) &&
+                    Number.isFinite(vp.y) &&
+                    Number.isFinite(vp.zoom)
+                  ) {
+                    canvasViewportsRef.current.set(savedKey, {
+                      x: vp.x,
+                      y: vp.y,
+                      zoom: vp.zoom,
+                    });
+                    canvasViewportsRef.current.delete(tabOnlyKey);
+                  }
+                  handleWorkflowSaved(tabId, workflowId, name);
+                },
+                onWorkflowModified: () => handleWorkflowModified(tab.id),
+                onWorkflowLoaded: (workflowId, name) =>
+                  handleLoadWorkflow(tab.id, workflowId, name),
+                onCloseWorkflow: handleCloseWorkflow,
+                onClearExecutions: handleClearExecutions,
+                onExecutionLogUpdate: handleExecutionLogUpdate,
+                onExecutionStatusUpdate: handleExecutionStatusUpdate,
+                onExecutionNodeUpdate: handleExecutionNodeUpdate,
+                onRemoveExecution: handleRemoveExecution,
+                onActiveExecutionChange: (executionId) => {
+                  setTabs((prev) =>
+                    prev.map((t) =>
+                      t.id === tab.id
+                        ? { ...t, activeExecutionId: executionId }
+                        : t,
+                    ),
+                  );
+                },
+              }}
+            />
+          </WorkflowBuilderMain>
+        );
+      })}
       {tabs.length === 0 && (
         <WorkflowEmptyMain>
           <EmptyStateInlineCenter>

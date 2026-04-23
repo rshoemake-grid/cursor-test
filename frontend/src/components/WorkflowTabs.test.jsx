@@ -2719,7 +2719,7 @@ describe("WorkflowTabs", () => {
       await waitForWithTimeout(() => {
         expect(screen.getByText("Tab 2")).toBeInTheDocument();
       });
-      expect(screen.getByText("WorkflowBuilder Mock")).toBeInTheDocument();
+      expect(screen.getAllByText("WorkflowBuilder Mock")).toHaveLength(2);
     });
     it("should map tabs correctly when passing workflowTabs to WorkflowBuilder", async () => {
       const tabsWithExecutions = [
@@ -2986,6 +2986,16 @@ describe("WorkflowTabs", () => {
         expect(tabs.length).toBeGreaterThan(1);
       });
       expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
+    });
+  });
+  describe("Per-tab builder instances", () => {
+    it("mounts one WorkflowBuilder per tab so inactive tabs keep in-memory canvas state", async () => {
+      renderWithProvider();
+      const plusButton = screen.getByTitle(/New workflow/);
+      fireEvent.click(plusButton);
+      await waitForWithTimeout(() => {
+        expect(screen.getAllByText("WorkflowBuilder Mock")).toHaveLength(2);
+      });
     });
   });
 });

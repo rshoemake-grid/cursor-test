@@ -166,7 +166,10 @@ function useDraftManagement({
     }
     const p = persistSliceRef.current;
     const so = storageOptionsRef.current;
-    draftsRef.current[p.tabId] = {
+    // Read-merge-write: each WorkflowBuilder keeps its own draftsRef snapshot. Saving the whole
+    // object without merging would overwrite other tabs' drafts with stale copies (multi-tab UI).
+    const latest = { ...loadDraftsFromStorage(so) };
+    latest[p.tabId] = {
       nodes: p.nodes.map(p.normalizeNodeForStorage),
       edges: p.edges,
       workflowId: p.localWorkflowId,
@@ -174,7 +177,8 @@ function useDraftManagement({
       workflowDescription: p.localWorkflowDescription,
       isUnsaved: p.tabIsUnsaved,
     };
-    saveDraftsToStorage(draftsRef.current, so);
+    draftsRef.current = latest;
+    saveDraftsToStorage(latest, so);
   };
 
   useEffect(() => {

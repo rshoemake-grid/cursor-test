@@ -3,6 +3,7 @@ package com.workflow.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -25,9 +26,16 @@ public class SqlitePathEnvironmentPostProcessor implements EnvironmentPostProces
 
     private static final String JDBC_SQLITE_PREFIX = "jdbc:sqlite:";
 
+    /**
+     * Must run after {@link ConfigDataEnvironmentPostProcessor} so {@code application.properties}
+     * has set {@code spring.datasource.url}. Previously we used {@code HIGHEST_PRECEDENCE + 1}, which
+     * ran <em>before</em> config data; the URL was still unset, we no-op'd, and SQLite opened
+     * {@code ./workflows.db} relative to {@code user.dir} (e.g. {@code backend-java/workflows.db})
+     * instead of the repo-root file shared with Python.
+     */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 1;
+        return ConfigDataEnvironmentPostProcessor.ORDER + 1;
     }
 
     @Override

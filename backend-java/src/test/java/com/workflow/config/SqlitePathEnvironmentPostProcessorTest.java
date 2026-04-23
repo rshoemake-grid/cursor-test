@@ -3,6 +3,7 @@ package com.workflow.config;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
@@ -22,14 +23,20 @@ class SqlitePathEnvironmentPostProcessorTest {
 
     private final EnvironmentPostProcessor processor = new SqlitePathEnvironmentPostProcessor();
 
+    @Test
+    void getOrder_runsAfterConfigDataSoDatasourceUrlIsLoadedFromApplicationProperties() {
+        assertTrue(
+                ((SqlitePathEnvironmentPostProcessor) processor).getOrder()
+                        > ConfigDataEnvironmentPostProcessor.ORDER);
+    }
+
     private String previousUserDir;
 
     @AfterEach
     void restoreUserDir() {
         if (previousUserDir != null) {
             System.setProperty("user.dir", previousUserDir);
-        } else {
-            System.clearProperty("user.dir");
+            previousUserDir = null;
         }
     }
 
