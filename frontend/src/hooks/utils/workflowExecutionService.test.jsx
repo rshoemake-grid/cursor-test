@@ -132,6 +132,12 @@ describe("WorkflowExecutionService", () => {
       const inputs = service.parseExecutionInputs("{}");
       expect(inputs).toEqual({});
     });
+    it("should return empty object for JSON array root (backend expects an object)", () => {
+      expect(service.parseExecutionInputs("[]")).toEqual({});
+    });
+    it("should return empty object for JSON null primitive", () => {
+      expect(service.parseExecutionInputs("null")).toEqual({});
+    });
   });
   describe("custom logger", () => {
     it("should use custom logger when provided", () => {

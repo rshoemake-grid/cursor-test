@@ -64,7 +64,11 @@ class WorkflowExecutionService {
    */
   parseExecutionInputs(inputsString) {
     try {
-      return JSON.parse(inputsString);
+      const parsed = JSON.parse(inputsString);
+      if (parsed == null || typeof parsed !== "object" || Array.isArray(parsed)) {
+        return {};
+      }
+      return parsed;
     } catch (error) {
       this.logger.error("[WorkflowExecution] Failed to parse inputs:", error);
       throw new Error("Invalid JSON in execution inputs");

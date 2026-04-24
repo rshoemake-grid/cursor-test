@@ -223,13 +223,17 @@ function createApiClient(options) {
       await http.delete(templateEndpoints.delete(templateId));
     },
     async executeWorkflow(workflowId, inputs = {}) {
+      const normalizedInputs =
+        inputs != null && typeof inputs === "object" && !Array.isArray(inputs)
+          ? inputs
+          : {};
       injectedLogger.debug("[API Client] executeWorkflow called with:", {
         workflowId,
-        inputs,
+        inputs: normalizedInputs,
       });
       try {
         const url = workflowEndpoints.execute(workflowId);
-        const payload = { workflow_id: workflowId, inputs };
+        const payload = { workflow_id: workflowId, inputs: normalizedInputs };
         injectedLogger.debug("[API Client] POST request to:", url);
         injectedLogger.debug("[API Client] Request payload:", payload);
         const raw = await http.post(url, payload);
