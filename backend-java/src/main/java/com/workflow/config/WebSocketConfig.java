@@ -30,8 +30,15 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(executionHandler, "/ws/executions/*")
-                .addInterceptors(authInterceptor)
-                .setAllowedOrigins(allowedOrigins);
+        var registration = registry.addHandler(executionHandler, "/ws/executions/*")
+                .addInterceptors(authInterceptor);
+        // Browsers send Origin (e.g. http://localhost:3000) for WS upgrades to :8000.
+        // setAllowedOrigins("*") does not reliably allow cross-origin WebSocket in Spring 6+;
+        // use origin patterns for the dev wildcard.
+        if (allowedOrigins.length == 1 && "*".equals(allowedOrigins[0])) {
+            registration.setAllowedOriginPatterns("*");
+        } else {
+            registration.setAllowedOrigins(allowedOrigins);
+        }
     }
 }
