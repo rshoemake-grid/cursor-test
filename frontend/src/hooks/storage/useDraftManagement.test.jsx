@@ -135,7 +135,33 @@ describe("useDraftManagement", () => {
     );
     expect(mockSetNodes).not.toHaveBeenCalled();
   });
-  it("should clear workflow when no workflowId and no draft", () => {
+  it("should clear workflow when no workflowId and no draft and tab is unsaved", () => {
+    mockGetLocalStorageItem.mockReturnValue({});
+    renderHook(() =>
+      useDraftManagement({
+        tabId: "tab-1",
+        workflowId: null,
+        nodes: [],
+        edges: [],
+        localWorkflowId: null,
+        localWorkflowName: "Untitled Workflow",
+        localWorkflowDescription: "",
+        tabIsUnsaved: true,
+        setNodes: mockSetNodes,
+        setEdges: mockSetEdges,
+        setLocalWorkflowId: mockSetLocalWorkflowId,
+        setLocalWorkflowName: mockSetLocalWorkflowName,
+        setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+        normalizeNodeForStorage: mockNormalizeNodeForStorage,
+      }),
+    );
+    expect(mockSetNodes).toHaveBeenCalledWith([]);
+    expect(mockSetEdges).toHaveBeenCalledWith([]);
+    expect(mockSetLocalWorkflowId).toHaveBeenCalledWith(null);
+    expect(mockSetLocalWorkflowName).toHaveBeenCalledWith("Untitled Workflow");
+    expect(mockSetLocalWorkflowDescription).toHaveBeenCalledWith("");
+  });
+  it("does not clear canvas when tab is marked saved but workflowId is missing (avoids wiping tabs)", () => {
     mockGetLocalStorageItem.mockReturnValue({});
     renderHook(() =>
       useDraftManagement({
@@ -155,11 +181,11 @@ describe("useDraftManagement", () => {
         normalizeNodeForStorage: mockNormalizeNodeForStorage,
       }),
     );
-    expect(mockSetNodes).toHaveBeenCalledWith([]);
-    expect(mockSetEdges).toHaveBeenCalledWith([]);
-    expect(mockSetLocalWorkflowId).toHaveBeenCalledWith(null);
-    expect(mockSetLocalWorkflowName).toHaveBeenCalledWith("Untitled Workflow");
-    expect(mockSetLocalWorkflowDescription).toHaveBeenCalledWith("");
+    expect(mockSetNodes).not.toHaveBeenCalled();
+    expect(mockSetEdges).not.toHaveBeenCalled();
+    expect(mockSetLocalWorkflowId).not.toHaveBeenCalled();
+    expect(mockSetLocalWorkflowName).not.toHaveBeenCalled();
+    expect(mockSetLocalWorkflowDescription).not.toHaveBeenCalled();
   });
   it("should hydrate from draft when workflowId prop is null but draft is a saved workflow with nodes", () => {
     const draft = {

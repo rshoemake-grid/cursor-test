@@ -145,7 +145,10 @@ function useDraftManagement({
       setLWId(draft.workflowId);
       setLWName(draft.workflowName);
       setLWDesc(draft.workflowDescription);
-    } else if (!workflowId) {
+    } else if (!workflowId && tabIsUnsaved !== false) {
+      // Only reset to a blank untitled graph for tabs that are explicitly unsaved.
+      // If the tab is marked saved (isUnsaved false) but workflowId is momentarily missing,
+      // clearing here wiped canvas state; useWorkflowLoader / tab metadata should recover.
       setN([]);
       setE([]);
       setLWId(null);
