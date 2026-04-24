@@ -8,7 +8,9 @@ import com.google.adk.models.VertexCredentials;
 import com.google.adk.runner.InMemoryRunner;
 import com.google.adk.tools.GoogleSearchTool;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.genai.Client;
 import com.google.genai.types.Content;
+import com.google.genai.types.HttpOptions;
 import com.google.genai.types.Part;
 import com.workflow.dto.ADKAgentConfig;
 import com.workflow.dto.AgentConfig;
@@ -151,7 +153,16 @@ public class AdkAgentRunner implements AdkRunner {
                         : LlmConfigUtils.geminiApiKeyOnly(effectiveLlmConfig, environment);
         if (apiKey != null && !apiKey.isBlank()) {
             log.info("ADK Gemini: using Gemini API key (AI Studio).");
-            return Gemini.builder().modelName(modelName).apiKey(apiKey.trim()).build();
+            // google-genai merges GOOGLE_CLOUD_PROJECT / location from the environment even when only an
+            // API key is supplied, then fails with "Gemini API do not support project/location." Build an
+            // explicit Client with vertexAI=false (Developer API), matching mutual exclusivity in Client.
+            Client genaiClient =
+                    Client.builder()
+                            .apiKey(apiKey.trim())
+                            .vertexAI(false)
+                            .httpOptions(HttpOptions.builder().build())
+                            .build();
+            return Gemini.builder().modelName(modelName).apiClient(genaiClient).build();
         }
 
         if (LlmVertexGeminiSupport.geminiAuthViaAdcServiceAccountJson(environment)) {
