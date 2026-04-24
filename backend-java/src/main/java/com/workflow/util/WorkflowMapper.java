@@ -1,6 +1,8 @@
 package com.workflow.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.dto.*;
 import com.workflow.entity.Workflow;
@@ -102,14 +104,53 @@ public class WorkflowMapper {
     }
 
     /**
-     * DRY-12: Convert value via ObjectMapper, fallback to cast on failure.
+     * DRY-12: Convert value via ObjectMapper. Never raw-cast {@code List<Map>} to {@code List<Edge>} —
+     * that yields {@code LinkedHashMap} elements at runtime and {@code ClassCastException} in
+     * {@link com.workflow.engine.WorkflowExecutor} when iterating edges.
      */
     @SuppressWarnings("unchecked")
     private <T> T convertValueOrCast(Object value, TypeReference<T> typeRef) {
         try {
             return objectMapper.convertValue(value, typeRef);
-        } catch (Exception e) {
-            return (T) value;
+        } catch (Exception ignoredStrictFailure) {
+            ObjectMapper lenient = objectMapper.copy();
+            lenient.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            try {
+                return lenient.convertValue(value, typeRef);
+            } catch (Exception lenientListEx) {
+                JavaType targetType = lenient.getTypeFactory().constructType(typeRef);
+                if (value instanceof List<?> list && targetType.isCollectionLikeType()) {
+                    JavaType contentType = targetType.getContentType();
+                    if (contentType != null && contentType.getRawClass() != null) {
+                        Class<?> elemClass = contentType.getRawClass();
+                        List<Object> out = new ArrayList<>(list.size());
+                        int idx = 0;
+                        for (Object item : list) {
+                            if (item == null) {
+                                out.add(null);
+                            } else {
+                                try {
+                                    out.add(lenient.convertValue(item, elemClass));
+                                } catch (Exception elemEx) {
+                                    throw new IllegalStateException(
+                                            "Cannot convert workflow definition list index " + idx
+                                                    + " to " + elemClass.getName(),
+                                            elemEx);
+                                }
+                            }
+                            idx++;
+                        }
+                        return (T) out;
+                    }
+                }
+                if (value instanceof Map<?, ?>) {
+                    return (T) value;
+                }
+                throw new IllegalStateException(
+                        "Cannot convert workflow definition fragment to " + typeRef.getType() + ": "
+                                + lenientListEx.getMessage(),
+                        lenientListEx);
+            }
         }
     }
 

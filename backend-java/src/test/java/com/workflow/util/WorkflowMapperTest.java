@@ -1,5 +1,6 @@
 package com.workflow.util;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.workflow.dto.*;
@@ -198,6 +199,26 @@ class WorkflowMapperTest {
         assertNotNull(result);
         // The actual extraction happens in private methods, but we verify the response is created
         assertNotNull(result);
+    }
+
+    @Test
+    void extractEdges_mapsWithUnknownReactFlowFieldsBecomeEdgeInstances() {
+        ObjectMapper strict = new ObjectMapper();
+        strict.registerModule(new JavaTimeModule());
+        strict.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
+        WorkflowMapper mapper = new WorkflowMapper(strict);
+        Map<String, Object> edgeMap = new LinkedHashMap<>();
+        edgeMap.put("id", "e1");
+        edgeMap.put("source", "a");
+        edgeMap.put("target", "b");
+        edgeMap.put("markerEnd", Map.of("type", "arrowclosed"));
+        Map<String, Object> def = Map.of("edges", List.of(edgeMap));
+        List<Edge> edges = mapper.extractEdges(def);
+        assertEquals(1, edges.size());
+        assertTrue(edges.get(0) instanceof Edge);
+        assertEquals("e1", edges.get(0).getId());
+        assertEquals("a", edges.get(0).getSource());
+        assertEquals("b", edges.get(0).getTarget());
     }
 
     @Test
