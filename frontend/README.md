@@ -16,7 +16,7 @@ Development server defaults to **http://localhost:3000**.
 ## API URL in development
 
 - **Default:** leave **`REACT_APP_API_BASE_URL` empty** in `.env.development` so the browser uses same-origin **`/api`**. `src/setupProxy.js` forwards to the API at **`PROXY_TARGET`** (default `http://127.0.0.1:8000`), which matches **Python FastAPI** when run with uvicorn on port 8000.
-- **504 / proxy errors in the browser:** the CRA dev server could not reach the API on `PROXY_TARGET`. Start FastAPI from the **repository root**: `python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload`. For the Java API instead, use `backend-java` `./gradlew bootRun` (also port 8000), or change `PROXY_TARGET`.
+- **504 / proxy errors in the browser:** the CRA dev server could not reach the API on `PROXY_TARGET`. Start the **Java API** from the repo: `cd backend-java && ./gradlew bootRun` (port 8000 by default), or change `PROXY_TARGET`.
 - **Direct API:** set `REACT_APP_API_BASE_URL=http://127.0.0.1:8000` in `.env.development.local` if you must bypass the proxy (mind CORS).
 
 See **[docs/CONFIGURATION_REFERENCE.md](../docs/CONFIGURATION_REFERENCE.md#frontend-configuration)**.

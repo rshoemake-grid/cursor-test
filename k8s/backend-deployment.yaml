@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: backend
-        # Build: docker build -t your-registry.io/workflow-builder-backend:latest -f backend/Dockerfile .
+        # Build a Spring Boot image from backend-java/ (Python backend removed).
         image: your-registry.io/workflow-builder-backend:latest
         imagePullPolicy: Always
         ports:

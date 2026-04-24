@@ -10,42 +10,37 @@ PYTHON_CMD="$(command -v python3 || command -v python || echo python3)"
 
 case "$1" in
   verify)
-    echo "Verifying setup..."
-    "$PYTHON_CMD" verify_setup.py
+    echo "Verifying Python tooling (scripts tests)..."
+    "$PYTHON_CMD" -m pytest scripts/ -q
     ;;
-  
+
   install)
-    echo "Installing dependencies..."
+    echo "Installing minimal Python deps (scripts tests only)..."
     "$PYTHON_CMD" -m pip install -r requirements.txt
     echo "✓ Dependencies installed"
     echo ""
     echo "Next steps:"
-    echo "  1. Create .env file with your OPENAI_API_KEY"
-    echo "  2. Run: ./run.sh verify"
-    echo "  3. Run: ./run.sh server"
+    echo "  API server: ./run.sh server   (Spring Boot in backend-java/)"
+    echo "  Optional: ./run.sh verify     (pytest scripts/)"
     ;;
-  
+
   server)
     echo "Starting Java API (Spring Boot)..."
     echo "API: http://localhost:8000  (from repo root: $ROOT)"
     cd "$ROOT/backend-java" && exec ./gradlew bootRun
     ;;
-  
+
   test)
-    echo "Running API tests..."
-    "$PYTHON_CMD" test_api.py
+    echo "Running scripts/ Python tests..."
+    "$PYTHON_CMD" -m pytest scripts/ -q
     ;;
-  
-  example-simple)
-    echo "Running simple workflow example..."
-    "$PYTHON_CMD" examples/simple_workflow.py
+
+  example-simple|example-research)
+    echo "Python API examples were removed with the FastAPI backend."
+    echo "Use the Java API at http://localhost:8000 (./run.sh server) and the app UI instead."
+    exit 1
     ;;
-  
-  example-research)
-    echo "Running research workflow example..."
-    "$PYTHON_CMD" examples/research_workflow.py
-    ;;
-  
+
   clean)
     echo "Cleaning up..."
     rm -f workflows.db
@@ -53,22 +48,19 @@ case "$1" in
     find . -type f -name "*.pyc" -delete 2>/dev/null || true
     echo "✓ Cleaned"
     ;;
-  
+
   help|*)
     echo "Agentic Workflow Engine - Commands"
     echo ""
     echo "Usage: ./run.sh [command]"
     echo ""
     echo "Commands:"
-    echo "  install          Install dependencies"
-    echo "  verify           Verify setup is correct"
-    echo "  server           Start the API server"
-    echo "  test             Run API tests"
-    echo "  example-simple   Run simple workflow example"
-    echo "  example-research Run research workflow example"
+    echo "  install          Install minimal Python deps (pytest for scripts/)"
+    echo "  verify           Run pytest on scripts/"
+    echo "  server           Start the Java API server (Spring Boot)"
+    echo "  test             Same as verify (scripts tests)"
     echo "  clean            Clean up temporary files"
     echo "  help             Show this help message"
     echo ""
     ;;
 esac
-

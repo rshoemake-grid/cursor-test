@@ -38,7 +38,7 @@ else
         if [ ! -d "$WORKER_DIR" ]; then
             mkdir -p "$WORKER_DIR"
             # Copy necessary files (simplified - in production, use git clone)
-            cp -r backend "$WORKER_DIR/" 2>/dev/null || true
+            # Python ./backend was removed; configure workers for your stack if needed.
             cp pytest.ini "$WORKER_DIR/" 2>/dev/null || true
             cp requirements.txt "$WORKER_DIR/" 2>/dev/null || true
         fi

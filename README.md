@@ -71,7 +71,7 @@ Visit `http://localhost:3000` to use the visual workflow builder!
 cd backend-java
 ./gradlew bootRun
 ```
-Backend runs at `http://localhost:8000` (OpenAPI UI: `/swagger-ui.html`). A legacy Python API still exists under `backend/` for scripts/examples but is **not** used by `./start.sh` or the Kubernetes/Docker paths documented for this app.
+Backend runs at `http://localhost:8000` (OpenAPI UI: `/swagger-ui.html`). The API is **Spring Boot** under `backend-java/` only; the former FastAPI tree under `backend/` has been removed.
 
 #### Terminal 2: Frontend
 ```bash
@@ -89,21 +89,9 @@ Frontend runs at `http://localhost:3000` (CRA dev server; API defaults to proxie
 5. **Save** your workflow (top toolbar)
 6. **Execute** and watch it run!
 
-### CLI Examples (Phase 1 Style)
+### CLI / Python examples
 
-```bash
-# Simple 2-agent workflow
-python examples/simple_workflow.py
-
-# 3-agent research pipeline
-python examples/research_workflow.py
-
-# Conditional branching (NEW!)
-python examples/conditional_workflow.py
-
-# Loop-based batch processing (NEW!)
-python examples/loop_workflow.py
-```
+The old FastAPI app and `examples/*.py` CLIs were removed with the Python backend. Drive workflows from the UI or call the Java REST API directly (see [docs/API_REFERENCE.md](docs/API_REFERENCE.md)).
 
 ## 📚 Documentation
 
@@ -124,76 +112,33 @@ python examples/loop_workflow.py
 - **Visual Builder** - http://localhost:3000 (when frontend is running)
 - **API Docs** - http://localhost:8000/docs (when backend is running)
 
-## 🎯 Example Workflows
+## 🎯 Example workflows
 
-### Phase 3 Examples (LATEST!)
-
-#### Complete Phase 3 Demo
-```bash
-python examples/phase3_demo.py
-```
-Demonstrates WebSocket streaming, memory, and tool calling
-
-### Phase 2 Examples
-
-#### Conditional Branching
-```bash
-python examples/conditional_workflow.py
-```
-Analyzes sentiment → Routes to positive/negative responder
-
-#### Loop Processing
-```bash
-python examples/loop_workflow.py
-```
-Processes multiple topics → Combines results
-
-### Phase 1 Examples
-
-#### Simple Story Writer (2 agents)
-```bash
-python examples/simple_workflow.py
-```
-Writer → Editor → Polished Story
-
-#### Research Assistant (3 agents)
-```bash
-python examples/research_workflow.py
-```
-Researcher → Analyzer → Summarizer → Final Report
+Use the in-app templates and marketplace, or import JSON through the API. Historical Python `examples/` scripts are no longer in this repository.
 
 ## 🏗️ Project Structure
 
 ```
 cursor-test/
-├── main.py                    # Application entry point
-├── requirements.txt           # Dependencies
-├── verify_setup.py           # Setup verification
-├── test_api.py               # API tests
-│
+├── requirements.txt           # Minimal Python deps (pytest for scripts/ only)
+├── scripts/                   # Small Python utilities + their tests
+├── backend-java/              # Spring Boot API (port 8000)
 ├── frontend/                  # Create React App UI (React 18, styled-components, Redux)
-│   └── README.md             # Frontend stack, proxy, styling, build output
-│
-├── backend/
-│   ├── models/               # Pydantic schemas & types
-│   ├── database/             # SQLAlchemy ORM & connection
-│   ├── engine/               # Workflow execution engine
-│   ├── agents/               # Agent implementations
-│   └── api/                  # FastAPI routes
-│
-└── examples/
-    ├── simple_workflow.py    # 2-agent example
-    └── research_workflow.py  # 3-agent example
+│   └── README.md              # Frontend stack, proxy, styling, build output
+└── ...
 ```
 
 ## 🔧 Testing
 
 ```bash
-# Test API connectivity (server must be running)
-python test_api.py
+# Python utilities under scripts/
+python3 -m pytest scripts/ -q
 
-# Manual API testing
-curl http://localhost:8000/health
+# Java API unit tests
+cd backend-java && ./gradlew test
+
+# Manual API check (server running)
+curl -sf http://localhost:8000/health
 ```
 
 ## 📖 API Overview
