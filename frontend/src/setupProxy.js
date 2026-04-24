@@ -7,7 +7,7 @@ const {
  * PROXY_TARGET: API origin only (no /api suffix), e.g. http://127.0.0.1:8000
  *
  * The `/api` tree uses legacyCreateProxyMiddleware so paths like
- * `/api/storage/gcp/default-project` reach FastAPI as the same path. Plain v3
+ * `/api/storage/gcp/default-project` reach the backend as the same path. Plain v3
  * createProxyMiddleware + app.use("/api") + target `${origin}/api` has been
  * observed to produce wrong upstream URLs (404 on storage explorer routes).
  */
@@ -22,7 +22,7 @@ function makeProxyErrorHandler(origin, label) {
       });
       res.end(
         JSON.stringify({
-          detail: `Cannot reach API at ${origin} (${code}). Start FastAPI from the repo root: python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload. For Java instead: cd backend-java && ./gradlew bootRun. For another URL, set PROXY_TARGET (see frontend/README.md).`,
+          detail: `Cannot reach API at ${origin} (${code}). Start the Java backend: cd backend-java && ./gradlew bootRun (port 8000). If you use another origin, set PROXY_TARGET. (Python FastAPI can also use port 8000 — only one backend on that port.)`,
         }),
       );
     }
