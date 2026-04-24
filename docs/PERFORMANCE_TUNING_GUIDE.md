@@ -5,103 +5,21 @@
 
 ## Overview
 
-This guide covers performance optimization strategies, profiling techniques, and best practices for improving the workflow engine's performance.
+This guide covers performance optimization strategies, profiling techniques, and best practices for improving the workflow engine. The server is **Spring Boot** (`backend-java/`); database access is **JPA/JDBC**.
 
-## Real-World Performance Optimization Examples
+## Backend patterns (Java)
 
-### Example 1: Optimizing Database Queries
+1. **Measure first** — enable Actuator metrics if available, watch GC pauses, JDBC pool waits, and slow-query logs.
+2. **Fix N+1 reads** — use `JOIN FETCH`, `@EntityGraph`, or DTO projections on hot list endpoints.
+3. **Tune HikariCP** — align `maximum-pool-size` with Postgres `max_connections` and expected concurrency.
+4. **Paginate** — use `Pageable` for large tables; never load unbounded collections to the UI in one shot.
+5. **Cache deliberately** — Caffeine or similar for stable reads (for example settings) when staleness rules allow.
+6. **Compress HTTP** — enable Spring **`server.compression.enabled`** for large JSON payloads where appropriate.
 
-**Problem:** Workflow list page loads slowly (2+ seconds)
+**See also**
 
-**Before:**
-```python
-# N+1 query problem
-workflows = await db.execute(select(WorkflowDB))
-for workflow in workflows:
-    # Separate query for each workflow
-    executions = await db.execute(
-        select(ExecutionDB).where(ExecutionDB.workflow_id == workflow.id)
-    )
-```
-
-**After:**
-```python
-# Single query with join
-from sqlalchemy.orm import selectinload
-
-workflows = await db.execute(
-    select(WorkflowDB)
-    .options(selectinload(WorkflowDB.executions))
-    .where(WorkflowDB.owner_id == user_id)
-)
-# All executions loaded in one query
-```
-
-**Result:** Page load time reduced from 2.1s to 0.3s (7x improvement)
-
-### Example 2: Caching LLM Responses
-
-**Problem:** Same prompts executed multiple times, wasting API calls
-
-**Before:**
-```python
-# No caching - every call hits API
-result1 = await llm_client.complete("What is Python?")
-result2 = await llm_client.complete("What is Python?")  # Duplicate call
-```
-
-**After:**
-```python
-from functools import lru_cache
-import hashlib
-
-@lru_cache(maxsize=1000)
-async def get_cached_llm_response(prompt: str, model: str):
-    """Cache LLM responses for identical prompts"""
-    return await llm_client.complete(prompt, model)
-
-# First call hits API
-result1 = await get_cached_llm_response("What is Python?", "gpt-4")
-# Second call uses cache
-result2 = await get_cached_llm_response("What is Python?", "gpt-4")
-```
-
-**Result:** 40% reduction in API calls, faster response times
-
-### Example 3: Parallel Node Execution
-
-**Problem:** Sequential execution takes too long (3 nodes × 10s = 30s)
-
-**Before:**
-```python
-# Sequential execution
-result1 = await execute_node(node1)
-result2 = await execute_node(node2)  # Waits for node1
-result3 = await execute_node(node3)  # Waits for node2
-```
-
-**After:**
-```python
-# Parallel execution for independent nodes
-independent_nodes = [node1, node2, node3]
-results = await asyncio.gather(*[
-    execute_node(node) for node in independent_nodes
-])
-```
-
-**Result:** Execution time reduced from 30s to 10s (3x improvement)
-
-**Performance Optimization Approach:**
-1. **Measure First**: Profile to identify bottlenecks
-2. **Optimize Database**: Indexes, connection pooling, query optimization
-3. **Optimize API**: Async operations, caching, pagination
-4. **Optimize Frontend**: Code splitting, memoization, virtualization
-5. **Monitor**: Track metrics and adjust as needed
-
-**See Also:**
-- [Storage Integration Guide](./STORAGE_INTEGRATION_GUIDE.md) - Database configuration
-- [Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md) - Performance patterns
-- [Real-World Examples](#real-world-performance-optimization-examples) - Practical optimization scenarios
+- [Storage Integration Guide](./STORAGE_INTEGRATION_GUIDE.md) — pooling and JDBC
+- [Java backend README](../backend-java/README.md) — run and profile locally
 
 ## Performance Metrics
 
@@ -122,183 +40,24 @@ results = await asyncio.gather(*[
 - Memory: Monitor for leaks
 - Database connections: <80% pool usage
 
-## Backend Performance
+## Backend performance (details)
 
-### Database Optimization
+### Database
 
-#### Connection Pooling
+- Index foreign keys and columns used in **`WHERE`**, **`ORDER BY`**, and join predicates (see entity `@Table` / `@Index` usage in `backend-java`).
+- Use **`spring.datasource.hikari.*`** for pool sizing, connection timeouts, and leak detection.
+- Prefer explicit **`@Transactional`** boundaries so sessions do not stay open across unrelated I/O.
 
-**Configuration:**
-```python
-# backend/config.py
-database_url: str = (
-    "postgresql+asyncpg://user:pass@host:5432/db"
-    "?pool_size=20"
-    "&max_overflow=10"
-    "&pool_timeout=30"
-    "&pool_recycle=3600"
-)
-```
+### HTTP API
 
-**Recommended Settings:**
-- Development: `pool_size=5`, `max_overflow=10`
-- Production: `pool_size=20`, `max_overflow=10`
-- High load: `pool_size=50`, `max_overflow=20`
+- Enable **`server.compression.enabled`** when responses are large JSON payloads.
+- Return **`Page<T>`** (or equivalent) for list endpoints; cap maximum page size server-side.
+- Offload long-running work from request threads when you add new features (`@Async`, bounded executors, or queues)—do not block servlet threads on slow upstream APIs.
 
-#### Query Optimization
+### Workflow execution and LLMs
 
-**Use Indexes:**
-```python
-# Add indexes for frequently queried fields
-class WorkflowDB(Base):
-    __tablename__ = "workflows"
-    
-    id = Column(String, primary_key=True)
-    owner_id = Column(String, index=True)  # Indexed
-    name = Column(String, index=True)      # Indexed
-```
-
-**Avoid N+1 Queries:**
-```python
-# Bad: N+1 queries
-workflows = await db.execute(select(WorkflowDB))
-for workflow in workflows:
-    executions = await db.execute(
-        select(ExecutionDB).where(ExecutionDB.workflow_id == workflow.id)
-    )
-
-# Good: Single query with join
-from sqlalchemy.orm import selectinload
-workflows = await db.execute(
-    select(WorkflowDB).options(selectinload(WorkflowDB.executions))
-)
-```
-
-**Batch Operations:**
-```python
-# Bad: Individual inserts
-for item in items:
-    db.add(item)
-    await db.commit()
-
-# Good: Batch insert
-db.add_all(items)
-await db.commit()
-```
-
-#### Caching
-
-**Settings Cache:**
-```python
-# backend/utils/settings_cache.py
-_settings_cache: Dict[str, Any] = {}
-
-def get_settings_cache() -> Dict[str, Any]:
-    return _settings_cache
-
-# Cache settings on startup
-async def load_settings_into_cache(db: AsyncSession):
-    # Load from database once
-    # Store in memory cache
-    pass
-```
-
-**Query Result Caching (Future):**
-```python
-from functools import lru_cache
-from datetime import timedelta
-
-@lru_cache(maxsize=100)
-def get_workflow_definition(workflow_id: str):
-    # Cache workflow definitions
-    pass
-```
-
-### API Optimization
-
-#### Async Operations
-
-**Use Async Throughout:**
-```python
-# Good: Async endpoint
-@router.get("/workflows")
-async def list_workflows(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(WorkflowDB))
-    return result.scalars().all()
-
-# Bad: Blocking operations
-@router.get("/workflows")
-def list_workflows():
-    result = db.query(WorkflowDB).all()  # Blocking
-    return result
-```
-
-#### Response Compression
-
-**Enable Gzip:**
-```python
-from fastapi.middleware.gzip import GZipMiddleware
-
-app.add_middleware(GZipMiddleware, minimum_size=1000)
-```
-
-#### Pagination
-
-**Implement Pagination:**
-```python
-@router.get("/workflows")
-async def list_workflows(
-    skip: int = 0,
-    limit: int = 20,
-    db: AsyncSession = Depends(get_db)
-):
-    result = await db.execute(
-        select(WorkflowDB)
-        .offset(skip)
-        .limit(limit)
-    )
-    return result.scalars().all()
-```
-
-### Execution Optimization
-
-#### Parallel Execution
-
-**Execute Independent Nodes in Parallel:**
-```python
-# Execute nodes without dependencies in parallel
-independent_nodes = [n for n in nodes if not n.dependencies]
-results = await asyncio.gather(*[
-    execute_node(node) for node in independent_nodes
-])
-```
-
-#### LLM Call Optimization
-
-**Batch Requests (when possible):**
-```python
-# If LLM supports batching
-responses = await llm_client.batch_complete([
-    {"prompt": p1},
-    {"prompt": p2},
-    {"prompt": p3}
-])
-```
-
-**Stream Responses:**
-```python
-# Stream LLM responses for better perceived performance
-async for chunk in llm_client.stream_complete(prompt):
-    yield chunk
-```
-
-**Cache Common Prompts:**
-```python
-# Cache LLM responses for identical prompts
-@lru_cache(maxsize=1000)
-async def get_llm_response(prompt: str, model: str):
-    return await llm_client.complete(prompt, model)
-```
+- The engine already runs independent branches where the graph allows; when extending execution, keep thread pools bounded.
+- Reuse HTTP clients (**`WebClient`** / **`RestTemplate`**) with sensible timeouts; add application-level caching only when responses are safe to reuse.
 
 ## Frontend Performance
 
@@ -425,50 +184,13 @@ npm run build -- --analyze
 
 ## Profiling
 
-### Backend Profiling
+### Backend profiling (JVM)
 
-#### Python Profiling
+- **`jcmd <pid> Thread.print`** — quick thread dump when the API stalls.
+- **JDK Flight Recorder (JFR)** — record CPU, allocation, and JDBC stalls on a running `bootRun` or container JVM.
+- **Async-profiler** or your APM’s **CPU flame graph** — find hot methods in services and persistence layers.
 
-**cProfile:**
-```python
-import cProfile
-import pstats
-
-profiler = cProfile.Profile()
-profiler.enable()
-
-# Your code here
-await execute_workflow(workflow)
-
-profiler.disable()
-stats = pstats.Stats(profiler)
-stats.sort_stats('cumulative')
-stats.print_stats(20)  # Top 20 functions
-```
-
-**Line Profiler:**
-```python
-@profile
-def slow_function():
-    # Code to profile
-    pass
-```
-
-**Async Profiling:**
-```python
-import asyncio
-from pyinstrument import Profiler
-
-profiler = Profiler()
-profiler.start()
-
-await execute_workflow(workflow)
-
-profiler.stop()
-print(profiler.output_text())
-```
-
-### Frontend Profiling
+### Frontend profiling
 
 #### React DevTools Profiler
 
@@ -497,17 +219,14 @@ print(profiler.output_text())
 
 ### Database Profiling
 
-#### Query Logging
+#### Query logging (Hibernate)
 
-```python
-# Enable SQL logging
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=True  # Log all SQL queries
-)
+```properties
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.orm.jdbc.bind=TRACE
 ```
 
-#### Slow Query Logging
+#### Slow query logging
 
 **PostgreSQL:**
 ```sql
@@ -541,19 +260,7 @@ SET GLOBAL long_query_time = 1;  -- Log queries >1s
 - Datadog
 - Sentry (error tracking)
 
-**Custom Metrics:**
-```python
-from prometheus_client import Counter, Histogram
-
-request_count = Counter('requests_total', 'Total requests')
-request_duration = Histogram('request_duration_seconds', 'Request duration')
-
-@router.get("/workflows")
-async def list_workflows():
-    with request_duration.time():
-        request_count.inc()
-        # Endpoint logic
-```
+**Custom metrics:** expose **Micrometer** meters from services (for example timers around external LLM calls) and scrape them with Prometheus if you add the Actuator Prometheus registry to the build.
 
 ## Optimization Checklist
 
@@ -563,7 +270,7 @@ async def list_workflows():
 - [ ] Database indexes on frequently queried fields
 - [ ] N+1 queries eliminated
 - [ ] Batch operations used where possible
-- [ ] Async/await used throughout
+- [ ] Servlet threads not blocked on slow I/O; pools sized for workload
 - [ ] Response compression enabled
 - [ ] Pagination implemented
 - [ ] Caching implemented for expensive operations
@@ -592,31 +299,24 @@ async def list_workflows():
 
 ### Load Testing
 
-**Tools:**
-- **Locust**: Python-based load testing
-- **Apache Bench**: Simple HTTP benchmarking
-- **k6**: Modern load testing tool
+**Tools:** **k6**, **Apache Bench**, or any HTTP load generator against `http://localhost:8000`.
 
-**Example (Locust):**
-```python
-from locust import HttpUser, task
+**Example (k6):**
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
 
-class WorkflowUser(HttpUser):
-    @task
-    def list_workflows(self):
-        self.client.get("/api/workflows")
-    
-    @task(3)
-    def create_workflow(self):
-        self.client.post("/api/workflows", json={
-            "name": "Test",
-            "definition": {}
-        })
+export const options = { vus: 10, duration: '30s' };
+
+export default function () {
+  const res = http.get('http://localhost:8000/api/workflows');
+  check(res, { 'status 200': (r) => r.status === 200 });
+  sleep(1);
+}
 ```
 
-**Run Load Test:**
 ```bash
-locust -f locustfile.py --host=http://localhost:8000
+k6 run script.js
 ```
 
 ### Stress Testing
@@ -657,6 +357,6 @@ locust -f locustfile.py --host=http://localhost:8000
 
 ## Related Documentation
 
-- [Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md) - Performance patterns
+- [Java backend README](../backend-java/README.md) - Performance patterns
 - [Kubernetes Deployment](./KUBERNETES_DEPLOYMENT.md) - Scaling strategies
 - [Architecture](./ARCHITECTURE.md) - System design

@@ -180,7 +180,7 @@ This document covers requirements for:
 
 **Required Tools**:
 - Calculator for mathematical operations
-- Python executor for code execution
+- Sandboxed code-execution tool where product policy allows
 - Web search for information retrieval
 - File reader for document processing
 - Extensible framework for custom tools
@@ -528,7 +528,7 @@ This document covers requirements for:
 
 ### 4.1 Technical Constraints
 
-- Python 3.8+ required for backend
+- Java 17+ required for backend (`backend-java/`)
 - Node.js 18+ required for frontend
 - SQLite database (PostgreSQL-ready)
 - Modern web browser required (Chrome, Firefox, Safari, Edge)

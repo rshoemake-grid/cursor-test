@@ -1,5 +1,7 @@
 # ADK Agent Config Support: Analysis & Recommendation
 
+> **Context:** The shipped workflow API is **Java / Spring Boot** (`backend-java/`). This document still quotes **Pydantic-style** snippets and the Google ADK **Python** SDK when comparing capabilities—treat those as research notes, not as documentation of a Python service in this repo.
+
 ## Executive Summary
 
 **Recommendation**: **Yes, add ADK agent config support** as an **optional enhancement**, but **not as a replacement** for the current system. This would provide users with additional flexibility and enable integration with Google's ADK ecosystem.

@@ -13,7 +13,7 @@ Complete reference for all configuration options, environment variables, and set
 7. [WebSocket Configuration](#websocket-configuration)
 8. [Frontend Configuration](#frontend-configuration)
 9. [Production Settings](#production-settings)
-10. [Workflow builder storage explorer (Python)](#workflow-builder-storage-explorer-python)
+10. [Workflow builder storage explorer](#workflow-builder-storage-explorer)
 11. [Configuration Examples](#configuration-examples)
 
 ---
@@ -22,26 +22,16 @@ Complete reference for all configuration options, environment variables, and set
 
 All configuration is managed through environment variables, loaded from `.env` file or system environment.
 
-### Database Configuration
+### Database configuration (Java API)
 
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| `DATABASE_URL` | string | `sqlite+aiosqlite:///./workflows.db` | Database connection string |
+The Spring Boot app reads **`spring.datasource.*`** from `backend-java/src/main/resources/application.properties` (and profile-specific files). Use **JDBC** URLs only.
 
-**SQLite (Development):**
-```bash
-DATABASE_URL=sqlite+aiosqlite:///./workflows.db
-```
+| Spring property | Typical local value |
+|-----------------|---------------------|
+| `spring.datasource.url` | `jdbc:sqlite:./workflows.db` |
+| `spring.datasource.driver-class-name` | `org.sqlite.JDBC` |
 
-**PostgreSQL (Production):**
-```bash
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/workflows
-```
-
-**MySQL (Alternative):**
-```bash
-DATABASE_URL=mysql+aiomysql://user:password@localhost:3306/workflows
-```
+**PostgreSQL:** use `application-postgresql.properties` / env such as `POSTGRES_URL`, `POSTGRES_USER`, `POSTGRES_PASSWORD`.
 
 ### LLM Provider API Keys
 
@@ -171,9 +161,11 @@ WEBSOCKET_TIMEOUT=120        # 2 minute timeout
 
 ---
 
-## Database Configuration
+## Database configuration
 
-### SQLite (Default - Development)
+Set **`spring.datasource.url`**, username, password, and driver in `backend-java/src/main/resources/application.properties` (or profile-specific files). Optional: **`SPRING_DATASOURCE_URL`** when your deployment maps env into Spring.
+
+### SQLite (default — development)
 
 **Pros:**
 - No setup required
@@ -185,12 +177,13 @@ WEBSOCKET_TIMEOUT=120        # 2 minute timeout
 - Limited concurrency
 - No network access
 
-**Configuration:**
-```bash
-DATABASE_URL=sqlite+aiosqlite:///./workflows.db
+**Spring (equivalent idea):**
+```properties
+spring.datasource.url=jdbc:sqlite:./workflows.db
+spring.datasource.driver-class-name=org.sqlite.JDBC
 ```
 
-### PostgreSQL (Recommended for Production)
+### PostgreSQL (recommended for production)
 
 **Pros:**
 - Production-ready
@@ -202,39 +195,29 @@ DATABASE_URL=sqlite+aiosqlite:///./workflows.db
 - Requires separate database server
 - More complex setup
 
-**Configuration:**
+**Spring / env (see `application-postgresql.properties`):**
 ```bash
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/workflows
+export POSTGRES_URL=jdbc:postgresql://localhost:5432/workflow
+export POSTGRES_USER=workflow
+export POSTGRES_PASSWORD=workflow
 ```
 
-**Connection String Format:**
+**JDBC URL format (PostgreSQL):**
 ```
-postgresql+asyncpg://[user]:[password]@[host]:[port]/[database]
-```
-
-**Environment Variables:**
-- `POSTGRES_USER` - Database user
-- `POSTGRES_PASSWORD` - Database password
-- `POSTGRES_HOST` - Database host (default: `localhost`)
-- `POSTGRES_PORT` - Database port (default: `5432`)
-- `POSTGRES_DB` - Database name
-
-**Example with Environment Variables:**
-```bash
-DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+jdbc:postgresql://[host]:[port]/[database]?[params]
 ```
 
-### MySQL (Alternative)
+**Environment variables** (when wired in `application-postgresql.properties`):
 
-**Configuration:**
-```bash
-DATABASE_URL=mysql+aiomysql://user:password@localhost:3306/workflows
-```
+- `POSTGRES_USER` — database user
+- `POSTGRES_PASSWORD` — database password
+- `POSTGRES_HOST` — host (default `localhost`)
+- `POSTGRES_PORT` — port (default `5432`)
+- `POSTGRES_DB` — database name
 
-**Connection String Format:**
-```
-mysql+aiomysql://[user]:[password]@[host]:[port]/[database]
-```
+### MySQL (alternative)
+
+Use a **`jdbc:mysql://...`** URL, the MySQL driver class name, and matching credentials if you standardize on MySQL instead of PostgreSQL.
 
 ---
 
@@ -337,41 +320,18 @@ RELOAD=true
 LOG_LEVEL=DEBUG
 ```
 
-**Start:**
+**Start (Java):**
 ```bash
-python main.py
-# or
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+cd backend-java && ./gradlew bootRun
 ```
 
-### Production Server
+### Production server (Java)
 
-**Configuration:**
-```bash
-HOST=0.0.0.0
-PORT=8000
-RELOAD=false
-LOG_LEVEL=INFO
-```
+Package and run the Spring Boot jar, or use your container image / Kubernetes manifests. Tune `SPRING_PROFILES_ACTIVE`, datasource URLs, and JVM flags for your environment (see [Kubernetes Deployment](./KUBERNETES_DEPLOYMENT.md)).
 
-**Start with Multiple Workers:**
-```bash
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 4
-```
+### Workflow builder storage explorer
 
-**With Gunicorn:**
-```bash
-gunicorn backend.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
-```
-
-### Workflow builder storage explorer (Python)
-
-The authenticated **`/api/storage/*`** routes power **Browse…** in node editors (GCS, S3, local paths, Pub/Sub, **BigQuery**, **Firestore**, etc.). Ensure the Python environment includes root **`requirements.txt`** dependencies:
-
-- **`google-cloud-bigquery`** — listing datasets and tables from the BigQuery node editor.
-- **`google-cloud-firestore`** — listing root Firestore collections from the Firebase (Firestore) editor.
-
-If a package is missing, the API responds with **503** and a message that includes an install hint. Other explorer features (GCS, Pub/Sub, etc.) use their own `google-cloud-*` libraries already declared in `requirements.txt`.
+The authenticated **`/api/storage/*`** routes power **Browse…** in node editors (GCS, S3, local paths, Pub/Sub, **BigQuery**, **Firestore**, etc.). Required **Google Cloud** client libraries are pulled in via **`backend-java/build.gradle`** (not the root `requirements.txt`, which is only for `scripts/` tests).
 
 ---
 
@@ -413,9 +373,9 @@ CORS_ORIGINS=["https://app.example.com", "https://admin.example.com"]
 - Use SSL connections in production
 - Regular backups
 
-**Connection String with SSL:**
-```bash
-DATABASE_URL=postgresql+asyncpg://user:password@host:5432/db?ssl=require
+**JDBC URL with SSL (PostgreSQL example):**
+```properties
+spring.datasource.url=jdbc:postgresql://host:5432/db?sslmode=require
 ```
 
 ---
@@ -497,7 +457,7 @@ The UI under `frontend/` is a **Create React App** project. Variables must be pr
 
 | Value | Behavior |
 |-------|----------|
-| **Empty / unset** (recommended local default) | Browser calls same-origin **`/api`**. The CRA dev server uses **`setupProxy.js`** to forward `/api` and `/ws` to the FastAPI process (see `PROXY_TARGET`, default `http://127.0.0.1:8000`). Avoids CORS and `localhost` vs `127.0.0.1` mismatches. |
+| **Empty / unset** (recommended local default) | Browser calls same-origin **`/api`**. The CRA dev server uses **`setupProxy.js`** to forward `/api` and `/ws` to the **Java API** (see `PROXY_TARGET`, default `http://127.0.0.1:8000`). Avoids CORS and `localhost` vs `127.0.0.1` mismatches. |
 | **`http://127.0.0.1:8000`** (or similar origin) | Direct calls to the API. The app normalizes an origin-only URL to **`…/api`** for route paths. Ensure CORS allows your dev page origin if you use this. |
 
 Override per machine in **`frontend/.env.development.local`** (not committed).
@@ -525,10 +485,12 @@ Use an API base that already includes the `/api` path segment when required (see
 
 ### Complete Production Configuration
 
-**`.env` file:**
+**`.env` file (example — map into Spring as needed):**
 ```bash
-# Database
-DATABASE_URL=postgresql+asyncpg://user:password@db-host:5432/workflows
+# Database (JDBC — prefer spring.datasource.* in application-production.properties)
+SPRING_DATASOURCE_URL=jdbc:postgresql://db-host:5432/workflows
+SPRING_DATASOURCE_USERNAME=workflow
+SPRING_DATASOURCE_PASSWORD=change-me
 
 # Server
 HOST=0.0.0.0
@@ -572,7 +534,7 @@ kind: ConfigMap
 metadata:
   name: workflow-builder-config
 data:
-  DATABASE_URL: "postgresql+asyncpg://..."
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://db:5432/workflows"
   HOST: "0.0.0.0"
   PORT: "8000"
   LOG_LEVEL: "INFO"
@@ -599,62 +561,18 @@ stringData:
 
 ### Development Setup
 
-**`.env` file:**
+**Root `.env` (keys consumed by Spring where wired):** use `OPENAI_API_KEY`, optional `DEV_BOOTSTRAP_*`, and any vars your `application*.properties` references. Configure the database with **`spring.datasource.*`** or mapped env vars such as **`SPRING_DATASOURCE_URL`**.
+
 ```bash
-# Database (SQLite for simplicity)
-DATABASE_URL=sqlite+aiosqlite:///./workflows.db
-
-# Server
-HOST=0.0.0.0
-PORT=8000
-RELOAD=true
-
-# Logging
-LOG_LEVEL=DEBUG
-
-# CORS (allow localhost)
-CORS_ORIGINS=["http://localhost:3000", "http://localhost:5173"]
-
-# Execution
-EXECUTION_TIMEOUT=300
-MAX_CONCURRENT_EXECUTIONS=10
-
-# WebSocket
-WEBSOCKET_PING_INTERVAL=20
-WEBSOCKET_TIMEOUT=60
+OPENAI_API_KEY=sk-...
+# Optional local dev user
+DEV_BOOTSTRAP_USERNAME=devuser
+DEV_BOOTSTRAP_PASSWORD=change-me
 ```
 
 ### Production Setup
 
-**`.env` file:**
-```bash
-# Database (PostgreSQL)
-DATABASE_URL=postgresql+asyncpg://workflow_user:secure_password@db.example.com:5432/workflows
-
-# Server
-HOST=0.0.0.0
-PORT=8000
-RELOAD=false
-
-# Logging
-LOG_LEVEL=INFO
-LOG_FILE=/var/log/workflow-engine/app.log
-
-# CORS (restrict to your domain)
-CORS_ORIGINS=["https://app.example.com"]
-
-# Execution
-EXECUTION_TIMEOUT=600
-MAX_CONCURRENT_EXECUTIONS=100
-
-# WebSocket
-WEBSOCKET_PING_INTERVAL=30
-WEBSOCKET_TIMEOUT=120
-
-# API
-# API uses /api prefix; API_VERSION is deprecated
-MAX_REQUEST_SIZE=20971520  # 20MB
-```
+**Production:** configure the Spring Boot service via environment variables and/or `application-production.properties` (PostgreSQL JDBC URL, `JWT_SECRET`, CORS, execution limits). See [Kubernetes Deployment](./KUBERNETES_DEPLOYMENT.md).
 
 ### Docker Setup
 
@@ -665,11 +583,10 @@ services:
   backend:
     image: workflow-engine:latest
     environment:
-      - DATABASE_URL=postgresql+asyncpg://user:pass@db:5432/workflows
-      - HOST=0.0.0.0
-      - PORT=8000
-      - LOG_LEVEL=INFO
-      - CORS_ORIGINS=["https://app.example.com"]
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/workflows
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - SPRING_PROFILES_ACTIVE=production,postgresql
     ports:
       - "8000:8000"
     depends_on:
@@ -692,24 +609,21 @@ volumes:
 
 ## Configuration Validation
 
-### Checking Configuration
+### Checking configuration
 
-**Verify settings are loaded correctly:**
-```python
-from backend.config import settings
-
-print(f"Database URL: {settings.database_url}")
-print(f"Log Level: {settings.log_level}")
-print(f"CORS Origins: {settings.cors_origins}")
+**Verify the API is up and env-sensitive pieces work:**
+```bash
+curl -sf http://localhost:8000/health
+# Compare with values in backend-java/src/main/resources/application.properties
 ```
 
 **Check environment variables:**
 ```bash
 # Linux/Mac
-env | grep -E "DATABASE_URL|LOG_LEVEL|CORS"
+env | grep -E "SPRING_|POSTGRES_|LOG_LEVEL|CORS"
 
 # Windows
-set | findstr "DATABASE_URL LOG_LEVEL CORS"
+set | findstr "SPRING_ POSTGRES_ LOG_LEVEL CORS"
 ```
 
 ---
@@ -724,7 +638,7 @@ set | findstr "DATABASE_URL LOG_LEVEL CORS"
 - Check for typos in variable names
 
 **2. Database connection errors:**
-- Verify `DATABASE_URL` format is correct
+- Verify **`spring.datasource.url`** (JDBC) and credentials
 - Check database server is running
 - Verify credentials are correct
 - Check network connectivity
@@ -745,7 +659,7 @@ set | findstr "DATABASE_URL LOG_LEVEL CORS"
 
 - [Troubleshooting Guide](./TROUBLESHOOTING.md) - Common issues and solutions
 - [Kubernetes Deployment](./KUBERNETES_DEPLOYMENT.md) - Production deployment
-- [Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md) - Development setup
+- [Java backend README](../backend-java/README.md) - Development setup
 
 ---
 

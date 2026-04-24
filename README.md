@@ -71,7 +71,7 @@ Visit `http://localhost:3000` to use the visual workflow builder!
 cd backend-java
 ./gradlew bootRun
 ```
-Backend runs at `http://localhost:8000` (OpenAPI UI: `/swagger-ui.html`). The API is **Spring Boot** under `backend-java/` only; the former FastAPI tree under `backend/` has been removed.
+Backend runs at `http://localhost:8000` (OpenAPI UI: `/swagger-ui.html`). The API is **Spring Boot** in `backend-java/`.
 
 #### Terminal 2: Frontend
 ```bash
@@ -89,9 +89,9 @@ Frontend runs at `http://localhost:3000` (CRA dev server; API defaults to proxie
 5. **Save** your workflow (top toolbar)
 6. **Execute** and watch it run!
 
-### CLI / Python examples
+### Automation
 
-The old FastAPI app and `examples/*.py` CLIs were removed with the Python backend. Drive workflows from the UI or call the Java REST API directly (see [docs/API_REFERENCE.md](docs/API_REFERENCE.md)).
+Drive workflows from the UI or call the **Java REST API** directly (see [docs/API_REFERENCE.md](docs/API_REFERENCE.md)).
 
 ## 📚 Documentation
 
@@ -178,11 +178,11 @@ Each agent:
 
 ## 🤝 Contributing
 
-This is Phase 1 of a multi-phase project. The architecture is designed for extensibility:
+This is a multi-phase project. The architecture is designed for extensibility:
 
-- Add new agent types by extending `BaseAgent`
-- Support new LLM providers in the agent layer
-- Implement custom node types via the registry pattern
+- Add node types and editors in **frontend** + corresponding execution logic in **backend-java**
+- Extend LLM provider handling in the Java services and user Settings
+- Keep API contracts stable where possible (see OpenAPI)
 
 ## 📝 License
 
@@ -191,14 +191,12 @@ MIT License - See LICENSE file for details
 ## 🙏 Acknowledgments
 
 Built with:
-- [FastAPI](https://fastapi.tiangolo.com/) - Modern web framework
-- [SQLAlchemy](https://www.sqlalchemy.org/) - SQL toolkit and ORM
-- [Pydantic](https://pydantic-docs.helpmanual.io/) - Data validation
-- [OpenAI](https://openai.com/) - LLM API
-- [React](https://react.dev/) + [Create React App](https://create-react-app.dev/) - Visual builder UI
-- [styled-components](https://styled-components.com/) - Component styling (see `frontend/README.md`)
+- [Spring Boot](https://spring.io/projects/spring-boot) — API and WebSockets
+- [OpenAI](https://openai.com/) — LLM API (and other providers in-app)
+- [React](https://react.dev/) + [Create React App](https://create-react-app.dev/) — Visual builder UI
+- [styled-components](https://styled-components.com/) — Component styling (see `frontend/README.md`)
 
 ---
 
-**Ready to build? Start with:** `python verify_setup.py`
+**Ready to build?** Follow [GETTING_STARTED.md](GETTING_STARTED.md) and run `./start.sh` or `backend-java/./gradlew bootRun` plus `frontend/npm start`.
 

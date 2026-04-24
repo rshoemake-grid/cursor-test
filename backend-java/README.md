@@ -1,6 +1,6 @@
-# Spring Boot Backend - Drop-in Replacement for Python FastAPI Backend
+# Spring Boot backend
 
-This is a Spring Boot Java backend that serves as a drop-in replacement for the Python FastAPI backend.
+This is the **Spring Boot** workflow API (REST + WebSocket). It is the only server implementation in this repository.
 
 ## Project Structure
 
@@ -27,18 +27,15 @@ backend-java/
 │       └── logback-spring.xml        # SLF4J/Logback: stdout-only; optional JSON profile for Datadog
 ```
 
-## Key Features
+## Key features
 
-- **Drop-in Replacement**: Same API endpoints, request/response formats as Python backend
-- **JWT Authentication**: Matches Python backend auth flow
-- **SQLite Database**: Uses same database schema and file
-- **REST API**: All endpoints under `/api` prefix
-- **WebSocket Support**: For real-time execution updates
-- **CORS Configuration**: Matches Python backend CORS settings
+- **REST API** under `/api`
+- **JWT authentication** and user management
+- **SQLite** by default (`workflows.db`); PostgreSQL via configuration
+- **WebSocket** streaming for execution updates
+- **CORS** configurable for dev and production
 
-## API Endpoints
-
-All endpoints match the Python FastAPI backend:
+## API endpoints (overview)
 
 - `/api/workflows` - Workflow CRUD operations
 - `/api/workflows/{id}/execute` - Execute workflows
@@ -101,7 +98,7 @@ The API will be available at `http://localhost:8000`
 
 Configuration is in `src/main/resources/application.properties`:
 
-- `server.port=8000` - API port (matches Python backend)
+- `server.port=8000` - API port (default local dev)
 - `spring.datasource.url=jdbc:sqlite:./workflows.db` - SQLite database
 - `jwt.secret` - JWT secret key (set via environment variable)
 
@@ -116,51 +113,8 @@ Levels are controlled with normal Spring properties, e.g. `logging.level.root=IN
 
 ## Database
 
-Uses SQLite database (`workflows.db`) - same file as Python backend for compatibility.
+Uses **SQLite** by default (`workflows.db` in the repo root when run from there). Configure **PostgreSQL** via Spring profile/properties for production.
 
-## Next Steps
+## Implementation notes
 
-To complete the implementation:
-
-1. **Implement Service Layer**: Create service classes in `service/` package
-   - `WorkflowService` - Workflow business logic
-   - `ExecutionService` - Execution orchestration
-   - `AuthService` - Authentication logic
-   - `SettingsService` - LLM settings management
-
-2. **Complete Controllers**: Finish implementing all controller endpoints
-   - `WorkflowController` - Workflow CRUD
-   - `ExecutionController` - Execution management
-   - `AuthController` - Authentication
-   - `SettingsController` - Settings management
-   - `MarketplaceController` - Marketplace operations
-   - `TemplateController` - Template management
-
-3. **Add Exception Handling**: Create global exception handler
-   - Match Python backend error response format
-   - Handle validation errors (422)
-   - Handle not found errors (404)
-
-4. **Implement WebSocket**: Add WebSocket support for real-time updates
-   - Match Python backend WebSocket implementation
-
-5. **Add Execution Engine**: Implement workflow execution logic
-   - Node execution (agents, conditions, loops)
-   - LLM integration (OpenAI, Anthropic, Gemini)
-   - Tool execution
-
-6. **Testing**: Add unit and integration tests
-
-## Migration Notes
-
-- The Java backend uses the same database file (`workflows.db`) as the Python backend
-- API endpoints match exactly (same paths, request/response formats)
-- JWT tokens are compatible (same secret key)
-- CORS configuration matches Python backend
-
-## Differences from Python Backend
-
-- **Synchronous by default**: Spring Boot is synchronous, but can use `@Async` for async operations
-- **Type safety**: Java provides compile-time type checking
-- **Spring Security**: Uses Spring Security instead of custom auth middleware
-- **JPA**: Uses JPA/Hibernate instead of SQLAlchemy
+The tree contains the full service layer, execution engine, WebSocket support, and tests. Run **`./gradlew test`** before submitting changes. Use **OpenAPI** at `/swagger-ui.html` when the app is up.

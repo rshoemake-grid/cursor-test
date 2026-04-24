@@ -7,6 +7,8 @@
 
 This guide covers security best practices, vulnerabilities to watch for, and security measures implemented in the workflow engine.
 
+> **Implementation:** The API is **Spring Boot** (`backend-java/`). Some narrative examples below still use **Python**-style pseudocode for illustration only—apply the same ideas with **JPA**, **parameterized queries**, **Bean Validation** on DTOs, and Spring Security.
+
 ## Real-World Security Scenarios
 
 ### Scenario 1: API Key Exposure Prevention
@@ -52,7 +54,7 @@ query = f"SELECT * FROM workflows WHERE name = '{user_input}'"
 
 **Secure Code:**
 ```python
-# Use parameterized queries (SQLAlchemy ORM)
+# Use parameterized queries / ORM (never concatenate user input into SQL)
 result = await db.execute(
     select(WorkflowDB).where(WorkflowDB.name == user_input)
 )
@@ -209,26 +211,12 @@ async def get_workflow(
 
 ## Input Validation
 
-### Backend Validation
+### Backend validation (Java)
 
-**Pydantic Models:**
-```python
-from pydantic import BaseModel, validator, Field
+Use **Bean Validation** (`jakarta.validation`) on REST DTOs, enforce size and required fields on JSON bodies, and reject malformed input before it reaches services.
 
-class WorkflowCreate(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
-    definition: Dict[str, Any]
-    
-    @validator('name')
-    def validate_name(cls, v):
-        if not v.strip():
-            raise ValueError('Name cannot be empty')
-        return v.strip()
-```
-
-**SQL Injection Prevention:**
-- Use SQLAlchemy ORM (parameterized queries)
+**SQL injection prevention:**
+- Prefer **JPA** / `JdbcTemplate` with bind parameters
 - Never concatenate user input into SQL
 - Validate input types
 
@@ -286,7 +274,7 @@ async def create_workflow(request: Request):
 
 **Production Settings:**
 ```python
-# backend/config.py
+# backend-java application.properties / SecurityConfig
 cors_origins: List[str] = [
     "https://yourdomain.com",
     "https://www.yourdomain.com"
@@ -408,21 +396,21 @@ async def handle_websocket_message(message: dict):
 
 ### Dependency Management
 
-**Regular Updates:**
+**Regular updates:**
 ```bash
-# Check for vulnerabilities
-pip list --outdated
+# Frontend
 npm audit
-
-# Update dependencies
-pip install --upgrade package-name
 npm update
+
+# Java (Gradle)
+cd backend-java && ./gradlew dependencyUpdates
 ```
 
-**Security Scanning:**
-- Use `safety` for Python: `safety check`
-- Use `npm audit` for Node.js
-- Use Dependabot for automated updates
+**Security scanning**
+
+- **Gradle:** OWASP Dependency-Check or GitHub Dependabot on `backend-java/build.gradle`
+- **npm:** `npm audit` and lockfile hygiene for `frontend/`
+- Enable **Dependabot** (or Renovate) for automated PRs across ecosystems
 
 ### Known Vulnerabilities
 
@@ -444,8 +432,10 @@ npm update
 **Secure Storage:**
 ```bash
 # .env file (never commit)
-SECRET_KEY=your-secret-key-here
-DATABASE_URL=postgresql://...
+JWT_SECRET=your-jwt-signing-secret
+SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/workflows
+SPRING_DATASOURCE_USERNAME=workflow
+SPRING_DATASOURCE_PASSWORD=change-me
 OPENAI_API_KEY=sk-...
 
 # Use secrets manager in production
@@ -566,4 +556,4 @@ logger.warning(
 
 - [Error Codes Reference](./ERROR_CODES_REFERENCE.md) - Security-related errors
 - [API Reference](./API_REFERENCE.md) - Secure API usage
-- [Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md) - Security patterns
+- [Java backend README](../backend-java/README.md) - Security patterns

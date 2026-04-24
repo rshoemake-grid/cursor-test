@@ -1,4 +1,6 @@
-# Execution System Architecture
+# Execution system architecture
+
+> **Implementation:** The running API is **Spring Boot** under `backend-java/`. Some diagrams use historical labels—map them to Java packages under `com.workflow.*` (controllers, services, engine, WebSocket).
 
 ## Overview
 
@@ -17,7 +19,7 @@ The execution system is responsible for running workflows defined as directed gr
 
 ## Architecture Layers
 
-### 1. API Layer (`backend/api/routes/execution_routes.py`)
+### 1. API layer (REST — e.g. `com.workflow.controller` execution endpoints)
 
 **Entry Point:** `POST /api/workflows/{workflow_id}/execute`
 
@@ -55,7 +57,7 @@ Client Request → ExecutionOrchestrator → Background Task → Response
 
 ---
 
-### 2. Orchestration Layer (`backend/services/execution_orchestrator.py`)
+### 2. Orchestration layer (e.g. `ExecutionOrchestratorService` in Java)
 
 **ExecutionOrchestrator Class** - Coordinates execution setup and lifecycle management.
 
@@ -98,7 +100,7 @@ Updates execution record in database with final status and state.
 
 ---
 
-### 3. Execution Engine (`backend/engine/executor_v3.py`)
+### 3. Execution engine (workflow graph runner in Java)
 
 **WorkflowExecutorV3 Class** - Core execution logic with WebSocket streaming support.
 
@@ -160,7 +162,7 @@ _execute_graph(adjacency: Dict[str, List[str]], in_degree: Dict[str, int])
    - completed: Nodes that have completed
 3. While queue or in_progress exist:
    a. Collect nodes ready to execute (dependencies met)
-   b. Execute ready nodes in parallel (asyncio.gather)
+   b. Execute ready nodes in parallel (bounded executor / `CompletableFuture` batching in Java)
    c. Mark nodes as completed
    d. Add children to queue (if dependencies met)
    e. Handle conditional branching
@@ -251,7 +253,7 @@ _resolve_config_variables(config) → Dict[str, Any]
 
 ---
 
-### 4. Agent System (`backend/agents/`)
+### 4. Agent system (LLM / ADK / tool nodes in Java)
 
 **AgentRegistry** - Factory for creating agent instances.
 
@@ -302,13 +304,13 @@ class BaseAgent:
 
 ---
 
-### 5. Real-Time Updates (`backend/websocket/manager.py`)
+### 5. Real-time updates (WebSocket / streaming in Java)
 
 **ConnectionManager** - Manages WebSocket connections for live execution updates.
 
 **Connection Management:**
 - Maps `execution_id` → Set of WebSocket connections
-- Thread-safe connection management (asyncio.Lock)
+- Thread-safe connection management (e.g. concurrent maps / locks in the WebSocket session registry)
 
 **Broadcast Methods:**
 
@@ -351,7 +353,7 @@ class BaseAgent:
 
 ---
 
-### 6. State Persistence (`backend/database/models.py`)
+### 6. State persistence (JPA entities / repositories)
 
 **ExecutionDB Model:**
 ```python
@@ -404,7 +406,7 @@ class ExecutionDB:
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
 │ 4. Start Background Task                                    │
-│    asyncio.create_task(executor.execute(inputs))          │
+│    Submit executor.execute(inputs) on a worker pool       │
 │    - Non-blocking execution                                 │
 │    - Returns execution_id immediately                       │
 └──────────────────────┬──────────────────────────────────────┘
@@ -455,7 +457,7 @@ class ExecutionDB:
 
 **How It Works:**
 - Independent nodes (no dependencies) execute concurrently
-- Uses `asyncio.gather()` for parallel batches
+- Uses concurrent batches over independent ready nodes (worker pool / `CompletableFuture` in Java)
 - Dependency tracking ensures correct execution order
 
 **Example:**
@@ -582,7 +584,7 @@ Agent Node executes 3 times, once for each item.
 - Decoupled from execution logic
 
 ### 5. Dependency Injection
-- Services injected into routes via FastAPI `Depends`
+- Services injected via Spring **constructor injection** / `@Autowired` patterns
 - Easier testing and maintenance
 
 ### 6. Repository Pattern
@@ -665,30 +667,16 @@ Agent Node executes 3 times, once for each item.
 
 ---
 
-## File Structure
+## Code layout (Java)
 
 ```
-backend/
-├── api/
-│   └── routes/
-│       └── execution_routes.py      # API endpoints
-├── services/
-│   ├── execution_orchestrator.py    # Orchestration layer
-│   └── execution_service.py         # Execution CRUD service
-├── engine/
-│   └── executor_v3.py                # Core execution engine
-├── agents/
-│   ├── registry.py                   # Agent factory
-│   ├── base.py                       # Base agent interface
-│   ├── unified_llm_agent.py          # LLM agent implementation
-│   ├── condition_agent.py            # Condition agent
-│   └── loop_agent.py                # Loop agent
-├── websocket/
-│   └── manager.py                    # WebSocket connection manager
-├── database/
-│   └── models.py                     # ExecutionDB model
-└── models/
-    └── schemas.py                     # ExecutionState, NodeState schemas
+backend-java/src/main/java/com/workflow/
+├── controller/          # REST + WebSocket entrypoints
+├── service/             # Execution orchestration, workflow services
+├── engine/              # Graph execution, node executors
+├── entity/              # JPA persistence
+├── dto/                 # Request/response models
+└── websocket/         # (if present) auth / config for streams
 ```
 
 ---
@@ -734,9 +722,9 @@ WS /api/executions/{execution_id}/stream
 - **LLM Calls**: 10-30 seconds per agent node (provider-dependent)
 
 ### Scalability
-- **Concurrent Executions**: Limited by server resources
-- **Background Tasks**: Uses asyncio for non-blocking execution
-- **Database**: Async SQLAlchemy for non-blocking I/O
+- **Concurrent executions:** limited by JVM heap, thread pools, and database capacity
+- **Background work:** Spring `@Async` and internal executor services where used
+- **Database:** JDBC connection pool (Hikari) and JPA persistence
 
 ### Optimization Opportunities
 - Parallel execution reduces total time for independent nodes
@@ -791,7 +779,7 @@ WS /api/executions/{execution_id}/stream
 
 - [API Workflow Execution](./API_WORKFLOW_EXECUTION.md) - API endpoint documentation
 - [Technical Design](./TECHNICAL_DESIGN.md) - Overall system design
-- [Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md) - Development guide
+- [Java backend README](../backend-java/README.md) - Development guide
 - [Architecture](./../ARCHITECTURE.md) - High-level architecture
 
 ---

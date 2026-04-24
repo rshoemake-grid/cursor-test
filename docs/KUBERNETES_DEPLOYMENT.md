@@ -60,28 +60,13 @@ This guide provides step-by-step instructions for deploying the Agentic Workflow
 
 ### Backend Dockerfile
 
-The repo ships `backend/Dockerfile`, which builds the Spring Boot JAR from `backend-java/`:
+The repo ships **`backend-java/Dockerfile`**, which builds the Spring Boot JAR from the `backend-java/` directory:
 
-```dockerfile
-# Spring Boot API (backend-java). Build from the repository root:
-#   docker build -t workflow-builder-backend:latest -f backend/Dockerfile .
-
-FROM eclipse-temurin:17-jdk-alpine AS builder
-WORKDIR /build
-COPY backend-java/ .
-RUN chmod +x gradlew && ./gradlew bootJar --no-daemon -x test
-
-FROM eclipse-temurin:17-jre-alpine
-WORKDIR /app
-RUN apk add --no-cache curl \
-    && addgroup -S spring && adduser -S spring -G spring
-COPY --from=builder /build/build/libs/*.jar app.jar
-USER spring:spring
-EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
-  CMD curl -sf http://127.0.0.1:8000/health > /dev/null || exit 1
-ENTRYPOINT ["java", "-jar", "app.jar"]
+```bash
+docker build -t workflow-builder-backend:latest -f backend-java/Dockerfile ./backend-java
 ```
+
+See `backend-java/Dockerfile` for the full multi-stage definition (Temurin 17, `bootJar`, non-root user, `/health` check).
 
 **Logging (Java backend):** The app uses **SLF4J + Logback** with **`backend-java/src/main/resources/logback-spring.xml`**. All application logs are written to **stdout/stderr** (no log files in the container), so Docker, Kubernetes (`kubectl logs`), and agents such as **Datadog** can ingest the stream from the container runtime.
 
@@ -192,7 +177,7 @@ export REGISTRY="your-registry.io"
 export IMAGE_TAG="v1.0.0"
 
 # Build backend image
-docker build -t $REGISTRY/workflow-builder-backend:$IMAGE_TAG -f backend/Dockerfile .
+docker build -t $REGISTRY/workflow-builder-backend:$IMAGE_TAG -f backend-java/Dockerfile ./backend-java
 docker push $REGISTRY/workflow-builder-backend:$IMAGE_TAG
 
 # Build frontend image
@@ -677,20 +662,9 @@ kubectl logs -f deployment/workflow-builder-frontend -n workflow-builder
 
 ### Monitoring Setup
 
-#### Prometheus Metrics (Optional)
+#### Prometheus metrics (optional)
 
-Add Prometheus metrics to backend:
-
-```python
-from prometheus_client import Counter, Histogram, generate_latest
-
-REQUEST_COUNT = Counter('http_requests_total', 'Total HTTP requests')
-REQUEST_DURATION = Histogram('http_request_duration_seconds', 'HTTP request duration')
-
-@app.get("/metrics")
-async def metrics():
-    return Response(generate_latest(), media_type="text/plain")
-```
+Expose **Micrometer** metrics from Spring Boot (for example enable the **Prometheus** registry in `backend-java` and scrape **`/actuator/prometheus`**). Wire a `ServiceMonitor` only after the actuator endpoint is actually served by your image.
 
 #### ServiceMonitor (if using Prometheus Operator)
 
@@ -774,13 +748,9 @@ spec:
 - Limits: 256Mi memory, 500m CPU
 - Replicas: 2+ for high availability
 
-### Database Connection Pooling
+### Database connection pooling
 
-Configure SQLAlchemy connection pool in `backend/config.py`:
-
-```python
-database_url: str = "postgresql+asyncpg://user:pass@host:5432/db?pool_size=20&max_overflow=10"
-```
+Tune **HikariCP** / JDBC via Spring Boot properties (e.g. `spring.datasource.hikari.maximum-pool-size`) in `application-production.properties` or your ConfigMap—see Spring Boot docs for datasource tuning.
 
 ## Troubleshooting
 
@@ -802,11 +772,9 @@ kubectl get events -n workflow-builder --sort-by='.lastTimestamp'
 #### 2. Database Connection Issues
 
 ```bash
-# Test database connectivity from pod
-kubectl exec -it <backend-pod> -n workflow-builder -- \
-    python -c "from backend.database.db import engine; import asyncio; asyncio.run(engine.connect())"
+# From inside the backend pod, hit health (includes DB checks if configured)
+kubectl exec -it <backend-pod> -n workflow-builder -- curl -sf http://127.0.0.1:8000/health
 
-# Check database service
 kubectl get svc postgresql -n workflow-builder
 ```
 
@@ -871,7 +839,7 @@ jobs:
     
     - name: Build and push backend
       run: |
-        docker build -t ${{ secrets.REGISTRY }}/workflow-builder-backend:${{ github.sha }} -f backend/Dockerfile .
+        docker build -t ${{ secrets.REGISTRY }}/workflow-builder-backend:${{ github.sha }} -f backend-java/Dockerfile ./backend-java
         docker push ${{ secrets.REGISTRY }}/workflow-builder-backend:${{ github.sha }}
     
     - name: Build and push frontend

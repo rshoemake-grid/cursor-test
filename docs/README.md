@@ -1,168 +1,74 @@
-# Documentation Index
+# Documentation index
 
-**Documentation Version:** 1.0.0  
-**Last Updated:** 2026-04-20  
+**Last updated:** 2026-04-24  
 
-**Recent changes:** **Storage explorer** documents **BigQuery** and **Firestore** browse endpoints (`POST /api/storage/bigquery/*`, `POST /api/storage/firestore/list-collections`) in [API Reference](./API_REFERENCE.md#storage-explorer-authenticated) and [Node Types](./NODE_TYPES_REFERENCE.md#workflow-builder-datastore-pickers). **Java parity:** see [PYTHON_PARITY.md](../backend-java/PYTHON_PARITY.md) (Partial until Java adds the same paths). API paths use `/api` prefix (no `/v1`). **Guest users:** workflow list and private workflow payloads are not exposed without auth; use Marketplace for templates. **Workflow chat:** `POST /api/workflow-chat/chat` accepts optional `iteration_limit` (1–100). **Frontend dev:** default API calls use same-origin `/api` via CRA `setupProxy`; see [Configuration Reference](./CONFIGURATION_REFERENCE.md#frontend-configuration). **Dev bootstrap:** optional `DEV_BOOTSTRAP_*` env vars create/update a local user — see [Configuration Reference](./CONFIGURATION_REFERENCE.md#development-user-bootstrap-optional).
+The production API is **Spring Boot** in `backend-java/`. Optional **Python** under `scripts/` is for small utilities and tests only (not the HTTP service).
 
-Welcome to the workflow engine documentation! This index helps you find the right documentation for your needs.
+**Highlights:** Storage explorer (BigQuery, Firestore, GCS, …) is documented in [API Reference](./API_REFERENCE.md#storage-explorer-authenticated) and [Node Types](./NODE_TYPES_REFERENCE.md#workflow-builder-datastore-pickers). API paths use the `/api` prefix. **Workflow chat:** `POST /api/workflow-chat/chat` accepts optional `iteration_limit` (1–100). **Frontend dev:** same-origin `/api` via CRA `setupProxy` — [Configuration Reference](./CONFIGURATION_REFERENCE.md#frontend-configuration). **Dev bootstrap:** optional `DEV_BOOTSTRAP_*` in root `.env` — [Configuration Reference](./CONFIGURATION_REFERENCE.md#development-user-bootstrap-optional).
 
-## Quick Navigation
+---
 
-### 🚀 Getting Started
-- **[Getting Started Guide](../GETTING_STARTED.md)** - First-time setup and installation
-- **[Quick Start Guide](../QUICKSTART.md)** - Fast setup instructions
-- **[Architecture Overview](../ARCHITECTURE.md)** - System design and architecture
+## Quick navigation
 
-### 📚 Developer Guides
+### Getting started
 
-#### Backend Development
-- **[Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md)** - Backend architecture, patterns, and development
-- **[Java Backend README](../backend-java/README.md)** - Spring Boot Java backend setup and API
-- **[Testing Guide](./TESTING_GUIDE.md)** - Testing strategies (Python, Java, frontend)
-- **[API Reference](./API_REFERENCE.md)** - Complete API documentation
+- [Getting Started](../GETTING_STARTED.md)
+- [Quick Start](../QUICKSTART.md)
+- [Architecture](../ARCHITECTURE.md)
 
-#### Frontend Development
-- **[Frontend Developer Guide](./FRONTEND_DEVELOPER_GUIDE.md)** - Frontend architecture and patterns
-- **[Testing Guide](./TESTING_GUIDE.md)** - Frontend testing with Jest
+### Developer guides
 
-### 🔧 Configuration & Setup
+- [Java backend README](../backend-java/README.md) — run, build, test the API
+- [Testing Guide](./TESTING_GUIDE.md) — Java, frontend, and `scripts/` tests
+- [API Reference](./API_REFERENCE.md)
+- [Frontend Developer Guide](./FRONTEND_DEVELOPER_GUIDE.md)
 
-- **[Configuration Reference](./CONFIGURATION_REFERENCE.md)** - All environment variables and settings
-- **[Storage Integration Guide](./STORAGE_INTEGRATION_GUIDE.md)** - Database setup (SQLite, PostgreSQL, MySQL)
-- **[LLM Provider Setup Guide](./LLM_PROVIDER_SETUP_GUIDE.md)** - Configure OpenAI, Anthropic, Gemini, custom providers
-- **[Node Types Reference](./NODE_TYPES_REFERENCE.md)** - Complete node configuration guide
+### Configuration and operations
 
-### 🔌 Integration Guides
+- [Configuration Reference](./CONFIGURATION_REFERENCE.md)
+- [Storage Integration Guide](./STORAGE_INTEGRATION_GUIDE.md)
+- [LLM Provider Setup Guide](./LLM_PROVIDER_SETUP_GUIDE.md)
+- [Node Types Reference](./NODE_TYPES_REFERENCE.md)
+- [WebSocket API Guide](./WEBSOCKET_API_GUIDE.md)
+- [Kubernetes Deployment](./KUBERNETES_DEPLOYMENT.md)
+- [Apigee Integration Guide](./APIGEE_INTEGRATION_GUIDE.md)
 
-- **[WebSocket API Guide](./WEBSOCKET_API_GUIDE.md)** - Real-time execution updates via WebSocket
-- **[API Reference](./API_REFERENCE.md)** - REST API endpoints and usage
-- **[Kubernetes Deployment](./KUBERNETES_DEPLOYMENT.md)** - Production deployment guide
-- **[Apigee Integration Guide](./APIGEE_INTEGRATION_GUIDE.md)** - API gateway integration
+### Security and quality
 
-### 🛡️ Security & Operations
+- [Security Guide](./SECURITY_GUIDE.md)
+- [Error Codes Reference](./ERROR_CODES_REFERENCE.md)
+- [Performance Tuning Guide](./PERFORMANCE_TUNING_GUIDE.md)
+- [Troubleshooting](./TROUBLESHOOTING.md)
 
-- **[Security Guide](./SECURITY_GUIDE.md)** - Security best practices and implementation
-- **[Error Codes Reference](./ERROR_CODES_REFERENCE.md)** - Complete error code reference
-- **[Performance Tuning Guide](./PERFORMANCE_TUNING_GUIDE.md)** - Optimization strategies
-- **[Troubleshooting Guide](./TROUBLESHOOTING.md)** - Common issues and solutions
+### Contributing
 
-### 🔄 Migration & Maintenance
+- [Contributing Guide](./CONTRIBUTING_GUIDE.md)
 
-- **[Migration Guide](./MIGRATION_GUIDE.md)** - Database migrations and version upgrades
-- **[Storage Integration Guide](./STORAGE_INTEGRATION_GUIDE.md)** - Moving between databases
+### Technical references
 
-### 🤝 Contributing
+- [Technical Design](./TECHNICAL_DESIGN.md)
+- [Execution System Architecture](./EXECUTION_SYSTEM_ARCHITECTURE.md)
+- [Business Requirements](./BUSINESS_REQUIREMENTS.md)
 
-- **[Contributing Guide](./CONTRIBUTING_GUIDE.md)** - How to contribute code, docs, and bug reports
-- **[Testing Guide](./TESTING_GUIDE.md)** - Testing requirements for contributions
+---
 
-### 📖 Technical Documentation
+## By role
 
-- **[SOLID & DRY Backend Analysis](./SOLID_DRY_BACKEND_ANALYSIS.md)** - Code quality analysis for Python and Java backends
-- **[Technical Design](./TECHNICAL_DESIGN.md)** - Detailed technical specifications
-- **[Execution System Architecture](./EXECUTION_SYSTEM_ARCHITECTURE.md)** - Execution engine details
-- **[Business Requirements](./BUSINESS_REQUIREMENTS.md)** - Business logic and requirements
+**Application developers:** [Java backend README](../backend-java/README.md) → [API Reference](./API_REFERENCE.md) → [Frontend Developer Guide](./FRONTEND_DEVELOPER_GUIDE.md)
 
-## Documentation by Role
+**DevOps:** [Kubernetes Deployment](./KUBERNETES_DEPLOYMENT.md) → [Configuration Reference](./CONFIGURATION_REFERENCE.md)
 
-### For Developers
+**Admins:** [Getting Started](../GETTING_STARTED.md) → [LLM Provider Setup Guide](./LLM_PROVIDER_SETUP_GUIDE.md)
 
-**Starting Out:**
-1. [Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md) or [Frontend Developer Guide](./FRONTEND_DEVELOPER_GUIDE.md)
-2. [Testing Guide](./TESTING_GUIDE.md)
-3. [Contributing Guide](./CONTRIBUTING_GUIDE.md)
+---
 
-**Working with APIs:**
-1. [API Reference](./API_REFERENCE.md)
-2. [WebSocket API Guide](./WEBSOCKET_API_GUIDE.md)
-3. [Error Codes Reference](./ERROR_CODES_REFERENCE.md)
+## Related resources
 
-**Configuration:**
-1. [Configuration Reference](./CONFIGURATION_REFERENCE.md)
-2. [Storage Integration Guide](./STORAGE_INTEGRATION_GUIDE.md)
-3. [LLM Provider Setup Guide](./LLM_PROVIDER_SETUP_GUIDE.md)
+- [Project README](../README.md)
+- [Architecture overview](../ARCHITECTURE.md)
 
-### For DevOps/Infrastructure
+## Quick links (local dev)
 
-**Deployment:**
-1. [Kubernetes Deployment](./KUBERNETES_DEPLOYMENT.md)
-2. [Storage Integration Guide](./STORAGE_INTEGRATION_GUIDE.md)
-3. [Performance Tuning Guide](./PERFORMANCE_TUNING_GUIDE.md)
-
-**Security:**
-1. [Security Guide](./SECURITY_GUIDE.md)
-2. [Configuration Reference](./CONFIGURATION_REFERENCE.md)
-
-**Monitoring:**
-1. [Performance Tuning Guide](./PERFORMANCE_TUNING_GUIDE.md)
-2. [Troubleshooting Guide](./TROUBLESHOOTING.md)
-
-### For Users/Administrators
-
-**Setup:**
-1. [Getting Started Guide](../GETTING_STARTED.md)
-2. [LLM Provider Setup Guide](./LLM_PROVIDER_SETUP_GUIDE.md)
-3. [Configuration Reference](./CONFIGURATION_REFERENCE.md)
-
-**Usage:**
-1. [Node Types Reference](./NODE_TYPES_REFERENCE.md)
-2. [Troubleshooting Guide](./TROUBLESHOOTING.md)
-
-**Maintenance:**
-1. [Migration Guide](./MIGRATION_GUIDE.md)
-2. [Storage Integration Guide](./STORAGE_INTEGRATION_GUIDE.md)
-
-## Documentation Structure
-
-### Guides (How-To)
-- Step-by-step instructions
-- Examples and code snippets
-- Best practices
-
-### References (Lookup)
-- Complete API documentation
-- Configuration options
-- Error codes and meanings
-
-### Architecture (Understanding)
-- System design
-- Technical decisions
-- Component relationships
-
-## Finding What You Need
-
-**I want to...**
-
-- **Set up the system**: [Getting Started](../GETTING_STARTED.md) → [Configuration Reference](./CONFIGURATION_REFERENCE.md)
-- **Configure a database**: [Storage Integration Guide](./STORAGE_INTEGRATION_GUIDE.md)
-- **Set up LLM providers**: [LLM Provider Setup Guide](./LLM_PROVIDER_SETUP_GUIDE.md)
-- **Use the API**: [API Reference](./API_REFERENCE.md) → [WebSocket API Guide](./WEBSOCKET_API_GUIDE.md)
-- **Deploy to production**: [Kubernetes Deployment](./KUBERNETES_DEPLOYMENT.md)
-- **Understand errors**: [Error Codes Reference](./ERROR_CODES_REFERENCE.md) → [Troubleshooting Guide](./TROUBLESHOOTING.md)
-- **Optimize performance**: [Performance Tuning Guide](./PERFORMANCE_TUNING_GUIDE.md)
-- **Secure the system**: [Security Guide](./SECURITY_GUIDE.md)
-- **Contribute code**: [Contributing Guide](./CONTRIBUTING_GUIDE.md) → [Testing Guide](./TESTING_GUIDE.md)
-- **Migrate data**: [Migration Guide](./MIGRATION_GUIDE.md)
-
-## Related Resources
-
-- **Main README**: [../README.md](../README.md) - Project overview
-- **Architecture**: [../ARCHITECTURE.md](../ARCHITECTURE.md) - High-level design
-- **Examples**: [../examples/](../examples/) - Code examples
-
-## Documentation Updates
-
-Documentation is updated alongside code changes. If you find:
-- Outdated information
-- Missing documentation
-- Unclear explanations
-
-Please [open an issue](https://github.com/your-repo/issues) or submit a pull request with improvements.
-
-## Quick Links
-
-- [API Documentation](http://localhost:8000/docs) - Interactive API docs (when server running)
-- [Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md)
+- [OpenAPI / Swagger UI](http://localhost:8000/swagger-ui.html) — when `backend-java` is running
 - [Frontend Developer Guide](./FRONTEND_DEVELOPER_GUIDE.md)
 - [Contributing Guide](./CONTRIBUTING_GUIDE.md)

@@ -49,10 +49,10 @@ tail -f app.log
 # Check terminal output
 ```
 
-**4. Verify Configuration:**
+**4. Verify configuration:**
 ```bash
-# Check environment variables
-python -c "from backend.config import settings; print(settings.database_url)"
+grep -E '^spring\.datasource\.|^jwt\.' backend-java/src/main/resources/application.properties
+curl -sf http://localhost:8000/health
 ```
 
 ---
@@ -222,10 +222,10 @@ curl http://localhost:8000/api/workflows \
 
 **Solutions:**
 
-**Check Database:**
+**Check database file / JDBC URL:**
 ```bash
-# Verify database connection
-python -c "from backend.database.db import engine; print(engine.url)"
+ls -la workflows.db 2>/dev/null || true
+grep spring.datasource.url backend-java/src/main/resources/application.properties
 ```
 
 **Check Logs:**
@@ -375,10 +375,10 @@ tail -f app.log | grep ERROR
 
 **Solutions:**
 
-**1. Check Database Connection:**
+**1. Check database connectivity:**
 ```bash
-# Verify database is accessible
-python -c "from backend.database.db import AsyncSessionLocal; import asyncio; asyncio.run(AsyncSessionLocal().__aenter__())"
+curl -sf http://localhost:8000/health
+# If using SQLite, ensure the API process cwd can read/write workflows.db
 ```
 
 **2. Check Execution Service:**
@@ -405,33 +405,27 @@ ls -la .
 chmod 755 .
 ```
 
-**PostgreSQL Solutions:**
+**PostgreSQL solutions:**
 ```bash
-# Verify connection string
-echo $DATABASE_URL
+# Verify JDBC-related env (example names—match your deployment)
+echo "$SPRING_DATASOURCE_URL"
 
-# Test connection
-psql $DATABASE_URL -c "SELECT 1;"
+# Test connection (adjust user/host/db)
+psql -h localhost -U workflow_user -d workflows -c "SELECT 1;"
 
 # Check PostgreSQL is running
 sudo systemctl status postgresql
 ```
 
-### Migration Issues
+### Migration issues
 
-**Error:** `Alembic migration failed`
+**Error:** Schema migration tool failed (Flyway / Liquibase)
 
 **Solutions:**
-```bash
-# Check current migration version
-alembic current
 
-# Apply migrations
-alembic upgrade head
-
-# Rollback if needed
-alembic downgrade -1
-```
+- Inspect migration logs from the **Java** deployment.
+- Confirm the database user can run DDL.
+- Restore from backup before retrying a failed migration.
 
 ### Performance Issues
 
@@ -449,19 +443,14 @@ CREATE INDEX idx_executions_workflow_id ON executions(workflow_id);
 CREATE INDEX idx_executions_user_id ON executions(user_id);
 ```
 
-**2. Optimize Queries:**
+**2. Optimize queries:**
 - Use pagination for large result sets
-- Add `limit` and `offset` to queries
-- Use `select_related` for joins
+- Prefer fetch joins / `@EntityGraph` in JPA to avoid N+1 loads
 
-**3. Connection Pooling:**
-```python
-# Increase pool size in database config
-engine = create_async_engine(
-    DATABASE_URL,
-    pool_size=20,
-    max_overflow=40
-)
+**3. Connection pooling (Hikari):**
+```properties
+spring.datasource.hikari.maximum-pool-size=20
+spring.datasource.hikari.minimum-idle=5
 ```
 
 ---
@@ -472,7 +461,7 @@ engine = create_async_engine(
 
 **Common causes:**
 
-1. **Frontend calling a different host than you tested** — Prefer an **empty** `REACT_APP_API_BASE_URL` in `frontend/.env.development` so the app uses same-origin **`/api`** and the CRA proxy forwards to FastAPI (see [Configuration Reference](./CONFIGURATION_REFERENCE.md#frontend-configuration)).
+1. **Frontend calling a different host than you tested** — Prefer an **empty** `REACT_APP_API_BASE_URL` in `frontend/.env.development` so the app uses same-origin **`/api`** and the CRA proxy forwards to the **Java API** (see [Configuration Reference](./CONFIGURATION_REFERENCE.md#frontend-configuration)).
 2. **CORS** — If you set `REACT_APP_API_BASE_URL=http://127.0.0.1:8000` while the app runs on `http://localhost:3000`, the browser performs a cross-origin request; ensure `CORS_ORIGINS` includes your exact dev origin.
 3. **Backend not running** or wrong `PROXY_TARGET` for the dev proxy.
 
@@ -496,11 +485,7 @@ DEV_BOOTSTRAP_PASSWORD=your_password
 
 Restart the API. On startup, the user is **created if missing** and the password is **reset** to `DEV_BOOTSTRAP_PASSWORD`.
 
-Alternatively create a user manually:
-
-```bash
-python backend/scripts/create_user.py email@example.com username password
-```
+Alternatively register via **`POST /api/auth/register`** (see [API Reference](./API_REFERENCE.md)) or use your admin tooling.
 
 ### “My workflows” empty when not signed in (expected)
 
@@ -519,12 +504,10 @@ curl -s -X POST http://127.0.0.1:8000/api/auth/login \
   -d '{"username":"your_username","password":"your_password","remember_me":false}'
 ```
 
-**2. Check Password Hashing:**
-- Ensure bcrypt is installed: `pip install bcrypt`
-- Verify password hashing algorithm matches
+**2. Check password hashing:** passwords are stored with **BCrypt** in the Java service; verify you are hitting the correct API instance and database file.
 
 **3. User inactive or missing:**
-- Use dev bootstrap (above) or `backend/scripts/create_user.py` in development.
+- Use dev bootstrap (above) or register again via the auth API.
 - For inactive accounts, fix in the database or admin tooling if available.
 
 ### Token Expired
@@ -888,19 +871,14 @@ CREATE INDEX idx_workflows_owner_id ON workflows(owner_id);
 CREATE INDEX idx_executions_status ON executions(status);
 ```
 
-**2. Optimize Queries:**
-- Use `select()` to limit columns
-- Add `limit` and `offset` for pagination
-- Use `join()` efficiently
+**2. Optimize queries:**
+- Return DTO projections where possible instead of full entities
+- Page list endpoints with Spring **`Pageable`**
 
-**3. Connection Pooling:**
-```python
-# Increase pool size
-engine = create_async_engine(
-    DATABASE_URL,
-    pool_size=20,
-    max_overflow=40
-)
+**3. Connection pooling (Hikari):**
+```properties
+spring.datasource.hikari.maximum-pool-size=20
+spring.datasource.hikari.minimum-idle=5
 ```
 
 ---
@@ -997,7 +975,7 @@ tail -f app.log
 
 **Enable Debug Logging:**
 ```bash
-LOG_LEVEL=DEBUG python main.py
+LOGGING_LEVEL_ROOT=DEBUG ./gradlew bootRun
 ```
 
 **Check Execution State:**
@@ -1012,11 +990,8 @@ curl http://localhost:8000/api/executions/{execution_id} \
 # Check backend health
 curl http://localhost:8000/health
 
-# Check database connection
-python -c "from backend.database.db import engine; print(engine.url)"
-
-# Check configuration
-python -c "from backend.config import settings; print(settings.dict())"
+# Inspect JDBC URL in config
+grep spring.datasource.url backend-java/src/main/resources/application.properties
 
 # List workflows
 curl http://localhost:8000/api/workflows \

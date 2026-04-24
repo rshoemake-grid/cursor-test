@@ -5,30 +5,13 @@
 
 ## Overview
 
-This document provides a comprehensive reference for all error codes, exception types, and error handling patterns used in the workflow engine.
+This document provides a reference for HTTP error codes and JSON error bodies returned by the **Spring Boot** API (`backend-java/`). Implementation details live in Java exception types and **`@RestControllerAdvice`** handlers—inspect that module for exact class names.
 
-## Real-World Error Handling Examples
+## End-to-end examples
 
-### Example 1: Workflow Not Found
+### Workflow not found
 
-**Scenario:** User tries to access a deleted workflow
-
-```python
-# Backend
-try:
-    workflow = await workflow_service.get_workflow("wf-deleted-123")
-except WorkflowNotFoundError as e:
-    raise HTTPException(
-        status_code=404,
-        detail={
-            "error_code": "WORKFLOW_NOT_FOUND",
-            "message": str(e),
-            "workflow_id": "wf-deleted-123"
-        }
-    )
-```
-
-**Client Response:**
+**Illustrative JSON body:**
 ```json
 {
   "detail": {
@@ -39,7 +22,7 @@ except WorkflowNotFoundError as e:
 }
 ```
 
-**Frontend Handling:**
+**Frontend handling:**
 ```typescript
 try {
   const workflow = await api.getWorkflow('wf-deleted-123');
@@ -51,71 +34,21 @@ try {
 }
 ```
 
-### Example 2: Invalid API Key
+### Invalid API key (LLM)
 
-**Scenario:** LLM provider API key expired or invalid
+Executions fail the current node, the UI surfaces the provider error, and the user corrects keys under **Settings**—then re-runs the workflow.
 
-```python
-# During workflow execution
-try:
-    result = await llm_agent.execute(inputs)
-except InvalidAPIKeyError as e:
-    # Log error, update execution status
-    await update_execution_status(
-        execution_id,
-        status="failed",
-        error=f"LLM provider error: {str(e)}"
-    )
-    # Broadcast via WebSocket
-    await manager.broadcast_error(execution_id, str(e))
-```
+### Upstream rate limits
 
-**User Experience:**
-1. Execution starts
-2. Node fails with "Invalid API key"
-3. User sees error in execution console
-4. User navigates to Settings
-5. User updates API key
-6. User re-runs workflow
+Outbound LLM calls should use bounded retries/backoff in the Java client layer; surface **`RATE_LIMIT_EXCEEDED`** (or provider-specific messaging) when retries are exhausted.
 
-### Example 3: Rate Limit Exceeded
+**Quick reference**
 
-**Scenario:** Too many API requests in short time
+- [Error codes](#error-codes) — stable `error_code` values
+- [Error handling patterns](#error-handling-patterns) — Spring-oriented patterns
+- [Best practices](#best-practices)
 
-```python
-# Backend retry logic
-max_retries = 3
-retry_delay = 60  # seconds
-
-for attempt in range(max_retries):
-    try:
-        result = await llm_client.complete(prompt)
-        break
-    except RateLimitError:
-        if attempt < max_retries - 1:
-            await asyncio.sleep(retry_delay)
-            retry_delay *= 2  # Exponential backoff
-        else:
-            raise LLMProviderError(
-                provider="openai",
-                message="Rate limit exceeded after retries",
-                api_error="429 Too Many Requests"
-            )
-```
-
-**User Experience:**
-- Execution pauses automatically
-- Retries after 60 seconds
-- If still failing, shows error with suggestion to wait or upgrade plan
-
-**Quick Reference:**
-- [Exception Classes](#exception-classes) - Python exception hierarchy
-- [Error Codes](#error-codes) - Standardized error code tables
-- [Error Handling Patterns](#error-handling-patterns) - Implementation examples
-- [Real-World Examples](#real-world-error-handling-examples) - Practical scenarios
-- [Best Practices](#best-practices) - Error handling guidelines
-
-## Error Categories
+## Error categories
 
 ### HTTP Status Codes
 
@@ -137,195 +70,9 @@ for attempt in range(max_retries):
 - `502 Bad Gateway`: Upstream server error
 - `503 Service Unavailable`: Service temporarily unavailable
 
-## Exception Classes
+## Domain errors (Java)
 
-### Base Exceptions
-
-#### `WorkflowEngineException`
-Base exception for all workflow engine errors.
-
-```python
-class WorkflowEngineException(Exception):
-    """Base exception for workflow engine errors"""
-    pass
-```
-
-### Workflow Exceptions
-
-#### `WorkflowNotFoundError`
-Raised when a workflow is not found.
-
-**HTTP Status:** `404 Not Found`
-
-**Attributes:**
-- `workflow_id`: The ID of the workflow that was not found
-
-**Example:**
-```python
-raise WorkflowNotFoundError(workflow_id="wf-123")
-# Error: "Workflow not found: wf-123"
-```
-
-#### `WorkflowValidationError`
-Raised when workflow validation fails.
-
-**HTTP Status:** `400 Bad Request` or `422 Unprocessable Entity`
-
-**Attributes:**
-- `message`: Error message
-- `details`: Optional dictionary with validation details
-
-**Example:**
-```python
-raise WorkflowValidationError(
-    message="Invalid workflow definition",
-    details={"node_id": "node-1", "error": "Missing required field 'type'"}
-)
-```
-
-### Execution Exceptions
-
-#### `ExecutionError`
-Base exception for execution-related errors.
-
-**Attributes:**
-- `execution_id`: The execution ID
-- `message`: Error message
-
-**Example:**
-```python
-raise ExecutionError(
-    execution_id="exec-123",
-    message="Execution failed"
-)
-```
-
-#### `ExecutionNotFoundError`
-Raised when an execution is not found.
-
-**HTTP Status:** `404 Not Found`
-
-**Attributes:**
-- `execution_id`: The ID of the execution that was not found
-
-**Example:**
-```python
-raise ExecutionNotFoundError(execution_id="exec-123")
-# Error: "Execution not found: exec-123"
-```
-
-#### `NodeExecutionError`
-Raised when a node execution fails.
-
-**HTTP Status:** `500 Internal Server Error`
-
-**Attributes:**
-- `execution_id`: The execution ID
-- `node_id`: The node ID that failed
-- `message`: Error message
-- `error_type`: Optional error type classification
-
-**Example:**
-```python
-raise NodeExecutionError(
-    execution_id="exec-123",
-    node_id="node-1",
-    message="API call failed",
-    error_type="api_error"
-)
-# Error: "Node node-1 failed: API call failed"
-```
-
-### Configuration Exceptions
-
-#### `ConfigurationError`
-Raised when configuration is invalid or missing.
-
-**HTTP Status:** `500 Internal Server Error`
-
-**Attributes:**
-- `message`: Error message
-- `config_key`: Optional configuration key that caused the error
-
-**Example:**
-```python
-raise ConfigurationError(
-    message="Missing required configuration",
-    config_key="database_url"
-)
-```
-
-### LLM Provider Exceptions
-
-#### `LLMProviderError`
-Raised when LLM provider configuration or API call fails.
-
-**HTTP Status:** `500 Internal Server Error` or `502 Bad Gateway`
-
-**Attributes:**
-- `provider`: Provider name (e.g., "openai", "anthropic")
-- `message`: Error message
-- `api_error`: Optional original API error message
-
-**Example:**
-```python
-raise LLMProviderError(
-    provider="openai",
-    message="API request failed",
-    api_error="Rate limit exceeded"
-)
-# Error: "LLM provider 'openai' error: API request failed"
-```
-
-#### `InvalidAPIKeyError`
-Raised when API key is invalid or missing.
-
-**HTTP Status:** `401 Unauthorized`
-
-**Attributes:**
-- `provider`: Provider name
-
-**Example:**
-```python
-raise InvalidAPIKeyError(provider="openai")
-# Error: "LLM provider 'openai' error: Invalid or missing API key. 
-#         Please configure a valid API key in Settings."
-```
-
-### Input Source Exceptions
-
-#### `InputSourceError`
-Raised when input source operations fail.
-
-**HTTP Status:** `500 Internal Server Error`
-
-**Attributes:**
-- `source_type`: Source type (e.g., "local_filesystem")
-- `message`: Error message
-
-**Example:**
-```python
-raise InputSourceError(
-    source_type="local_filesystem",
-    message="Failed to read file"
-)
-# Error: "Input source 'local_filesystem' error: Failed to read file"
-```
-
-#### `FileNotFoundError`
-Raised when a required file is not found.
-
-**HTTP Status:** `404 Not Found`
-
-**Attributes:**
-- `file_path`: Path to the file that was not found
-
-**Example:**
-```python
-raise FileNotFoundError(file_path="/path/to/file.txt")
-# Error: "Input source 'local_filesystem' error: File not found: /path/to/file.txt. 
-#         Please check that the file exists and the path is correct."
-```
+Runtime failures are represented by **typed exceptions** under `com.workflow` (workflows, executions, LLM providers, configuration, storage). Global handlers translate them to the JSON shapes below and the HTTP statuses listed in [Error codes](#error-codes). Browse `backend-java/src/main/java/com/workflow` for authoritative names and fields.
 
 ## Error Response Format
 
@@ -425,72 +172,15 @@ raise FileNotFoundError(file_path="/path/to/file.txt")
 
 ## Error Handling Patterns
 
-### API Route Error Handling
+### API error handling (Spring Boot)
 
-```python
-from fastapi import HTTPException, status
-from backend.exceptions import WorkflowNotFoundError
+Map domain exceptions to HTTP status and a stable JSON body with **`error_code`**, **`detail`**, and optional identifiers (for example `workflow_id`). Typical patterns:
 
-@router.get("/workflows/{workflow_id}")
-async def get_workflow(workflow_id: str):
-    try:
-        workflow = await workflow_service.get_workflow(workflow_id)
-        if not workflow:
-            raise WorkflowNotFoundError(workflow_id)
-        return workflow
-    except WorkflowNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-```
+- **`@ControllerAdvice`** / **`@RestControllerAdvice`** with **`@ExceptionHandler`** methods returning **`ResponseEntity<ProblemDetail>`** or your shared error DTO.
+- **`ResponseStatusException`** for simple 4xx cases inside controllers.
+- Keep **validation errors** (`422`) aligned with whatever the frontend expects (field errors vs. single `detail` string).
 
-### Service Layer Error Handling
-
-```python
-from backend.exceptions import WorkflowNotFoundError
-
-async def get_workflow(self, workflow_id: str):
-    workflow = await self.repository.get_by_id(workflow_id)
-    if not workflow:
-        raise WorkflowNotFoundError(workflow_id)
-    return workflow
-```
-
-### Execution Error Handling
-
-```python
-from backend.exceptions import NodeExecutionError
-
-try:
-    result = await node.execute(inputs)
-except Exception as e:
-    raise NodeExecutionError(
-        execution_id=execution_id,
-        node_id=node.id,
-        message=str(e),
-        error_type=type(e).__name__
-    )
-```
-
-### Global Exception Handler
-
-```python
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from backend.exceptions import WorkflowNotFoundError, ExecutionNotFoundError
-
-@app.exception_handler(WorkflowNotFoundError)
-async def workflow_not_found_handler(request: Request, exc: WorkflowNotFoundError):
-    return JSONResponse(
-        status_code=404,
-        content={
-            "detail": str(exc),
-            "error_code": "WORKFLOW_NOT_FOUND",
-            "workflow_id": exc.workflow_id
-        }
-    )
-```
+Service layers should throw **typed exceptions** (for example “workflow not found”) rather than leaking raw persistence errors to the client.
 
 ## Client-Side Error Handling
 
@@ -540,116 +230,19 @@ class ErrorBoundary extends React.Component {
 }
 ```
 
-## Error Logging
+## Error logging (Java)
 
-### Server-Side Logging
+Use **SLF4J** (`LoggerFactory.getLogger(...)`) with structured **MDC** fields (for example `executionId`, `workflowId`) where helpful. Log **once** at the boundary where you translate to an HTTP response; include the stack trace on unexpected failures (`log.error("...", e)`).
 
-```python
-from backend.utils.logger import get_logger
+## Best practices
 
-logger = get_logger(__name__)
-
-try:
-    result = await operation()
-except Exception as e:
-    logger.error(
-        "Operation failed",
-        extra={
-            "error": str(e),
-            "error_type": type(e).__name__,
-            "execution_id": execution_id
-        },
-        exc_info=True
-    )
-    raise
-```
-
-### Structured Logging
-
-```python
-logger.error(
-    "Node execution failed",
-    extra={
-        "execution_id": execution_id,
-        "node_id": node_id,
-        "error": str(error),
-        "error_code": "NODE_EXECUTION_FAILED",
-        "timestamp": datetime.utcnow().isoformat()
-    }
-)
-```
-
-## Best Practices
-
-### 1. Use Specific Exceptions
-
-**Good:**
-```python
-raise WorkflowNotFoundError(workflow_id)
-```
-
-**Bad:**
-```python
-raise Exception("Workflow not found")
-```
-
-### 2. Provide Context
-
-**Good:**
-```python
-raise NodeExecutionError(
-    execution_id=execution_id,
-    node_id=node_id,
-    message="API call failed",
-    error_type="api_error"
-)
-```
-
-**Bad:**
-```python
-raise Exception("Failed")
-```
-
-### 3. Include Error Codes
-
-**Good:**
-```json
-{
-  "detail": "Workflow not found",
-  "error_code": "WORKFLOW_NOT_FOUND"
-}
-```
-
-**Bad:**
-```json
-{
-  "detail": "Workflow not found"
-}
-```
-
-### 4. Log Before Raising
-
-```python
-logger.error("Operation failed", exc_info=True)
-raise OperationError("Operation failed")
-```
-
-### 5. Don't Expose Sensitive Information
-
-**Good:**
-```python
-raise InvalidAPIKeyError(provider="openai")
-# Error: "Invalid or missing API key"
-```
-
-**Bad:**
-```python
-raise Exception(f"Invalid API key: {api_key}")
-# Exposes API key in error message
-```
+1. Throw **specific** runtime exceptions from services; avoid raw `Exception` for control flow.
+2. Attach **`error_code`** and stable identifiers to API JSON—clients depend on them.
+3. Never echo secrets, tokens, or full upstream provider payloads into **`detail`**.
+4. Prefer **`@RestControllerAdvice`** for consistent response shaping across controllers.
 
 ## Related Documentation
 
-- [Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md) - Error handling patterns
+- [Java backend README](../backend-java/README.md) - Error handling patterns
 - [API Reference](./API_REFERENCE.md) - API error responses
 - [Security Guide](./SECURITY_GUIDE.md) - Security-related errors

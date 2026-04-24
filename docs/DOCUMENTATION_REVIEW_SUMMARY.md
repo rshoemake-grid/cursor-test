@@ -93,13 +93,10 @@ Files updated:
    - Fixed hook testing example
 
 2. **Migration Guide:**
-   - Added `select` import to migration script
-   - Fixed SQLAlchemy imports
-   - Improved migration script completeness
+   - Rewritten for the **Java** stack (JDBC, Flyway/Liquibase, backups)
 
 3. **Storage Integration Guide:**
-   - Fixed SQLite to PostgreSQL migration script
-   - Added proper imports and error handling
+   - Aligned with **Spring `spring.datasource.*`** and HikariCP
 
 ## Documentation Quality Assessment
 

@@ -1,47 +1,34 @@
-# Spring Boot Backend - Summary
+# Spring Boot backend — summary
 
 ## Overview
 
-A complete Spring Boot Java backend that serves as a **drop-in replacement** for the Python FastAPI backend. The implementation maintains API compatibility, database compatibility, and authentication compatibility.
+Spring Boot service exposing the workflow **REST** and **WebSocket** API, with **JPA** persistence and **JWT** security.
 
-## What's Been Created
+## What is in the tree
 
-### ✅ Core Infrastructure
-- **Gradle Project** (`build.gradle`) with all required dependencies
-- **Application Configuration** (`application.properties`) matching Python config
-- **Main Application Class** with Spring Boot setup
+### Core infrastructure
+- **Gradle** project (`build.gradle`, wrapper)
+- **`application.properties`** (SQLite default, logging, CORS, execution limits)
+- **Main application** entry class
 
-### ✅ Database Layer
-- **7 Entity Models** matching Python SQLAlchemy models:
-  - User, Workflow, Execution, Settings
-  - WorkflowTemplate, PasswordResetToken, RefreshToken
-- **7 JPA Repositories** with custom query methods
-- **SQLite Database** - uses same `workflows.db` file as Python backend
+### Database layer
+- **JPA entities** for users, workflows, executions, settings, templates, tokens
+- **Repositories** with query methods
+- **SQLite** default (`workflows.db`); **PostgreSQL** optional via profile/env
 
-### ✅ Data Transfer Objects
-- **Complete DTO Layer** matching Python Pydantic schemas:
-  - Workflow DTOs (WorkflowDefinition, WorkflowCreate, WorkflowResponse)
-  - Execution DTOs (ExecutionRequest, ExecutionResponse)
-  - Node/Edge DTOs with all config types
-  - Auth DTOs (UserCreate, UserResponse, TokenResponse)
-  - All enum types (NodeType, ExecutionStatus)
+### DTOs and API
+- Request/response DTOs for workflows, executions, nodes, auth, settings
+- Enums such as `NodeType`, execution status values
 
-### ✅ Security & Authentication
-- **JWT Authentication** matching Python backend
-- **Spring Security Configuration** with CORS support
-- **Password Encoding** (BCrypt) matching Python passlib
-- **JWT Utilities** for token generation/validation
-- **Authentication Filter** for request processing
+### Security
+- **Spring Security**, JWT access/refresh flow, BCrypt passwords
 
-### ✅ Controllers (Partial Implementation)
-- **WorkflowController** - Full CRUD operations
-- **AuthController** - Register, login, refresh token
-- **HealthController** - Health check endpoint
+### Controllers and errors
+- REST controllers under `com.workflow.controller`
+- **Global exception handler** returning consistent JSON error bodies
 
-### ✅ Exception Handling
-- **Global Exception Handler** matching Python error format
-- **Custom Exceptions** (ResourceNotFoundException, ValidationException)
-- **Error Response Format** matches Python FastAPI responses
+### Health
+- **`/health`** for load balancers and local checks
 
 ## API Endpoints Implemented
 
@@ -75,18 +62,15 @@ See `IMPLEMENTATION_GUIDE.md` for detailed instructions on completing:
 
 ## Key Features
 
-### Drop-in Replacement
-- ✅ Same API endpoints (`/api/*`)
-- ✅ Same request/response formats
-- ✅ Same database schema (SQLite)
-- ✅ Same JWT authentication
-- ✅ Same error response format
+### API surface
+- REST under `/api/*` with JSON request/response bodies
+- SQLite default (`workflows.db`); PostgreSQL supported
+- JWT access/refresh and BCrypt passwords
+- Consistent JSON error payloads from the global handler
 
-### Compatibility
-- ✅ Uses same `workflows.db` database file
-- ✅ JWT tokens are compatible (same secret)
-- ✅ CORS configuration matches Python backend
-- ✅ Port 8000 (matches Python backend)
+### Defaults
+- Listens on **port 8000** in local `application.properties`
+- Permissive CORS for development; tighten via env/properties for production
 
 ## Running the Application
 
@@ -109,10 +93,10 @@ The API will be available at `http://localhost:8000`
 ## Configuration
 
 Key configuration in `application.properties`:
-- `server.port=8000` - Matches Python backend
-- `spring.datasource.url=jdbc:sqlite:./workflows.db` - Same database
-- `jwt.secret` - Set via environment variable
-- `cors.allowed-origins=*` - Matches Python CORS
+- `server.port=8000` — local default
+- `spring.datasource.url=jdbc:sqlite:./workflows.db` — SQLite dev DB
+- `jwt.secret` — set via environment / properties (never commit secrets)
+- `cors.allowed-origins` — restrict in production
 
 ## Architecture
 
@@ -141,5 +125,5 @@ Key configuration in `application.properties`:
 
 - The Java backend is synchronous by default (can use `@Async` for async)
 - Uses Spring Security instead of custom auth middleware
-- Uses JPA/Hibernate instead of SQLAlchemy
+- Uses JPA/Hibernate for persistence
 - Type-safe at compile time (Java benefits)

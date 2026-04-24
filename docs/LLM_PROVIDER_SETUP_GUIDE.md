@@ -473,7 +473,7 @@ with a valid API key, enable it, and click 'Sync Now'.
 
 **Enable Debug Logging:**
 ```python
-# backend/config.py
+# backend-java — application properties and SettingsService
 log_level: str = "DEBUG"
 ```
 
@@ -560,5 +560,5 @@ Monitor API usage:
 ## Related Documentation
 
 - [Settings API Reference](./API_REFERENCE.md) - Settings endpoints
-- [Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md) - LLM client implementation
+- [Java backend README](../backend-java/README.md) - LLM client implementation
 - [Technical Design](./TECHNICAL_DESIGN.md) - Provider architecture

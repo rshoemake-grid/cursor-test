@@ -1,33 +1,27 @@
-# Keys and Secrets
+# Keys and secrets
 
-**Never commit secrets to the repository.** All sensitive values are loaded from environment variables.
+**Never commit secrets.** Use environment variables, Kubernetes Secrets, or your cloud secret manager.
 
-## Where Keys Are Kept
+## Where values are read (Java API)
 
-| Key | Source | Used By |
-|-----|--------|---------|
-| `SECRET_KEY` | `.env` or environment | `backend/auth/auth.py` – JWT signing |
-| `REFRESH_TOKEN_SECRET_KEY` | `.env` or environment | `backend/auth/auth.py` – refresh tokens |
-| `OPENAI_API_KEY` | `.env` or environment | `backend/utils/env_config_utils.py` – LLM fallback |
-| `ANTHROPIC_API_KEY` | `.env` or environment | `backend/utils/env_config_utils.py` – LLM fallback |
-| `GEMINI_API_KEY` / `GOOGLE_API_KEY` | `.env` or environment | `backend/utils/env_config_utils.py` – LLM fallback |
-| LLM API keys (per provider) | Database (Settings) | `backend/services/settings_service.py` – primary source |
-| GCP credentials | Database or config | `backend/inputs/input_sources.py` – GCP Bucket/PubSub |
-| AWS credentials | Database or config | `backend/inputs/input_sources.py` – S3 |
+| Key / setting | Typical source | Used by |
+|---------------|----------------|---------|
+| `JWT_SECRET` (or configured property name) | Env / `.env` | `backend-java` — access & refresh token signing |
+| `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, etc. | Root `.env` | Fallback LLM keys when users have not saved keys in Settings |
+| Per-user LLM keys | Database (`settings` / user settings) | Provider calls at execution time |
+| GCP / AWS credentials for storage nodes | User or system config | Storage explorer and input nodes |
 
-## Protected from Check-in
+Exact property names are in `backend-java/src/main/resources/application*.properties` and the security configuration classes—search the Java tree for `jwt` and datasource settings.
 
-The following are in `.gitignore` and will **not** be committed:
+## Protected from check-in
 
-- `.env` – local environment file
-- `.env.local`, `.env.*.local` – local overrides
-- `*.pem` – certificate/key files
-- `*credentials*.json` – GCP/AWS credential files
-- `*secret*` – files with "secret" in the name
+See root `.gitignore`:
 
-## Setup
+- `.env`, `.env.*.local`
+- `*.pem`, `*credentials*.json`, `*secret*`
 
-1. Copy `.env.example` to `.env`
-2. Fill in required values (see `.env.example` comments)
-3. In production, set `SECRET_KEY` and `ENVIRONMENT=production`
-4. **In production, set `LOCAL_FILE_BASE_PATH`** to restrict file system access. Path validation (path traversal protection) only runs when `LOCAL_FILE_BASE_PATH` is set. Without it, local file system nodes can access any path on the server.
+## Local development
+
+1. Copy `.env.example` → `.env` and fill values.  
+2. For optional auto-login in dev, set `DEV_BOOTSTRAP_*` (see [Configuration Reference](./CONFIGURATION_REFERENCE.md#development-user-bootstrap-optional)).  
+3. In production, load secrets from a vault or platform secret store—not from the repo.

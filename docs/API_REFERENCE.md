@@ -42,9 +42,9 @@ These **POST** routes live under **`/api/storage`** (same prefix as the rest of 
 | `POST /api/storage/aws/list-regions` | AWS regions |
 | `POST /api/storage/local/list-directory` | Server directory listing (respects `LOCAL_FILE_BASE_PATH`) |
 
-**Responses:** List-style endpoints return JSON with an **`objects`** array of `{ name, display_name, size?, updated? }`, matching the shared picker UI. **503** may be returned if an optional Python dependency is missing on the server (message includes install hint).
+**Responses:** List-style endpoints return JSON with an **`objects`** array of `{ name, display_name, size?, updated? }`, matching the shared picker UI. **503** may be returned when an optional integration is unavailable on the server (response body usually includes a short reason).
 
-**Dependencies (Python API):** BigQuery and Firestore listing require `google-cloud-bigquery` and `google-cloud-firestore` (listed in `requirements.txt`). Credential resolution matches workflow GCS nodes (inline service account JSON, or Application Default Credentials on the server).
+**Dependencies:** BigQuery and Firestore pickers require the corresponding **Google client libraries** on the **Java** classpath and valid credentials (inline service account JSON on the request where supported, or ADC / workload identity on the server). See `backend-java/build.gradle` and the storage explorer controllers for what is wired today.
 
 ## Workflow Chat
 
@@ -68,10 +68,10 @@ Response includes `message` (assistant text) and optional `workflow_changes` for
 ## Notes
 
 - **Templates:** Use `/api/templates` (no trailing slash). Query params: `category`, `difficulty`, `search`, `sort_by`, `limit`, `offset`.
-- **Backend parity:** Python and Java backends expose the same core endpoints. Path variable names may differ internally (e.g. `template_id` vs `templateId`); URLs are identical. **Exception:** the Python API adds **BigQuery** and **Firestore** storage-explorer routes above; the Java `StorageExplorerController` may not implement those paths yet—use Python or extend Java for full picker parity.
+- **Coverage:** Not every storage-explorer route may be implemented in a given build; if the UI receives **404/503** for BigQuery/Firestore, extend `StorageExplorerController` (and dependencies) or adjust the product matrix accordingly.
 
 ## Related Documentation
 
 - [API Workflow Execution](./API_WORKFLOW_EXECUTION.md) - Execution API details
 - [WebSocket API Guide](./WEBSOCKET_API_GUIDE.md) - Real-time updates
-- [Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md) - Architecture and development
+- [Java backend README](../backend-java/README.md) - Architecture and development

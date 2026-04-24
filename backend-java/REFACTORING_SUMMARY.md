@@ -342,7 +342,7 @@ public class WorkflowController {
 
 ## 📝 Notes
 
-- All changes maintain API compatibility with Python backend
+- REST contract remains stable for existing clients under `/api/*`
 - All changes follow Spring Boot best practices
 - Code is now production-ready
 - Easy to test and maintain

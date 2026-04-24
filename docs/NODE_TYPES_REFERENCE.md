@@ -1015,7 +1015,7 @@ The visual editor uses shared browser dialogs backed by the **storage explorer**
 | **Firebase — Storage** | Uses the same **GCS** bucket and object pickers as the GCP Bucket node (`project_id` + credentials from the Firebase editor). |
 | **Firebase — Realtime Database** | No browse API; set paths manually. |
 
-If the Python server returns **503** for BigQuery or Firestore, install **`google-cloud-bigquery`** and **`google-cloud-firestore`** (see root `requirements.txt`).
+If the API returns **503** for BigQuery or Firestore, verify the **Java** service has the required Google client libraries on the classpath and that credentials / ADC are configured for the deployment.
 
 ---
 

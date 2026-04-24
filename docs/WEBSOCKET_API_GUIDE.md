@@ -87,21 +87,10 @@ ws.onclose = () => {
 };
 ```
 
-**Python:**
-```python
-import asyncio
-import websockets
-import json
+**CLI ([websocat](https://github.com/vi/websocat)):**
 
-async def connect_execution_stream(execution_id: str):
-    uri = f"ws://localhost:8000/api/ws/executions/{execution_id}"
-    async with websockets.connect(uri) as websocket:
-        while True:
-            message = await websocket.recv()
-            data = json.loads(message)
-            print(f"Received: {data}")
-
-asyncio.run(connect_execution_stream("exec-123"))
+```bash
+websocat ws://127.0.0.1:8000/api/ws/executions/exec-123
 ```
 
 ## Message Types
@@ -589,15 +578,17 @@ ws.onopen = () => {
 
 ## Configuration
 
-### Server Configuration
+### Server configuration
 
-```python
-# backend/config.py
-websocket_ping_interval: int = 20  # seconds
-websocket_timeout: int = 60  # seconds
+Tune ping/timeout via Spring properties (see `backend-java/src/main/resources/application.properties` and any WebSocket config beans), for example:
+
+```properties
+# Illustrative — exact keys depend on your WebSocket setup
+app.websocket.ping-interval-seconds=20
+app.websocket.idle-timeout-seconds=60
 ```
 
-### Client Configuration
+### Client configuration
 
 ```javascript
 // Set WebSocket timeout
@@ -615,5 +606,5 @@ ws.onopen = () => {
 ## Related Documentation
 
 - [Execution API Reference](./API_REFERENCE.md) - REST API for executions
-- [Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md) - WebSocket implementation
+- [Java backend README](../backend-java/README.md) - WebSocket implementation
 - [Technical Design](./TECHNICAL_DESIGN.md) - Real-time architecture

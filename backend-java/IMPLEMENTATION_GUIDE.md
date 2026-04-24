@@ -1,6 +1,6 @@
 # Spring Boot Backend Implementation Guide
 
-This guide provides details on completing the Spring Boot backend implementation to match the Python FastAPI backend.
+This guide provides notes for extending the **Spring Boot** backend (`backend-java/`).
 
 ## Completed Components
 
@@ -12,7 +12,7 @@ This guide provides details on completing the Spring Boot backend implementation
 ✅ **Entity Models**
 - User, Workflow, Execution, Settings, WorkflowTemplate
 - PasswordResetToken, RefreshToken
-- All match Python SQLAlchemy models
+- Schema aligned with the shared `workflows.db` / PostgreSQL layout used by the app
 
 ✅ **DTOs**
 - Node, Edge, WorkflowDefinition, WorkflowCreate, WorkflowResponse
@@ -202,21 +202,17 @@ public class MetricsController {
 - POST /api/workflows/{id}/share
 - GET /api/workflows/shared
 
-## Database Compatibility
+## Database compatibility
 
-The Java backend uses the same SQLite database file (`workflows.db`) as the Python backend. The JPA entities are configured to match the Python SQLAlchemy models exactly.
+The service uses the SQLite file `workflows.db` for local development and PostgreSQL in production; JPA entities map to that schema (see `application*.properties`).
 
-## API Compatibility
+## API contract
 
-All endpoints match the Python backend:
-- Same URL paths (`/api/*`)
-- Same request/response formats
-- Same error response format
-- Same authentication (JWT tokens)
+REST endpoints live under `/api/*` with JWT auth; request/response shapes follow the DTOs in this module and the OpenAPI spec when generated.
 
 ## Testing
 
-Add tests matching Python backend tests:
+Add integration and unit tests for services and controllers:
 
 ```java
 @SpringBootTest
@@ -238,16 +234,8 @@ The Spring Boot backend can be deployed as:
 - Docker container
 - Traditional WAR file (with modifications)
 
-## Migration Path
-
-1. **Phase 1**: Deploy Java backend alongside Python backend
-2. **Phase 2**: Test with same database
-3. **Phase 3**: Switch frontend to Java backend
-4. **Phase 4**: Decommission Python backend
-
 ## Notes
 
-- The Java backend is synchronous by default (Spring Boot)
-- Use `@Async` for async operations if needed
-- WebSocket support uses Spring WebSocket (different from Python's websockets library)
-- LLM API calls can use Spring WebFlux (reactive) or RestTemplate/WebClient
+- The Java API is synchronous by default (Spring MVC); use **`@Async`** or dedicated executors when you intentionally offload work from request threads.
+- WebSockets use **Spring WebSocket** support.
+- Outbound LLM calls typically use **`WebClient`** or **`RestTemplate`** with strict timeouts and retries where appropriate.

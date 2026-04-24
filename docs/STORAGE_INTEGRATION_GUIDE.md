@@ -5,7 +5,7 @@
 
 ## Overview
 
-This guide explains how to configure and integrate different storage backends for the workflow engine. The system currently supports SQLite (default) and can be configured to use PostgreSQL, MySQL, or other SQLAlchemy-supported databases.
+This guide explains how to configure and integrate different storage backends for the workflow engine. The **Java** service supports **SQLite** by default and **PostgreSQL** in production via Spring datasource configuration (see `backend-java/src/main/resources/application*.properties`).
 
 ## Database Schema Diagram
 
@@ -74,11 +74,11 @@ erDiagram
     }
 ```
 
-**Quick Start:**
-1. Choose your database (SQLite for development, PostgreSQL for production)
-2. Set `DATABASE_URL` environment variable
-3. Run the application - tables are created automatically
-4. For production, configure connection pooling and backups
+**Quick start**
+1. Choose SQLite for local development or PostgreSQL for production.
+2. Set **`spring.datasource.*`** (or activate the `postgresql` Spring profile) in `backend-java/src/main/resources/application*.properties`.
+3. Run the API from `backend-java/` (for example `./gradlew bootRun`). Schema updates follow **`spring.jpa.hibernate.ddl-auto`**.
+4. For production, tune **HikariCP**, enable TLS to the database, and configure backups.
 
 **See Also:**
 - [Migration Guide](./MIGRATION_GUIDE.md) - Moving between databases
@@ -101,84 +101,31 @@ erDiagram
 - **Pros**: Widely supported, good performance
 - **Cons**: Requires separate database server
 
-## Configuration
+## Configuration (Spring Boot)
 
-### Environment Variables
+Configure the database with **JDBC** via **`spring.datasource.*`** (and optional profile files such as `application-postgresql.properties`). Do not use generic `DATABASE_URL` strings unless your deployment explicitly maps them into Spring properties.
 
-Configure storage via the `DATABASE_URL` environment variable:
-
-```bash
-# SQLite (default)
-DATABASE_URL=sqlite+aiosqlite:///./workflows.db
-
-# PostgreSQL
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/workflows
-
-# MySQL
-DATABASE_URL=mysql+aiomysql://user:password@localhost:3306/workflows
+**SQLite (typical local dev):**
+```properties
+spring.datasource.url=jdbc:sqlite:./workflows.db
+spring.datasource.driver-class-name=org.sqlite.JDBC
 ```
 
-### Connection String Format
-
-```
-{driver}://{user}:{password}@{host}:{port}/{database}?{options}
-```
-
-**Components:**
-- `driver`: Database driver (`sqlite+aiosqlite`, `postgresql+asyncpg`, `mysql+aiomysql`)
-- `user`: Database username
-- `password`: Database password
-- `host`: Database hostname
-- `port`: Database port
-- `database`: Database name
-- `options`: Additional connection options (optional)
-
-### Connection Options
-
-#### PostgreSQL Options
-```bash
-DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/db?pool_size=20&max_overflow=10&pool_timeout=30
+**PostgreSQL (typical production):**
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/workflows
+spring.datasource.username=workflow_user
+spring.datasource.password=your_password
+spring.datasource.driver-class-name=org.postgresql.Driver
 ```
 
-**Common Options:**
-- `pool_size`: Number of connections to maintain (default: 5)
-- `max_overflow`: Maximum overflow connections (default: 10)
-- `pool_timeout`: Seconds to wait for connection (default: 30)
-- `pool_recycle`: Seconds before recycling connection (default: 3600)
-
-#### MySQL Options
-```bash
-DATABASE_URL=mysql+aiomysql://user:pass@host:3306/db?charset=utf8mb4&pool_size=20
-```
-
-**Common Options:**
-- `pool_size`: Connection pool size
-- `charset`: Character set (recommend: `utf8mb4`)
-- `connect_timeout`: Connection timeout in seconds
+Tune **`spring.datasource.hikari.*`** for pool size, timeouts, and leak detection. See Spring Boot datasource documentation for the full property set.
 
 ## Setup Instructions
 
 ### SQLite Setup
 
-No setup required! SQLite is the default and works out of the box.
-
-```bash
-# Database file will be created automatically at ./workflows.db
-# No additional configuration needed
-```
-
-**Real-World Example:**
-```bash
-# Development environment
-# .env file
-DATABASE_URL=sqlite+aiosqlite:///./workflows.db
-
-# Start application - database created automatically
-python main.py
-
-# Database file appears at ./workflows.db
-# Contains: users, workflows, executions, settings tables
-```
+No separate database server is required. With the properties above, **`workflows.db`** is created beside the process working directory when the app starts.
 
 ### PostgreSQL Setup
 
@@ -219,47 +166,21 @@ GRANT ALL PRIVILEGES ON DATABASE workflows TO workflow_user;
 \q
 ```
 
-#### 3. Install Python Driver
+#### 3. Point Spring at PostgreSQL
+
+Set `spring.datasource.url` to a **`jdbc:postgresql://...`** URL and matching username/password (see `application-postgresql.properties` in `backend-java/` for the pattern your deployment uses).
+
+#### 4. Start the API and verify schema
 
 ```bash
-pip install asyncpg
+cd backend-java && ./gradlew bootRun
 ```
 
-#### 4. Configure Connection
-
 ```bash
-# .env file
-DATABASE_URL=postgresql+asyncpg://workflow_user:your_password@localhost:5432/workflows
-```
-
-#### 5. Initialize Database
-
-```bash
-# Run migrations or create tables
-python -c "from backend.database.db import init_db; import asyncio; asyncio.run(init_db())"
-```
-
-**Real-World Example:**
-```bash
-# Production PostgreSQL setup
-# 1. Create database and user
-psql -U postgres
-CREATE DATABASE workflows_prod;
-CREATE USER app_user WITH PASSWORD 'secure_password_123';
-GRANT ALL PRIVILEGES ON DATABASE workflows_prod TO app_user;
-\q
-
-# 2. Configure connection
-# .env file
-DATABASE_URL=postgresql+asyncpg://app_user:secure_password_123@db.example.com:5432/workflows_prod?pool_size=20&max_overflow=10&ssl=require
-
-# 3. Initialize schema
-python -c "from backend.database.db import init_db; import asyncio; asyncio.run(init_db())"
-
-# 4. Verify tables created
 psql -U app_user -d workflows_prod -c "\dt"
-# Should show: users, workflows, executions, settings, workflow_versions, workflow_shares
 ```
+
+You should see tables such as `users`, `workflows`, `executions`, `settings`, and related workflow tables.
 
 ### MySQL Setup
 
@@ -303,22 +224,13 @@ FLUSH PRIVILEGES;
 EXIT;
 ```
 
-#### 3. Install Python Driver
+#### 3. JDBC driver for MySQL
 
-```bash
-pip install aiomysql
-```
-
-#### 4. Configure Connection
-
-```bash
-# .env file
-DATABASE_URL=mysql+aiomysql://workflow_user:your_password@localhost:3306/workflows?charset=utf8mb4
-```
+Add the MySQL JDBC driver to the Gradle dependencies if you choose MySQL, then set `spring.datasource.url=jdbc:mysql://...` and the matching username, password, and driver class.
 
 ## Database Schema
 
-The application uses SQLAlchemy ORM models defined in `backend/database/models.py`. See the [Database Schema Diagram](#database-schema-diagram) above for a visual representation.
+The application persists workflows and executions through **JPA entities** in `backend-java/` (see entity classes under `com.workflow.entity`). See the [Database Schema Diagram](#database-schema-diagram) above for a visual representation.
 
 ### Core Tables
 
@@ -354,69 +266,22 @@ The application uses SQLAlchemy ORM models defined in `backend/database/models.p
 
 ## Migration and Schema Updates
 
-### Automatic Schema Creation
+### Automatic schema updates
 
-The application automatically creates tables on startup:
+Hibernate **`spring.jpa.hibernate.ddl-auto`** controls whether tables are created or updated at startup. Use a conservative value in production (often `validate` plus explicit migrations).
 
-```python
-# backend/database/db.py
-async def init_db():
-    """Initialize database tables"""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-```
+### Manual migrations
 
-### Manual Migration (Future)
+For production schema evolution, prefer **Flyway** or **Liquibase** migrations checked into `backend-java/` rather than ad-hoc DDL. Align migration scripts with the JPA entities under `com.workflow.entity`.
 
-For production deployments, consider using Alembic for migrations:
+## Connection pooling (Java)
 
-```bash
-# Install Alembic
-pip install alembic
-
-# Initialize Alembic
-alembic init alembic
-
-# Create migration
-alembic revision --autogenerate -m "Initial schema"
-
-# Apply migration
-alembic upgrade head
-```
-
-## Connection Pooling
-
-### Configuration
-
-Connection pooling is handled by SQLAlchemy. Configure via connection string:
-
-```python
-# backend/config.py
-database_url: str = "postgresql+asyncpg://user:pass@host:5432/db?pool_size=20&max_overflow=10"
-```
-
-### Recommended Pool Sizes
-
-**Development:**
-- `pool_size=5`
-- `max_overflow=10`
-
-**Production:**
-- `pool_size=20`
-- `max_overflow=10`
+**HikariCP** (Spring Boot default) settings such as `spring.datasource.hikari.maximum-pool-size` apply. Tune them in `application-production.properties` or environment-specific config for your JDBC URL—see Spring Boot datasource documentation.
 - Adjust based on concurrent request load
 
-### Monitoring Pool Usage
+### Monitoring pool usage
 
-```python
-from backend.database.db import engine
-
-# Check pool status
-pool = engine.pool
-print(f"Pool size: {pool.size()}")
-print(f"Checked out: {pool.checkedout()}")
-print(f"Overflow: {pool.overflow()}")
-```
+Expose **Spring Boot Actuator** (if enabled in your build) and inspect Hikari metrics, or watch JDBC wait times and thread stalls in your APM. At minimum, log slow queries and pool exhaustion warnings from the datasource.
 
 ## Backup and Recovery
 
@@ -468,32 +333,20 @@ The application creates indexes on frequently queried fields:
 - `executions.user_id`
 - `executions.status`
 
-### Query Optimization
+### Query optimization
 
-**Use async queries:**
-```python
-# Good: Async query
-result = await db.execute(select(WorkflowDB).where(WorkflowDB.owner_id == user_id))
-workflows = result.scalars().all()
-
-# Avoid: Synchronous operations
-# workflows = db.query(WorkflowDB).filter_by(owner_id=user_id).all()
-```
-
-**Batch operations:**
-```python
-# Batch insert
-workflows = [WorkflowDB(...), WorkflowDB(...)]
-db.add_all(workflows)
-await db.commit()
-```
+- Prefer **parameterized** repository methods and bounded **`Pageable`** reads for lists.
+- Use **`JOIN FETCH`** or **`@EntityGraph`** when you must hydrate associations without N+1 selects.
+- Batch writes with **`saveAll`** / bulk operations where appropriate.
 
 ### Monitoring
 
-**Enable query logging:**
-```python
-# backend/config.py
-log_level: str = "DEBUG"  # Shows SQL queries
+Enable SQL diagnostics only when needed, for example:
+
+```properties
+# backend-java/src/main/resources/application.properties (dev only)
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.orm.jdbc.bind=TRACE
 ```
 
 **Database metrics:**
@@ -536,9 +389,9 @@ log_level: str = "DEBUG"  # Shows SQL queries
 ### Migration Issues
 
 **Schema mismatch:**
-- Verify models match database schema
-- Run `init_db()` to create missing tables
-- Check for manual schema changes
+- Verify JPA entities match the live schema
+- Align `spring.jpa.hibernate.ddl-auto` with your migration strategy
+- Check for manual schema changes outside Flyway/Liquibase
 
 **Data type issues:**
 - Verify JSON columns support JSON type (PostgreSQL 9.4+, MySQL 5.7+)
@@ -548,30 +401,14 @@ log_level: str = "DEBUG"  # Shows SQL queries
 
 ### Connection Security
 
-**Use SSL/TLS in production:**
-```bash
-# PostgreSQL with SSL
-DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/db?ssl=require
+**Use SSL/TLS in production**
 
-# MySQL with SSL
-DATABASE_URL=mysql+aiomysql://user:pass@host:3306/db?ssl=true
-```
+Append the appropriate SSL parameters to the JDBC URL for your vendor (for example PostgreSQL `sslmode=require` on the JDBC URL, or MySQL TLS parameters per the connector docs).
 
-### Credential Management
+### Credential management
 
-**Never commit credentials:**
-- Use environment variables
-- Use secret management systems (Kubernetes secrets, AWS Secrets Manager)
-- Rotate credentials regularly
-
-**Example:**
-```bash
-# .env file (not committed)
-DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/db
-
-# Or use secrets manager
-DATABASE_URL=${SECRETS_MANAGER_DATABASE_URL}
-```
+- Store usernames and passwords in environment variables, Kubernetes Secrets, or a secrets manager—not in Git.
+- Map secrets into **`spring.datasource.username`** / **`spring.datasource.password`** (or Spring Cloud Config) at runtime.
 
 ## Production Checklist
 
@@ -588,6 +425,6 @@ DATABASE_URL=${SECRETS_MANAGER_DATABASE_URL}
 
 ## Related Documentation
 
-- [Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md) - Database models and patterns
+- [Java backend README](../backend-java/README.md) - Database models and patterns
 - [Technical Design](./TECHNICAL_DESIGN.md) - Database schema details
 - [Kubernetes Deployment](./KUBERNETES_DEPLOYMENT.md) - Production deployment with databases

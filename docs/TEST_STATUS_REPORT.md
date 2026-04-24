@@ -45,12 +45,9 @@ The failing tests are **pre-existing issues** unrelated to the Apigee improvemen
 
 #### 2. Debug Routes Tests (4 failures)
 
-**Issue**: Database model mismatches:
-- `TypeError: 'logs' is an invalid keyword argument for ExecutionDB`
-- `TypeError: 'error' is an invalid keyword argument for ExecutionDB`
-- `sqlalchemy.exc.IntegrityError: NOT NULL constraint failed: executions.state`
+**Issue**: Test fixtures out of sync with the execution persistence model (invalid fields, constraint failures).
 
-**Impact**: Low - Test code needs updating to match current ExecutionDB model
+**Impact**: Low — update tests to match the current schema and DTOs
 
 **Files Affected**:
 - `test_debug_routes_mutation_killers.py` (4 failures)
