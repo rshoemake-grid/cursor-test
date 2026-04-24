@@ -9,6 +9,8 @@ import com.workflow.service.ExecutionOrchestratorService;
 import com.workflow.util.AuthenticationHelper;
 import com.workflow.util.ErrorMessages;
 import com.workflow.util.ExecutionLogsFormatter;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -42,15 +44,18 @@ public class ExecutionController {
     private final ExecutionOrchestratorService executionOrchestratorService;
     private final AuthenticationHelper authenticationHelper;
     private final ExecutionLogsFormatter logsFormatter;
+    private final ObjectMapper objectMapper;
 
     public ExecutionController(ExecutionService executionService,
                               ExecutionOrchestratorService executionOrchestratorService,
                               AuthenticationHelper authenticationHelper,
-                              ExecutionLogsFormatter logsFormatter) {
+                              ExecutionLogsFormatter logsFormatter,
+                              ObjectMapper objectMapper) {
         this.executionService = executionService;
         this.executionOrchestratorService = executionOrchestratorService;
         this.authenticationHelper = authenticationHelper;
         this.logsFormatter = logsFormatter;
+        this.objectMapper = objectMapper;
     }
 
     @PostMapping("/workflows/{workflowId}/execute")
@@ -62,11 +67,11 @@ public class ExecutionController {
     })
     public ResponseEntity<ExecutionResponse> executeWorkflow(
             @PathVariable String workflowId,
-            @RequestBody(required = false) ExecutionRequest executionRequest,
+            @RequestBody(required = false) JsonNode executeBody,
             Authentication authentication) {
         String userId = authenticationHelper.extractUserIdRequired(authentication);
         log.info("Executing workflow {} for user {}", workflowId, userId);
-        ExecutionRequest request = executionRequest != null ? executionRequest : new ExecutionRequest();
+        ExecutionRequest request = ExecutionRequest.fromHttpJson(executeBody, objectMapper);
         ExecutionResponse response = executionOrchestratorService.executeWorkflow(workflowId, userId, request);
 
         return ResponseEntity.ok(response);

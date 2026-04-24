@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Ensures execute payload from the frontend (snake_case + flexible inputs) deserializes.
+ * Ensures execute payload parsing ({@link ExecutionRequest#fromHttpJson}) matches frontend/Python.
  */
 class ExecutionRequestJacksonTest {
 
@@ -23,35 +23,51 @@ class ExecutionRequestJacksonTest {
     }
 
     @Test
-    void deserialize_snakeCaseWorkflowId_andObjectInputs() throws Exception {
+    void fromHttpJson_snakeCaseWorkflowId_andObjectInputs() throws Exception {
         String json = """
                 {"workflow_id":"972aae0b-de38-40db-ba53-6b301c956867","inputs":{"topic":"hello"}}
                 """;
-        ExecutionRequest r = objectMapper.readValue(json, ExecutionRequest.class);
+        ExecutionRequest r = ExecutionRequest.fromHttpJson(objectMapper.readTree(json), objectMapper);
         assertEquals("972aae0b-de38-40db-ba53-6b301c956867", r.getWorkflowId());
         assertEquals(Map.of("topic", "hello"), r.getInputs());
     }
 
     @Test
-    void deserialize_camelCaseWorkflowId() throws Exception {
+    void fromHttpJson_camelCaseWorkflowId() throws Exception {
         String json = "{\"workflowId\":\"w1\",\"inputs\":{}}";
-        ExecutionRequest r = objectMapper.readValue(json, ExecutionRequest.class);
+        ExecutionRequest r = ExecutionRequest.fromHttpJson(objectMapper.readTree(json), objectMapper);
         assertEquals("w1", r.getWorkflowId());
         assertNotNull(r.getInputs());
         assertTrue(r.getInputs().isEmpty());
     }
 
     @Test
-    void deserialize_inputsAsJsonStringObject() throws Exception {
+    void fromHttpJson_inputsAsJsonStringObject() throws Exception {
         String json = "{\"workflow_id\":\"w1\",\"inputs\":\"{\\\"a\\\":1}\"}";
-        ExecutionRequest r = objectMapper.readValue(json, ExecutionRequest.class);
-        assertEquals(Map.of("a", 1), r.getInputs());
+        ExecutionRequest r = ExecutionRequest.fromHttpJson(objectMapper.readTree(json), objectMapper);
+        assertEquals(1, ((Number) r.getInputs().get("a")).intValue());
     }
 
     @Test
-    void deserialize_inputsArray_becomesEmptyMap() throws Exception {
+    void fromHttpJson_inputsArray_becomesEmptyMap() throws Exception {
         String json = "{\"workflow_id\":\"w1\",\"inputs\":[]}";
-        ExecutionRequest r = objectMapper.readValue(json, ExecutionRequest.class);
+        ExecutionRequest r = ExecutionRequest.fromHttpJson(objectMapper.readTree(json), objectMapper);
+        assertNotNull(r.getInputs());
+        assertTrue(r.getInputs().isEmpty());
+    }
+
+    @Test
+    void fromHttpJson_emptyObject() throws Exception {
+        ExecutionRequest r = ExecutionRequest.fromHttpJson(objectMapper.readTree("{}"), objectMapper);
+        assertEquals(null, r.getWorkflowId());
+        assertNotNull(r.getInputs());
+        assertTrue(r.getInputs().isEmpty());
+    }
+
+    @Test
+    void fromHttpJson_nullNode() {
+        ExecutionRequest r = ExecutionRequest.fromHttpJson(null, objectMapper);
+        assertEquals(null, r.getWorkflowId());
         assertNotNull(r.getInputs());
         assertTrue(r.getInputs().isEmpty());
     }
