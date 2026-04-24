@@ -364,7 +364,7 @@ describe("useWorkflowExecution - No Coverage Paths", () => {
       const { result } = renderHook(() =>
         useWorkflowExecution({
           isAuthenticated: true,
-          localWorkflowId: "workflow-123",
+          localWorkflowId: null,
           workflowIdRef: emptyWorkflowIdRef,
           saveWorkflow: mockSaveWorkflow,
           onExecutionStart: mockOnExecutionStart,
@@ -390,7 +390,7 @@ describe("useWorkflowExecution - No Coverage Paths", () => {
       const { result } = renderHook(() =>
         useWorkflowExecution({
           isAuthenticated: true,
-          localWorkflowId: "workflow-123",
+          localWorkflowId: null,
           workflowIdRef: emptyWorkflowIdRef,
           saveWorkflow: mockSaveWorkflow,
           onExecutionStart: mockOnExecutionStart,

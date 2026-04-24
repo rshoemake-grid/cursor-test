@@ -34,7 +34,7 @@ describe("BigQueryNodeEditor", () => {
     );
     expect(screen.getByLabelText(/Project ID/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Connection Mode/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Dataset/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Dataset$/i)).toBeInTheDocument();
     expect(
       screen.getByLabelText(/Service Account Credentials/i),
     ).toBeInTheDocument();
@@ -88,7 +88,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    const datasetInput = screen.getByLabelText(/Dataset/i);
+    const datasetInput = screen.getByLabelText(/^Dataset$/i);
     fireEvent.change(datasetInput, {
       target: {
         value: "new_dataset",
@@ -164,7 +164,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    expect(screen.getByLabelText(/Table/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Table$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Write Disposition/i)).toBeInTheDocument();
   });
   it("should not display table and write disposition fields when mode is read", () => {
@@ -174,7 +174,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    expect(screen.queryByLabelText(/Table/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Table$/i)).not.toBeInTheDocument();
     expect(
       screen.queryByLabelText(/Write Disposition/i),
     ).not.toBeInTheDocument();
@@ -186,7 +186,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    const tableInput = screen.getByLabelText(/Table/i);
+    const tableInput = screen.getByLabelText(/^Table$/i);
     fireEvent.change(tableInput, {
       target: {
         value: "my_table",
@@ -222,7 +222,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    const locationInput = screen.getByLabelText(/Location/i);
+    const locationInput = screen.getByLabelText(/Location \(optional\)/i);
     fireEvent.change(locationInput, {
       target: {
         value: "EU",
@@ -345,7 +345,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    const datasetInput = screen.getByLabelText(/Dataset/i);
+    const datasetInput = screen.getByLabelText(/^Dataset$/i);
     expect(datasetInput.value).toBe("");
   });
   it("should handle null dataset", () => {
@@ -355,7 +355,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    const datasetInput = screen.getByLabelText(/Dataset/i);
+    const datasetInput = screen.getByLabelText(/^Dataset$/i);
     expect(datasetInput.value).toBe("");
   });
   it("should handle empty string query in read mode", () => {
@@ -388,7 +388,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    const tableInput = screen.getByLabelText(/Table/i);
+    const tableInput = screen.getByLabelText(/^Table$/i);
     expect(tableInput.value).toBe("");
   });
   it("should handle null table in write mode", () => {
@@ -399,7 +399,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    const tableInput = screen.getByLabelText(/Table/i);
+    const tableInput = screen.getByLabelText(/^Table$/i);
     expect(tableInput.value).toBe("");
   });
   it("should handle empty string write_disposition", () => {
@@ -431,7 +431,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    const locationInput = screen.getByLabelText(/Location/i);
+    const locationInput = screen.getByLabelText(/Location \(optional\)/i);
     expect(locationInput.value).toBe("");
   });
   it("should handle null location", () => {
@@ -441,7 +441,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    const locationInput = screen.getByLabelText(/Location/i);
+    const locationInput = screen.getByLabelText(/Location \(optional\)/i);
     expect(locationInput.value).toBe("");
   });
   it("should handle empty string credentials", () => {
@@ -476,7 +476,7 @@ describe("BigQueryNodeEditor", () => {
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
     expect(screen.getByLabelText(/SQL Query/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/Table/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Table$/i)).not.toBeInTheDocument();
   });
   it("should verify write mode condition is checked correctly", () => {
     const node = createMockNode({
@@ -486,7 +486,7 @@ describe("BigQueryNodeEditor", () => {
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
     expect(screen.queryByLabelText(/SQL Query/i)).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/Table/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Table$/i)).toBeInTheDocument();
   });
   it("should handle mode that is neither read nor write", () => {
     const node = createMockNode({
@@ -496,7 +496,7 @@ describe("BigQueryNodeEditor", () => {
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
     expect(screen.queryByLabelText(/SQL Query/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/Table/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Table$/i)).not.toBeInTheDocument();
   });
   it("should verify query fallback to empty string when query is falsy", () => {
     const node = createMockNode({
@@ -590,8 +590,8 @@ describe("BigQueryNodeEditor", () => {
     );
     expect(screen.getByLabelText(/Project ID/i).value).toBe("");
     expect(screen.getByLabelText(/Connection Mode/i).value).toBe("read");
-    expect(screen.getByLabelText(/Dataset/i).value).toBe("");
-    expect(screen.getByLabelText(/Location/i).value).toBe("");
+    expect(screen.getByLabelText(/^Dataset$/i).value).toBe("");
+    expect(screen.getByLabelText(/Location \(optional\)/i).value).toBe("");
     expect(screen.getByLabelText(/Service Account Credentials/i).value).toBe(
       "",
     );
@@ -661,7 +661,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    const datasetInput = screen.getByLabelText(/Dataset/i);
+    const datasetInput = screen.getByLabelText(/^Dataset$/i);
     expect(datasetInput.value).toBe("");
     expect(datasetInput.value.length).toBe(0);
   });
@@ -673,7 +673,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    const tableInput = screen.getByLabelText(/Table/i);
+    const tableInput = screen.getByLabelText(/^Table$/i);
     expect(tableInput.value).toBe("");
     expect(tableInput.value.length).toBe(0);
   });
@@ -684,7 +684,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    const locationInput = screen.getByLabelText(/Location/i);
+    const locationInput = screen.getByLabelText(/Location \(optional\)/i);
     expect(locationInput.value).toBe("");
     expect(locationInput.value.length).toBe(0);
   });
@@ -709,7 +709,7 @@ describe("BigQueryNodeEditor", () => {
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
     expect(screen.getByLabelText(/SQL Query/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/Table/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Table$/i)).not.toBeInTheDocument();
   });
   it("should verify mode === write condition is checked correctly", () => {
     const node = createMockNode({
@@ -718,7 +718,7 @@ describe("BigQueryNodeEditor", () => {
     render(
       <BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
     );
-    expect(screen.getByLabelText(/Table/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Table$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Write Disposition/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/SQL Query/i)).not.toBeInTheDocument();
   });

@@ -21,6 +21,24 @@ class ErrorMessagesTest {
     }
 
     @Test
+    void executionFailureDetailUsesCauseMessageWhenTopMessageNull() {
+        assertEquals(
+                "root cause text",
+                ErrorMessages.executionFailureDetail(
+                        new IllegalStateException(null, new RuntimeException("root cause text"))));
+    }
+
+    @Test
+    void executionFailureDetailSkipsBlankMessagesInChain() {
+        Exception inner = new Exception("inner");
+        // Single-arg RuntimeException(Throwable) sets message to cause.toString(), not null.
+        RuntimeException mid = new RuntimeException("   ", inner);
+        assertEquals(
+                "inner",
+                ErrorMessages.executionFailureDetail(new IllegalStateException("   ", mid)));
+    }
+
+    @Test
     void executionFailureDetailFallsBackForNullThrowable() {
         assertEquals(ErrorMessages.EXECUTION_FAILED, ErrorMessages.executionFailureDetail(null));
     }

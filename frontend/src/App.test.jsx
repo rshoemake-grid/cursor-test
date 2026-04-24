@@ -144,6 +144,14 @@ describe("App", () => {
       fireEvent.click(workflowsButton);
       expect(screen.getByText("WorkflowList")).toBeInTheDocument();
     });
+    it("should keep WorkflowTabs mounted while list view is shown", () => {
+      renderApp();
+      fireEvent.click(screen.getByText("Workflows"));
+      expect(screen.getByText("WorkflowList")).toBeInTheDocument();
+      // Regression: unmounting WorkflowTabs on list caused other tabs' workflows to disappear
+      // after opening a workflow from the list (remount + effect ordering).
+      expect(screen.getByText("WorkflowTabs")).toBeInTheDocument();
+    });
     it("should switch back to builder view when Builder button is clicked", async () => {
       renderApp();
       const workflowsButton = screen.getByText("Workflows");

@@ -21,6 +21,7 @@ import {
   WS_CLOSE_REASONS,
   WS_RECONNECT,
   WS_CLIENT_PING_INTERVAL_MS,
+  WS_STREAM_SESSION_HINT,
 } from "./websocketConstants";
 import { extractApiErrorMessage } from "./apiUtils";
 import {
@@ -43,6 +44,7 @@ class WebSocketConnectionManager {
     __publicField(this, "isConnectedState", false);
     __publicField(this, "reconnectionStrategy");
     __publicField(this, "clientPingInterval", null);
+    __publicField(this, "streamSessionHintSentForExecution", false);
     this.lastKnownStatus = config.executionStatus;
     this.reconnectionStrategy =
       config.reconnectionStrategy ?? new ExponentialBackoffStrategy();
@@ -81,7 +83,11 @@ class WebSocketConnectionManager {
    * Single Responsibility: Only updates execution ID
    */
   updateExecutionId(executionId) {
+    const prev = this.config.executionId;
     this.config.executionId = executionId;
+    if (prev !== executionId) {
+      this.streamSessionHintSentForExecution = false;
+    }
     this.resetReconnectAttempts();
   }
   /**
@@ -134,7 +140,19 @@ class WebSocketConnectionManager {
    * Single Responsibility: Only sets up handlers
    */
   setupEventHandlers(ws, callbacks, wsUrl) {
+    let socketReachedOpen = false;
+    const maybeNotifyStreamSessionHint = () => {
+      if (socketReachedOpen === true) {
+        return;
+      }
+      if (this.streamSessionHintSentForExecution === true) {
+        return;
+      }
+      this.streamSessionHintSentForExecution = true;
+      callbacks.onError?.(WS_STREAM_SESSION_HINT);
+    };
     ws.onopen = () => {
+      socketReachedOpen = true;
       this.config.logger.debug(
         `[WebSocket] Connected to execution ${this.config.executionId}`,
       );
@@ -175,16 +193,15 @@ class WebSocketConnectionManager {
         error,
         "Unknown WebSocket error",
       );
+      const ready = getWebSocketStateText(ws.readyState);
       this.config.logger.error(
-        `[WebSocket] Connection error for execution ${this.config.executionId}:`,
-        {
-          message: errorMessage,
-          readyState: getWebSocketStateText(ws.readyState),
-          url: wsUrl,
-        },
+        `[WebSocket] Connection error for execution ${this.config.executionId}: ${errorMessage} readyState=${ready} url=${wsUrl} (if upgrade was rejected, check Java logs for "WebSocket handshake rejected" — wrong/missing token, execution not visible yet, or stale session after a DB reset; user hint: log out and log in again)`,
       );
       this.isConnectedState = false;
       callbacks.onStatus?.(WS_STATUS.ERROR);
+      if (socketReachedOpen === false && ws.readyState === WebSocket.CLOSED) {
+        maybeNotifyStreamSessionHint();
+      }
     };
     ws.onclose = (event) => {
       if (this.clientPingInterval != null) {
@@ -192,15 +209,23 @@ class WebSocketConnectionManager {
         this.clientPingInterval = null;
       }
       const reason = getCloseReason(event);
-      this.config.logger.debug(
-        `[WebSocket] Disconnected from execution ${this.config.executionId}`,
-        {
-          code: event.code,
-          reason,
-          wasClean: event.wasClean,
-          reconnectAttempts: this.reconnectAttempts,
-        },
-      );
+      const detail = `code=${event.code} reason=${reason} wasClean=${event.wasClean} reconnectAttempts=${this.reconnectAttempts}`;
+      if (event.wasClean === true) {
+        this.config.logger.debug(
+          `[WebSocket] Disconnected from execution ${this.config.executionId} ${detail}`,
+        );
+      } else {
+        this.config.logger.warn(
+          `[WebSocket] Unclean disconnect execution ${this.config.executionId} ${detail}`,
+        );
+      }
+      if (
+        socketReachedOpen === false &&
+        event.wasClean === false &&
+        event.code === WS_CLOSE_CODES.ABNORMAL_CLOSURE
+      ) {
+        maybeNotifyStreamSessionHint();
+      }
       this.ws = null;
       this.isConnectedState = false;
       callbacks.onStatus?.(WS_STATUS.DISCONNECTED);

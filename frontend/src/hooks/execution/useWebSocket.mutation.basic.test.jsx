@@ -565,12 +565,9 @@ describe("useWebSocket - mutation.basic", () => {
         wsInstances[0].onerror(errorEvent);
         await advanceTimersByTime(50);
         expect(logger.error).toHaveBeenCalledWith(
-          "[WebSocket] Connection error for execution exec-1:",
-          expect.objectContaining({
-            message: expect.any(String),
-            readyState: expect.any(String),
-            url: expect.stringContaining("exec-1"),
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=.*exec-1/,
+          ),
         );
       }
     });
@@ -730,10 +727,9 @@ describe("useWebSocket - mutation.basic", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("Disconnected from execution exec-1"),
-          expect.objectContaining({
-            reason: "No reason provided",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Disconnected from execution exec-1.*reason=No reason provided/,
+          ),
         );
       }
     });

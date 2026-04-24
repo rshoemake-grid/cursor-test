@@ -28,6 +28,9 @@ const WS_CLOSE_REASONS = {
   EXECUTION_COMPLETED: "Execution completed",
   NO_REASON_PROVIDED: "No reason provided",
 };
+/** Shown when the socket never opens (e.g. HTTP 403 on upgrade: stale JWT userId vs execution owner). */
+const WS_STREAM_SESSION_HINT =
+  "Could not open the live execution stream. Log out and log in again to refresh your session.";
 export {
   EXECUTION_STATUS,
   WS_CLIENT_PING_INTERVAL_MS,
@@ -35,4 +38,5 @@ export {
   WS_CLOSE_REASONS,
   WS_RECONNECT,
   WS_STATUS,
+  WS_STREAM_SESSION_HINT,
 };

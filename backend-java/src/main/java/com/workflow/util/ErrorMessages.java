@@ -44,7 +44,11 @@ public final class ErrorMessages {
     public static final String INVALID_JSON = "Invalid JSON";
     public static final String INVALID_REQUEST_BODY = "Invalid request body";
     public static final String VALIDATION_FAILED = "Validation failed";
-    public static final String LLM_RESPONSE_INVALID_STRUCTURE = "LLM response missing expected structure (choices[0].message.content)";
+    /**
+     * Base message when the HTTP body is not in the shape this client parses. Details (API error text,
+     * Gemini blockReason, etc.) are appended by {@link com.workflow.engine.WebClientLlmApiClient}.
+     */
+    public static final String LLM_RESPONSE_INVALID_STRUCTURE = "Could not parse LLM response";
     public static final String LLM_CONFIG_REQUIRED_AGENT = "LLM config required for agent nodes";
     public static final String NO_LLM_PROVIDER_CONFIGURED = "No LLM provider configured. Please configure an LLM provider in Settings.";
     public static final String NO_LLM_PROVIDER_CONFIGURED_EXECUTION = "No LLM provider configured. Please configure an LLM provider in Settings before executing workflows.";
@@ -133,20 +137,36 @@ public final class ErrorMessages {
 
     /**
      * User-visible execution failure detail for persisted state / WebSocket (trimmed, capped).
+     * Walks {@link Throwable#getCause()} when the top throwable has no usable message (common for
+     * {@code new IllegalStateException(cause.getMessage(), cause)} when the cause message is null).
      */
     public static String executionFailureDetail(Throwable throwable) {
         if (throwable == null) {
             return EXECUTION_FAILED;
         }
-        String msg = throwable.getMessage();
-        if (msg != null && !msg.isBlank()) {
-            return truncateExecutionDetail(msg.trim());
+        String fromChain = firstNonBlankMessageInCauseChain(throwable);
+        if (fromChain != null) {
+            return truncateExecutionDetail(fromChain);
         }
         String simple = throwable.getClass().getSimpleName();
         if (simple != null && !simple.isBlank()) {
             return truncateExecutionDetail(simple);
         }
         return EXECUTION_FAILED;
+    }
+
+    private static final int EXECUTION_FAILURE_CAUSE_CHAIN_MAX_DEPTH = 16;
+
+    private static String firstNonBlankMessageInCauseChain(Throwable t) {
+        Throwable x = t;
+        for (int depth = 0; x != null && depth < EXECUTION_FAILURE_CAUSE_CHAIN_MAX_DEPTH; depth++) {
+            String msg = x.getMessage();
+            if (msg != null && !msg.isBlank()) {
+                return msg.trim();
+            }
+            x = x.getCause();
+        }
+        return null;
     }
 
     private static String truncateExecutionDetail(String s) {

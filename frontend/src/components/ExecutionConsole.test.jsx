@@ -4,6 +4,11 @@ import { AuthProvider } from "../contexts/AuthContext";
 import ExecutionConsole from "./ExecutionConsole";
 import { useWebSocket } from "../hooks/execution";
 import { logger } from "../utils/logger";
+import { invalidateStoredSessionAndBroadcastUnauthorized } from "../api/client";
+import { WS_STREAM_SESSION_HINT } from "../hooks/utils/websocketConstants";
+jest.mock("../api/client", () => ({
+  invalidateStoredSessionAndBroadcastUnauthorized: jest.fn(),
+}));
 jest.mock("../hooks/execution", () => ({
   useWebSocket: jest.fn(),
   useWorkflowExecution: jest.fn(),
@@ -324,6 +329,20 @@ describe("ExecutionConsole", () => {
       "WebSocket error",
     );
     expect(logger.error).toHaveBeenCalled();
+  });
+  it("should invalidate session when WebSocket reports stale stream (redirect to login)", () => {
+    let onErrorCallback;
+    mockUseWebSocket.mockImplementation((config) => {
+      onErrorCallback = config.onError;
+      return {};
+    });
+    renderWithAuth(
+      <ExecutionConsole
+        {...ec({ activeWorkflowId: "workflow-1", executions: [mockExecution], activeExecutionId: "exec-123", onExecutionStatusUpdate: mockOnExecutionStatusUpdate })}
+      />,    );
+    onErrorCallback(WS_STREAM_SESSION_HINT);
+    expect(invalidateStoredSessionAndBroadcastUnauthorized).toHaveBeenCalled();
+    expect(mockOnExecutionStatusUpdate).not.toHaveBeenCalled();
   });
   it.skip("should close execution tab", async () => {});
   it.skip("should switch to chat when closing active execution tab", async () => {

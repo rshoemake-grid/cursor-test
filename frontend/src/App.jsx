@@ -235,7 +235,17 @@ function AuthenticatedLayout() {
   /** Index route only. WorkflowTabsProvider wraps all routes in Main so tab state survives /settings, /marketplace, etc. */
   const renderIndexContent = () => (
     <>
-      {currentView === "builder" && (
+      {/*
+        Keep WorkflowTabs mounted while browsing the list (or execution) so tab rows, draft
+        flush cleanups, and useTabInitialization do not tear down all builders — that was
+        clearing or losing other tabs' workflows after opening one from the list.
+      */}
+      <div
+        style={{
+          display: currentView === "builder" ? "contents" : "none",
+        }}
+        aria-hidden={currentView !== "builder"}
+      >
         <CanvasClipboardProvider>
           <WorkflowTabs
             initialWorkflowId={selectedWorkflowId}
@@ -243,7 +253,7 @@ function AuthenticatedLayout() {
             onExecutionStart={handleExecutionStart}
           />
         </CanvasClipboardProvider>
-      )}
+      </div>
       {currentView === "list" && (
         <WorkflowList
           onSelectWorkflow={handleSelectWorkflow}

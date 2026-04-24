@@ -318,10 +318,9 @@ describe("useWebSocket - edges.comprehensive.3", () => {
           ws.simulateClose(1e3, "", true);
           await advanceTimersByTime(50);
           expect(logger.debug).toHaveBeenCalledWith(
-            expect.stringContaining("[WebSocket] Disconnected"),
-            expect.objectContaining({
-              reason: "No reason provided",
-            }),
+            expect.stringMatching(
+              /\[WebSocket\] Disconnected from execution exec-1.*reason=No reason provided/,
+            ),
           );
         }
       });
@@ -337,10 +336,9 @@ describe("useWebSocket - edges.comprehensive.3", () => {
           ws.simulateClose(1e3, "Normal closure", true);
           await advanceTimersByTime(50);
           expect(logger.debug).toHaveBeenCalledWith(
-            expect.stringContaining("[WebSocket] Disconnected"),
-            expect.objectContaining({
-              reason: "Normal closure",
-            }),
+            expect.stringMatching(
+              /\[WebSocket\] Disconnected from execution exec-1.*reason=Normal closure/,
+            ),
           );
         }
       });

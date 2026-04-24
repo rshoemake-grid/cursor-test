@@ -55,6 +55,21 @@ function dispatchUnauthorized() {
   }
 }
 
+/**
+ * Clears persisted auth and broadcasts {@code auth:unauthorized} so {@link AuthSessionRedirect}
+ * sends the user to the login page (same end state as HTTP 401 from {@link createFetchClient}).
+ */
+function invalidateStoredSessionAndBroadcastUnauthorized(
+  adapters = {},
+) {
+  const local =
+    adapters.localStorage ?? defaultAdapters.createLocalStorageAdapter();
+  const session =
+    adapters.sessionStorage ?? defaultAdapters.createSessionStorageAdapter();
+  clearAuthStorage(local, session);
+  dispatchUnauthorized();
+}
+
 function buildAuthHeaders(local, session) {
   const headers = { Accept: "application/json" };
   if (!local || !session) {
@@ -361,4 +376,9 @@ function createApiClient(options) {
 
 const api = createApiClient();
 
-export { api, createApiClient, createFetchClient };
+export {
+  api,
+  createApiClient,
+  createFetchClient,
+  invalidateStoredSessionAndBroadcastUnauthorized,
+};

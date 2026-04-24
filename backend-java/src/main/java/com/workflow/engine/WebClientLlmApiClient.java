@@ -232,11 +232,16 @@ public class WebClientLlmApiClient implements LlmApiClient {
 
     private static String parseAnthropicText(Map<?, ?> response) {
         if (response == null) {
-            throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+            throw new IllegalArgumentException(
+                    ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE + " (Anthropic messages).");
         }
+        failIfProviderError(response, "Anthropic messages");
         Object content = response.get("content");
         if (!(content instanceof List<?> list) || list.isEmpty()) {
-            throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+            throw new IllegalArgumentException(
+                    ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE
+                            + " (Anthropic messages: expected content[0].text)."
+                            + providerErrorSuffix(response));
         }
         Object first = list.get(0);
         if (first instanceof Map<?, ?> block) {
@@ -245,56 +250,140 @@ public class WebClientLlmApiClient implements LlmApiClient {
                 return text.toString();
             }
         }
-        throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+        throw new IllegalArgumentException(
+                ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE
+                        + " (Anthropic messages: expected content[0].text)."
+                        + providerErrorSuffix(response));
     }
 
     private static String parseGeminiText(Map<?, ?> response) {
         if (response == null) {
-            throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+            throw new IllegalArgumentException(
+                    ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE + " (Gemini :generateContent).");
         }
+        failIfProviderError(response, "Gemini :generateContent");
         Object c = response.get("candidates");
         if (!(c instanceof List<?> list) || list.isEmpty()) {
-            throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+            throw new IllegalArgumentException(
+                    ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE
+                            + " (Gemini :generateContent: no candidates; model may have blocked or refused the prompt)."
+                            + geminiPromptFeedbackSuffix(response)
+                            + providerErrorSuffix(response));
         }
         Object cand = list.get(0);
         if (!(cand instanceof Map<?, ?> cm)) {
-            throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+            throw new IllegalArgumentException(
+                    ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE
+                            + " (Gemini :generateContent: invalid candidates[0])."
+                            + providerErrorSuffix(response));
         }
         Object content = cm.get("content");
         if (!(content instanceof Map<?, ?> contentMap)) {
-            throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+            throw new IllegalArgumentException(
+                    ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE
+                            + " (Gemini :generateContent: missing candidates[0].content)."
+                            + providerErrorSuffix(response));
         }
         Object parts = contentMap.get("parts");
         if (!(parts instanceof List<?> plist) || plist.isEmpty()) {
-            throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+            throw new IllegalArgumentException(
+                    ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE
+                            + " (Gemini :generateContent: empty content.parts)."
+                            + providerErrorSuffix(response));
         }
-        Object p0 = plist.get(0);
-        if (!(p0 instanceof Map<?, ?> pm)) {
-            throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+        StringBuilder sb = new StringBuilder();
+        for (Object p : plist) {
+            if (p instanceof Map<?, ?> pm) {
+                Object text = pm.get("text");
+                if (text != null) {
+                    sb.append(text);
+                }
+            }
         }
-        Object text = pm.get("text");
-        return text != null ? text.toString() : "";
+        return sb.toString();
     }
 
     private static ChatCompletionRound parseChatResponse(Map<?, ?> response) {
         if (response == null) {
-            throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+            throw new IllegalArgumentException(
+                    ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE + " (OpenAI-compatible chat/completions).");
         }
+        failIfProviderError(response, "OpenAI-compatible chat/completions");
         Object choices = response.get("choices");
         if (!(choices instanceof List<?> list) || list.isEmpty()) {
-            throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+            if (response.get("candidates") != null) {
+                throw new IllegalArgumentException(
+                        ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE
+                                + " (OpenAI-compatible chat/completions: response contains \"candidates\" instead of \"choices\"."
+                                + " Use provider type \"gemini\" for the Google Generative Language API, or a /.../openai chat URL for Gemini's OpenAI adapter.)"
+                                + providerErrorSuffix(response)
+                                + geminiPromptFeedbackSuffix(response));
+            }
+            throw new IllegalArgumentException(
+                    ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE
+                            + " (OpenAI-compatible chat/completions: missing or empty \"choices\")."
+                            + providerErrorSuffix(response));
         }
         Object first = list.get(0);
         if (!(first instanceof Map<?, ?> choice)) {
-            throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+            throw new IllegalArgumentException(
+                    ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE
+                            + " (OpenAI-compatible chat/completions: choices[0] not an object)."
+                            + providerErrorSuffix(response));
         }
         Object msg = choice.get("message");
         if (!(msg instanceof Map<?, ?> message)) {
-            throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
+            throw new IllegalArgumentException(
+                    ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE
+                            + " (OpenAI-compatible chat/completions: missing choices[0].message)."
+                            + providerErrorSuffix(response));
         }
         String content = normalizeMessageContent(message.get("content"));
         List<ToolCallSpec> toolCalls = parseToolCalls(message);
         return new ChatCompletionRound(content, toolCalls);
+    }
+
+    /** Throws if the body includes a top-level {@code error} object (OpenAI / Google JSON APIs). */
+    private static void failIfProviderError(Map<?, ?> response, String apiLabel) {
+        Object err = response.get("error");
+        if (!(err instanceof Map<?, ?> em)) {
+            return;
+        }
+        Object msg = em.get("message");
+        if (msg != null && !msg.toString().isBlank()) {
+            throw new IllegalArgumentException("LLM API error (" + apiLabel + "): " + msg);
+        }
+        Object code = em.get("code");
+        Object status = em.get("status");
+        if (code != null || status != null) {
+            throw new IllegalArgumentException(
+                    "LLM API error (" + apiLabel + "): code=" + code + ", status=" + status);
+        }
+    }
+
+    private static String providerErrorSuffix(Map<?, ?> response) {
+        Object err = response.get("error");
+        if (err instanceof Map<?, ?> em) {
+            Object msg = em.get("message");
+            if (msg != null && !msg.toString().isBlank()) {
+                return " Provider: " + msg;
+            }
+        }
+        return "";
+    }
+
+    private static String geminiPromptFeedbackSuffix(Map<?, ?> response) {
+        Object pf = response.get("promptFeedback");
+        if (!(pf instanceof Map<?, ?> m)) {
+            return "";
+        }
+        Object br = m.get("blockReason");
+        if (br != null && !br.toString().isBlank()) {
+            Object brm = m.get("blockReasonMessage");
+            String extra = brm != null && !brm.toString().isBlank() ? " (" + brm + ")" : "";
+            return " blockReason=" + br + extra;
+        }
+        return "";
     }
 
     private static String normalizeMessageContent(Object content) {

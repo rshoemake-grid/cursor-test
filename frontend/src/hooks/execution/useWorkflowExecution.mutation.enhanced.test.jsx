@@ -304,19 +304,112 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
   });
   describe("handleConfirmExecute - Independent Condition Testing", () => {
     describe("if (!workflowIdToExecute) condition", () => {
-      it("should verify exact falsy check - workflowIdToExecute is null", async () => {
+      it("uses localWorkflowId when ref is null (stale ref after save)", async () => {
+        workflowIdRef.current = null;
+        const execImpl = jest.fn().mockResolvedValue(void 0);
+        WorkflowExecutionService.mockImplementation(() => ({
+          parseExecutionInputs: jest.fn((inputs) => JSON.parse(inputs)),
+          createTempExecutionId: jest.fn(() => "temp-exec-123"),
+          executeWorkflow: execImpl,
+        }));
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: "workflow-1",
+            workflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          }),
+        );
+        act(() => {
+          result.current.setExecutionInputs('{"key": "value"}');
+        });
+        await act(async () => {
+          await result.current.handleConfirmExecute();
+        });
+        expect(mockShowError).not.toHaveBeenCalledWith(
+          "Workflow must be saved before executing.",
+        );
+        expect(execImpl).toHaveBeenCalledWith(
+          expect.objectContaining({ workflowId: "workflow-1" }),
+        );
+        expect(result.current.isExecuting).toBe(false);
+      });
+      it("uses localWorkflowId when ref is undefined (stale ref after save)", async () => {
+        workflowIdRef.current = void 0;
+        const execImpl = jest.fn().mockResolvedValue(void 0);
+        WorkflowExecutionService.mockImplementation(() => ({
+          parseExecutionInputs: jest.fn((inputs) => JSON.parse(inputs)),
+          createTempExecutionId: jest.fn(() => "temp-exec-123"),
+          executeWorkflow: execImpl,
+        }));
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: "workflow-1",
+            workflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          }),
+        );
+        act(() => {
+          result.current.setExecutionInputs('{"key": "value"}');
+        });
+        await act(async () => {
+          await result.current.handleConfirmExecute();
+        });
+        expect(mockShowError).not.toHaveBeenCalledWith(
+          "Workflow must be saved before executing.",
+        );
+        expect(execImpl).toHaveBeenCalledWith(
+          expect.objectContaining({ workflowId: "workflow-1" }),
+        );
+        expect(result.current.isExecuting).toBe(false);
+      });
+      it("uses localWorkflowId when ref is empty string", async () => {
+        workflowIdRef.current = "";
+        const execImpl = jest.fn().mockResolvedValue(void 0);
+        WorkflowExecutionService.mockImplementation(() => ({
+          parseExecutionInputs: jest.fn((inputs) => JSON.parse(inputs)),
+          createTempExecutionId: jest.fn(() => "temp-exec-123"),
+          executeWorkflow: execImpl,
+        }));
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: "workflow-1",
+            workflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          }),
+        );
+        act(() => {
+          result.current.setExecutionInputs('{"key": "value"}');
+        });
+        await act(async () => {
+          await result.current.handleConfirmExecute();
+        });
+        expect(mockShowError).not.toHaveBeenCalledWith(
+          "Workflow must be saved before executing.",
+        );
+        expect(execImpl).toHaveBeenCalledWith(
+          expect.objectContaining({ workflowId: "workflow-1" }),
+        );
+        expect(result.current.isExecuting).toBe(false);
+      });
+      it("errors when both ref and localWorkflowId are missing", async () => {
         workflowIdRef.current = null;
         const { result } = renderHook(() =>
           useWorkflowExecution({
             isAuthenticated: true,
-            localWorkflowId: "workflow-1",
+            localWorkflowId: null,
             workflowIdRef,
             saveWorkflow: mockSaveWorkflow,
             onExecutionStart: mockOnExecutionStart,
           }),
         );
         act(() => {
-          result.current.setExecutionInputs('{"key": "value"}');
+          result.current.setExecutionInputs("{}");
         });
         await act(async () => {
           await result.current.handleConfirmExecute();
@@ -324,54 +417,6 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
         expect(mockShowError).toHaveBeenCalledWith(
           "Workflow must be saved before executing.",
         );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          "[WorkflowBuilder] No workflow ID found - workflow must be saved",
-        );
-        expect(result.current.isExecuting).toBe(false);
-      });
-      it("should verify exact falsy check - workflowIdToExecute is undefined", async () => {
-        workflowIdRef.current = void 0;
-        const { result } = renderHook(() =>
-          useWorkflowExecution({
-            isAuthenticated: true,
-            localWorkflowId: "workflow-1",
-            workflowIdRef,
-            saveWorkflow: mockSaveWorkflow,
-            onExecutionStart: mockOnExecutionStart,
-          }),
-        );
-        act(() => {
-          result.current.setExecutionInputs('{"key": "value"}');
-        });
-        await act(async () => {
-          await result.current.handleConfirmExecute();
-        });
-        expect(mockShowError).toHaveBeenCalledWith(
-          "Workflow must be saved before executing.",
-        );
-        expect(result.current.isExecuting).toBe(false);
-      });
-      it("should verify exact falsy check - workflowIdToExecute is empty string", async () => {
-        workflowIdRef.current = "";
-        const { result } = renderHook(() =>
-          useWorkflowExecution({
-            isAuthenticated: true,
-            localWorkflowId: "workflow-1",
-            workflowIdRef,
-            saveWorkflow: mockSaveWorkflow,
-            onExecutionStart: mockOnExecutionStart,
-          }),
-        );
-        act(() => {
-          result.current.setExecutionInputs('{"key": "value"}');
-        });
-        await act(async () => {
-          await result.current.handleConfirmExecute();
-        });
-        expect(mockShowError).toHaveBeenCalledWith(
-          "Workflow must be saved before executing.",
-        );
-        expect(result.current.isExecuting).toBe(false);
       });
       it("should verify exact falsy check - workflowIdToExecute is truthy", async () => {
         workflowIdRef.current = "workflow-1";

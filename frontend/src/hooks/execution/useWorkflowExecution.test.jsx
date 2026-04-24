@@ -293,7 +293,7 @@ describe("useWorkflowExecution", () => {
       const { result } = renderHook(() =>
         useWorkflowExecution({
           isAuthenticated: true,
-          localWorkflowId: "workflow-id",
+          localWorkflowId: null,
           workflowIdRef: { current: null },
           saveWorkflow: mockSaveWorkflow,
           onExecutionStart: mockOnExecutionStart,
@@ -676,7 +676,7 @@ describe("useWorkflowExecution", () => {
       const { result } = renderHook(() =>
         useWorkflowExecution({
           isAuthenticated: true,
-          localWorkflowId: "workflow-id",
+          localWorkflowId: null,
           workflowIdRef: { current: null },
           // No workflow ID
           saveWorkflow: mockSaveWorkflow,
@@ -1633,7 +1633,7 @@ describe("useWorkflowExecution", () => {
       const { result } = renderHook(() =>
         useWorkflowExecution({
           isAuthenticated: true,
-          localWorkflowId: "workflow-id",
+          localWorkflowId: null,
           workflowIdRef: { current: null },
           saveWorkflow: mockSaveWorkflow,
           onExecutionStart: mockOnExecutionStart,
@@ -1826,7 +1826,7 @@ describe("useWorkflowExecution", () => {
       const { result } = renderHook(() =>
         useWorkflowExecution({
           isAuthenticated: true,
-          localWorkflowId: "workflow-id",
+          localWorkflowId: null,
           workflowIdRef: mockWorkflowIdRef,
           saveWorkflow: mockSaveWorkflow,
           onExecutionStart: mockOnExecutionStart,
@@ -2226,7 +2226,7 @@ describe("useWorkflowExecution", () => {
       const { result } = renderHook(() =>
         useWorkflowExecution({
           isAuthenticated: true,
-          localWorkflowId: "workflow-id",
+          localWorkflowId: null,
           workflowIdRef: mockWorkflowIdRef,
           saveWorkflow: mockSaveWorkflow,
           onExecutionStart: mockOnExecutionStart,
@@ -2553,7 +2553,7 @@ describe("useWorkflowExecution", () => {
       const { result } = renderHook(() =>
         useWorkflowExecution({
           isAuthenticated: true,
-          localWorkflowId: "workflow-id",
+          localWorkflowId: null,
           workflowIdRef: mockWorkflowIdRef,
           saveWorkflow: mockSaveWorkflow,
           onExecutionStart: mockOnExecutionStart,
@@ -2816,7 +2816,7 @@ describe("useWorkflowExecution", () => {
       const { result } = renderHook(() =>
         useWorkflowExecution({
           isAuthenticated: true,
-          localWorkflowId: "workflow-id",
+          localWorkflowId: null,
           workflowIdRef: mockWorkflowIdRef,
           saveWorkflow: mockSaveWorkflow,
           onExecutionStart: mockOnExecutionStart,
@@ -3973,7 +3973,7 @@ describe("useWorkflowExecution", () => {
         const { result } = renderHook(() =>
           useWorkflowExecution({
             isAuthenticated: true,
-            localWorkflowId: "workflow-id",
+            localWorkflowId: null,
             workflowIdRef: mockWorkflowIdRef,
             saveWorkflow: mockSaveWorkflow,
             onExecutionStart: mockOnExecutionStart,
@@ -5833,7 +5833,7 @@ describe("useWorkflowExecution", () => {
         const { result } = renderHook(() =>
           useWorkflowExecution({
             isAuthenticated: true,
-            localWorkflowId: "workflow-1",
+            localWorkflowId: null,
             workflowIdRef: { current: null },
             saveWorkflow: mockSaveWorkflow,
           }),

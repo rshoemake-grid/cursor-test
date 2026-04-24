@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useState,
   useRef,
   forwardRef,
@@ -171,9 +172,6 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
     saveDraftsToStorageRef.current = draftManagement.saveDraftsToStorage;
   }, [draftManagement.saveDraftsToStorage]);
   const lastLoadedWorkflowIdRef = useRef(null);
-  useEffect(() => {
-    workflowIdRef.current = localWorkflowId;
-  }, [localWorkflowId]);
   const { saveWorkflow, exportWorkflow } = useWorkflowPersistence({
     isAuthenticated,
     localWorkflowId,
@@ -188,6 +186,9 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
     setIsSaving,
   });
   const workflowIdRef = useRef(workflowId);
+  useLayoutEffect(() => {
+    workflowIdRef.current = localWorkflowId;
+  }, [localWorkflowId]);
   const execution = useWorkflowExecution({
     isAuthenticated,
     localWorkflowId,
@@ -201,9 +202,6 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
       execution.showInputs,
     );
   }, [execution.showInputs]);
-  useEffect(() => {
-    workflowIdRef.current = localWorkflowId;
-  }, [localWorkflowId]);
   const clearWorkflow = useCallback(() => {
     const variableCount =
       variables !== null &&

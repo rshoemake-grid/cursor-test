@@ -26,7 +26,10 @@ jest.mock("../utils/logger", () => ({
   },
 }));
 
-import { createApiClient } from "./client";
+import {
+  createApiClient,
+  invalidateStoredSessionAndBroadcastUnauthorized,
+} from "./client";
 import { defaultAdapters } from "../types/adapters";
 import { STORAGE_KEYS } from "../config/constants";
 
@@ -239,5 +242,32 @@ describe("createApiClient (fetch)", () => {
       expect.stringMatching(/\/api\/workflow-chat\/chat$/),
       expect.objectContaining({ method: "POST" }),
     );
+  });
+});
+
+describe("invalidateStoredSessionAndBroadcastUnauthorized", () => {
+  it("clears auth storage and dispatches auth:unauthorized", () => {
+    const spy = jest
+      .spyOn(window, "dispatchEvent")
+      .mockImplementation(() => true);
+    const local = {
+      removeItem: jest.fn(),
+      getItem: jest.fn(() => null),
+    };
+    const session = {
+      removeItem: jest.fn(),
+      getItem: jest.fn(() => null),
+    };
+    invalidateStoredSessionAndBroadcastUnauthorized({
+      localStorage: local,
+      sessionStorage: session,
+    });
+    expect(local.removeItem).toHaveBeenCalledWith(STORAGE_KEYS.AUTH_TOKEN);
+    expect(local.removeItem).toHaveBeenCalledWith(STORAGE_KEYS.AUTH_USER);
+    expect(session.removeItem).toHaveBeenCalledWith(STORAGE_KEYS.AUTH_TOKEN);
+    expect(spy).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "auth:unauthorized" }),
+    );
+    spy.mockRestore();
   });
 });

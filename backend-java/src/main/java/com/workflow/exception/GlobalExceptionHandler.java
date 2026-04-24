@@ -88,13 +88,26 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadable(
             HttpMessageNotReadableException e, HttpServletRequest request) {
-        String message = e.getMessage() != null && e.getMessage().contains("JSON")
-                ? ErrorMessages.INVALID_JSON
-                : ErrorMessages.INVALID_REQUEST_BODY;
+        boolean jsonish =
+                e.getMessage() != null
+                        && (e.getMessage().contains("JSON")
+                                || e.getMessage().contains("json"));
+        String message =
+                jsonish ? ErrorMessages.INVALID_JSON : ErrorMessages.INVALID_REQUEST_BODY;
+        if (!EnvironmentUtils.isProduction(environment)) {
+            Throwable root = e.getMostSpecificCause();
+            if (root != null && root.getMessage() != null && !root.getMessage().equals(e.getMessage())) {
+                String hint = root.getMessage();
+                if (hint.length() > 400) {
+                    hint = hint.substring(0, 400) + "…";
+                }
+                message = message + " — " + hint;
+            }
+        }
         if (EnvironmentUtils.isProduction(environment)) {
             log.debug("Bad request (malformed JSON/body): {}", message);
         } else {
-            log.warn("Bad request (malformed JSON/body): {} — {}", message, e.getMessage());
+            log.warn("Bad request (malformed JSON/body): {}", message, e);
         }
         return ErrorResponseBuilder.badRequest(message, getRequestPath(request));
     }

@@ -13,9 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -51,7 +48,13 @@ public class ExecutionOrchestratorService {
         this.workflowExecutor = workflowExecutor;
     }
 
-    @Transactional
+    /**
+     * Not transactional as a whole: {@link ExecutionCreationService#validateAndCreate} runs in its own
+     * transaction and commits before this method schedules {@link #runExecutionInBackground}. A single outer
+     * {@code @Transactional} previously held the commit until after the async task could start and until after
+     * the HTTP response — clients could open the execution WebSocket before the row was visible, causing
+     * handshake rejection ("execution not found or not stream-authorized").
+     */
     public ExecutionResponse executeWorkflow(String workflowId, String userId, ExecutionRequest request) {
         Execution execution = executionCreationService.validateAndCreate(workflowId, userId);
         String executionId = execution.getId();

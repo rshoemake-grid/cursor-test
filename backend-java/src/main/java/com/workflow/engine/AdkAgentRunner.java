@@ -1,10 +1,10 @@
 package com.workflow.engine;
 
 import com.google.adk.agents.LlmAgent;
+import com.google.adk.agents.RunConfig;
 import com.google.adk.events.Event;
 import com.google.adk.models.BaseLlm;
 import com.google.adk.models.Gemini;
-import com.google.adk.models.VertexCredentials;
 import com.google.adk.runner.InMemoryRunner;
 import com.google.adk.tools.GoogleSearchTool;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -122,8 +122,13 @@ public class AdkAgentRunner implements AdkRunner {
 
         Content message = Content.builder().role("user").parts(Part.fromText(userText)).build();
 
+        // ADK 0.7: RunConfig.builder() defaults autoCreateSession=false; runAsync(user, sessionId, msg) then
+        // requires the session to already exist and fails with "Session not found: ...". One-shot workflow
+        // runs must create the session on first use.
+        RunConfig runConfig = RunConfig.builder().setAutoCreateSession(true).build();
+
         try {
-            List<Event> events = runner.runAsync(userId, sessionId, message).toList().blockingGet();
+            List<Event> events = runner.runAsync(userId, sessionId, message, runConfig).toList().blockingGet();
             String text = AdkEventTextExtractor.extractAssistantText(events);
             if (text.isEmpty()) {
                 log.warn(
@@ -188,13 +193,17 @@ public class AdkAgentRunner implements AdkRunner {
                                             new IllegalStateException(
                                                     "Vertex project id missing: set GOOGLE_CLOUD_PROJECT or project_id in ADC JSON."));
             String location = LlmVertexGeminiSupport.resolveLocationForModel(environment, modelName);
-            VertexCredentials vc =
-                    VertexCredentials.builder()
-                            .setProject(project)
-                            .setLocation(location)
-                            .setCredentials(credentials)
+            // ADK's Gemini(model, VertexCredentials) builds google-genai Client without vertexAI(true); with
+            // project/location set that triggers "Gemini API do not support project/location." Build explicitly.
+            Client genaiClient =
+                    Client.builder()
+                            .credentials(credentials)
+                            .project(project)
+                            .location(location)
+                            .vertexAI(true)
+                            .httpOptions(HttpOptions.builder().build())
                             .build();
-            return Gemini.builder().modelName(modelName).vertexCredentials(vc).build();
+            return Gemini.builder().modelName(modelName).apiClient(genaiClient).build();
         } catch (IOException e) {
             throw new IllegalStateException("Failed to load Application Default Credentials for Vertex (ADK).", e);
         }

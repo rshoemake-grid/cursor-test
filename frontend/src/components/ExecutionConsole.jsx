@@ -15,6 +15,8 @@ import { coalesceString } from "../utils/nullCoalescing";
 import { LOG_LEVELS } from "../constants/stringLiterals";
 import { isValidExecutionStatus } from "../utils/executionStatus";
 import { deriveExecutionCompletionFromWsResult } from "../hooks/utils/wsExecutionCompletion";
+import { WS_STREAM_SESSION_HINT } from "../hooks/utils/websocketConstants";
+import { invalidateStoredSessionAndBroadcastUnauthorized } from "../api/client";
 import { ConsoleEmptyState } from "../styles/contentBlocks.styled";
 import {
   ConsoleRoot,
@@ -313,6 +315,10 @@ function ExecutionConsole({
     },
     onError: (error) => {
       logger.error("[ExecutionConsole] WebSocket error:", error);
+      if (error === WS_STREAM_SESSION_HINT) {
+        invalidateStoredSessionAndBroadcastUnauthorized();
+        return;
+      }
       const workflowId = activeWorkflowIdRef.current;
       const executionId = activeExecutionIdRef.current;
       const callback = onExecutionStatusUpdateRef.current;

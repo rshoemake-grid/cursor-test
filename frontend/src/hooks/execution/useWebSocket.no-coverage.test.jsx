@@ -269,10 +269,9 @@ describe("useWebSocket - No Coverage Paths", () => {
             wasClean: true,
           });
           expect(logger.debug).toHaveBeenCalledWith(
-            expect.stringContaining("[WebSocket] Disconnected"),
-            expect.objectContaining({
-              reason: expect.any(String),
-            }),
+            expect.stringMatching(
+              /\[WebSocket\] Disconnected from execution exec-123.*reason=/,
+            ),
           );
         }
       }
@@ -293,10 +292,9 @@ describe("useWebSocket - No Coverage Paths", () => {
           const error = new Error("Test error");
           ws.onerror(error);
           expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining("[WebSocket] Connection error"),
-            expect.objectContaining({
-              message: "Test error",
-            }),
+            expect.stringMatching(
+              /\[WebSocket\] Connection error for execution exec-123:.*Test error/,
+            ),
           );
         }
       }
@@ -315,10 +313,9 @@ describe("useWebSocket - No Coverage Paths", () => {
           const error = { message: "Test error" };
           ws.onerror(error);
           expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining("[WebSocket] Connection error"),
-            expect.objectContaining({
-              message: expect.any(String),
-            }),
+            expect.stringMatching(
+              /\[WebSocket\] Connection error for execution exec-123:/,
+            ),
           );
         }
       }
@@ -337,34 +334,30 @@ describe("useWebSocket - No Coverage Paths", () => {
           ws.readyState = 0;
           ws.onerror(new Error("Test"));
           expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining("[WebSocket] Connection error"),
-            expect.objectContaining({
-              readyState: "CONNECTING",
-            }),
+            expect.stringMatching(
+              /\[WebSocket\] Connection error for execution exec-123:.*readyState=CONNECTING/,
+            ),
           );
           ws.readyState = 1;
           ws.onerror(new Error("Test"));
           expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining("[WebSocket] Connection error"),
-            expect.objectContaining({
-              readyState: "OPEN",
-            }),
+            expect.stringMatching(
+              /\[WebSocket\] Connection error for execution exec-123:.*readyState=OPEN/,
+            ),
           );
           ws.readyState = 2;
           ws.onerror(new Error("Test"));
           expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining("[WebSocket] Connection error"),
-            expect.objectContaining({
-              readyState: "CLOSING",
-            }),
+            expect.stringMatching(
+              /\[WebSocket\] Connection error for execution exec-123:.*readyState=CLOSING/,
+            ),
           );
           ws.readyState = 3;
           ws.onerror(new Error("Test"));
           expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining("[WebSocket] Connection error"),
-            expect.objectContaining({
-              readyState: "CLOSED",
-            }),
+            expect.stringMatching(
+              /\[WebSocket\] Connection error for execution exec-123:.*readyState=CLOSED/,
+            ),
           );
         }
       }

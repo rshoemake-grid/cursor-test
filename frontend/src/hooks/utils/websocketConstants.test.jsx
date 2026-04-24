@@ -3,6 +3,7 @@ import {
   WS_STATUS,
   WS_RECONNECT,
   WS_CLOSE_REASONS,
+  WS_STREAM_SESSION_HINT,
 } from "./websocketConstants";
 describe("websocketConstants", () => {
   describe("WS_CLOSE_CODES", () => {
@@ -51,6 +52,12 @@ describe("websocketConstants", () => {
     });
     it("should be readonly (const assertion)", () => {
       expect(WS_RECONNECT.BASE_DELAY).toBe(1e3);
+    });
+  });
+  describe("WS_STREAM_SESSION_HINT", () => {
+    it("should tell the user to log in again", () => {
+      expect(WS_STREAM_SESSION_HINT).toContain("Log out");
+      expect(WS_STREAM_SESSION_HINT).toContain("log in again");
     });
   });
   describe("WS_CLOSE_REASONS", () => {

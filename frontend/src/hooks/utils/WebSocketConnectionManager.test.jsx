@@ -16,6 +16,7 @@ import {
   WS_CLOSE_CODES,
   EXECUTION_STATUS,
   WS_CLIENT_PING_INTERVAL_MS,
+  WS_STREAM_SESSION_HINT,
 } from "./websocketConstants";
 const _MockWebSocket = class _MockWebSocket {
   constructor(url) {
@@ -68,6 +69,39 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
     jest.useRealTimers();
   });
   describe("Reconnection Timeout Guards", () => {
+    it("should call onError with session hint once when socket never opens (1006)", () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: "exec-hint",
+        maxReconnectAttempts: 2,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: "ws:", host: "localhost:8000" },
+        getAuthToken: () => "tok",
+        logger: mockLogger,
+      });
+      manager.connect(callbacks);
+      act(() => {
+        jest.advanceTimersByTime(20);
+      });
+      const ws = manager.ws;
+      expect(ws).toBeTruthy();
+      if (ws && ws.onclose) {
+        ws.onclose(
+          new CloseEvent("close", { code: WS_CLOSE_CODES.ABNORMAL_CLOSURE, wasClean: false }),
+        );
+      }
+      expect(callbacks.onError).toHaveBeenCalledWith(WS_STREAM_SESSION_HINT);
+      const callsAfterFirstClose = callbacks.onError.mock.calls.length;
+      act(() => {
+        jest.advanceTimersByTime(20000);
+      });
+      const ws2 = manager.ws;
+      if (ws2 && ws2.onclose) {
+        ws2.onclose(
+          new CloseEvent("close", { code: WS_CLOSE_CODES.ABNORMAL_CLOSURE, wasClean: false }),
+        );
+      }
+      expect(callbacks.onError.mock.calls.length).toBe(callsAfterFirstClose);
+    });
     it("should stop reconnecting after max attempts", () => {
       const manager = new WebSocketConnectionManager({
         executionId: "exec-123",

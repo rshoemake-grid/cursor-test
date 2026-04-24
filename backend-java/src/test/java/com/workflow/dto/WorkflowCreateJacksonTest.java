@@ -1,5 +1,6 @@
 package com.workflow.dto;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,8 @@ class WorkflowCreateJacksonTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
+        // Match strict HTTP Jackson setups: frontend may send palette-only fields (e.g. tool_config).
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
     }
 
     @Test
@@ -59,5 +62,32 @@ class WorkflowCreateJacksonTest {
         assertEquals(NodeType.DATABASE, created.getNodes().get(0).getType());
         assertEquals(NodeType.FIREBASE, created.getNodes().get(1).getType());
         assertEquals(NodeType.BIGQUERY, created.getNodes().get(2).getType());
+    }
+
+    @Test
+    void deserialize_workflowWithToolConfigOnNode_succeeds() throws Exception {
+        String json =
+                """
+                {
+                  "name": "Tool parity",
+                  "description": "",
+                  "nodes": [
+                    {
+                      "id": "t1",
+                      "type": "tool",
+                      "name": "Calc",
+                      "position": { "x": 0, "y": 0 },
+                      "inputs": [],
+                      "tool_config": { "toolName": "calculator" }
+                    }
+                  ],
+                  "edges": [],
+                  "variables": {}
+                }
+                """;
+        WorkflowCreate created = objectMapper.readValue(json, WorkflowCreate.class);
+        assertNotNull(created);
+        assertEquals(1, created.getNodes().size());
+        assertEquals(NodeType.TOOL, created.getNodes().get(0).getType());
     }
 }

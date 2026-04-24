@@ -102,7 +102,16 @@ function useWorkflowExecution({
         "\u2705 Execution starting...\n\nCheck the console at the bottom of the screen to watch it run.",
         6e3,
       );
-      const workflowIdToExecute = workflowIdRef.current;
+      // Prefer ref (updated after effects) but fall back to localWorkflowId: right after
+      // saveWorkflow() sets state, the ref may not have run useLayoutEffect/useEffect yet,
+      // which blocked execution tabs from appearing (onExecutionStart never ran with a valid id).
+      const refId = workflowIdRef.current;
+      const workflowIdToExecute =
+        refId != null && refId !== ""
+          ? refId
+          : localWorkflowId != null && localWorkflowId !== ""
+            ? localWorkflowId
+            : null;
       logger.debug(
         "[WorkflowBuilder] Workflow ID to execute:",
         workflowIdToExecute,
@@ -134,6 +143,7 @@ function useWorkflowExecution({
   }, [
     executionInputs,
     workflowIdRef,
+    localWorkflowId,
     onExecutionStart,
     api,
     logger,

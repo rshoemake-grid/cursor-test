@@ -1,5 +1,6 @@
 package com.workflow.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -18,6 +19,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowCreate {
     @NotBlank(message = "Workflow name is required")
     @Size(min = 1, max = 255, message = "Workflow name must be between 1 and 255 characters")

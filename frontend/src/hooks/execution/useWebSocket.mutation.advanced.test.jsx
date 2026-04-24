@@ -374,10 +374,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("Disconnected from execution exec-1"),
-          expect.objectContaining({
-            reason: "No reason provided",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Disconnected from execution exec-1.*reason=No\ reason\ provided/,
+          ),
         );
       }
     });
@@ -399,10 +398,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("Disconnected from execution exec-1"),
-          expect.objectContaining({
-            reason: "Normal closure",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Disconnected from execution exec-1.*reason=Normal\ closure/,
+          ),
         );
       }
     });
@@ -656,10 +654,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            readyState: "CONNECTING",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=CONNECTING/,
+          ),
         );
       }
     });
@@ -678,10 +675,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            readyState: "OPEN",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=OPEN/,
+          ),
         );
       }
     });
@@ -700,10 +696,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            readyState: "CLOSING",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=CLOSING/,
+          ),
         );
       }
     });
@@ -722,10 +717,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            readyState: "CLOSED",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=CLOSED/,
+          ),
         );
       }
     });
@@ -744,10 +738,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            readyState: "UNKNOWN",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=UNKNOWN/,
+          ),
         );
       }
     });
@@ -768,10 +761,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            message: "Test error",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*Test error/,
+          ),
         );
       }
     });
@@ -784,16 +776,15 @@ describe("useWebSocket - mutation.advanced", () => {
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
         const ws = wsInstances[0];
-        const error = { message: "Not an Error instance" };
+        const error = {};
         await act(async () => {
           ws.simulateError(error);
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            message: "Unknown WebSocket error",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*Unknown WebSocket error/,
+          ),
         );
       }
     });
@@ -1296,10 +1287,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            readyState: "CONNECTING",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=CONNECTING/,
+          ),
         );
       }
     });
@@ -1325,10 +1315,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            readyState: "OPEN",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=OPEN/,
+          ),
         );
       }
     });
@@ -1350,10 +1339,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            readyState: "CLOSING",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=CLOSING/,
+          ),
         );
       }
     });
@@ -1375,10 +1363,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            readyState: "CLOSED",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=CLOSED/,
+          ),
         );
       }
     });
@@ -1401,10 +1388,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            readyState: "UNKNOWN",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=UNKNOWN/,
+          ),
         );
       }
     });
@@ -1423,10 +1409,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            message: "Test error message",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*Test error message/,
+          ),
         );
       }
     });
@@ -1439,16 +1424,15 @@ describe("useWebSocket - mutation.advanced", () => {
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
         const ws = wsInstances[0];
-        const error = { message: "Not an Error" };
+        const error = {};
         await act(async () => {
           ws.simulateError(error);
           await advanceTimersByTime(50);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Connection error for execution exec-1"),
-          expect.objectContaining({
-            message: "Unknown WebSocket error",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*Unknown WebSocket error/,
+          ),
         );
       }
     });
@@ -2720,10 +2704,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("Disconnected from execution exec-1"),
-          expect.objectContaining({
-            reason: "No reason provided",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Disconnected from execution exec-1.*reason=No\ reason\ provided/,
+          ),
         );
       }
     });
@@ -2746,10 +2729,9 @@ describe("useWebSocket - mutation.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("Disconnected from execution exec-1"),
-          expect.objectContaining({
-            reason: "X",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Disconnected from execution exec-1.*reason=X/,
+          ),
         );
       }
     });
@@ -3042,16 +3024,9 @@ describe("useWebSocket - mutation.advanced", () => {
             await advanceTimersByTime(50);
           });
           expect(logger.debug).toHaveBeenCalledWith(
-            expect.stringContaining("Disconnected from execution exec-1"),
-            expect.objectContaining({
-              reason: "No reason provided",
-            }),
-          );
-          expect(logger.debug).not.toHaveBeenCalledWith(
-            expect.anything(),
-            expect.objectContaining({
-              reason: "no reason provided",
-            }),
+            expect.stringMatching(
+              /\[WebSocket\] Disconnected from execution exec-1.*reason=No reason provided/,
+            ),
           );
         }
       });
@@ -3773,12 +3748,12 @@ describe("useWebSocket - mutation.advanced", () => {
             });
             const debugCalls = logger.debug.mock.calls;
             const noReasonCall = debugCalls.find(
-              (call) => call[1] && call[1].reason === "No reason provided",
+              (call) =>
+                call[0] &&
+                typeof call[0] === "string" &&
+                call[0].includes("reason=No reason provided"),
             );
             expect(noReasonCall).toBeDefined();
-            if (noReasonCall) {
-              expect(noReasonCall[1].reason).toBe("No reason provided");
-            }
           }
         });
         it('should verify exact string literal "Failed to create WebSocket connection"', async () => {
@@ -3839,10 +3814,9 @@ describe("useWebSocket - mutation.advanced", () => {
               await advanceTimersByTime(50);
             });
             expect(logger.error).toHaveBeenCalledWith(
-              expect.stringContaining("Connection error"),
-              expect.objectContaining({
-                readyState: "CONNECTING",
-              }),
+              expect.stringMatching(
+                /\[WebSocket\] Connection error for execution exec-1:.*readyState=CONNECTING/,
+              ),
             );
           }
         });
@@ -3866,10 +3840,9 @@ describe("useWebSocket - mutation.advanced", () => {
               await advanceTimersByTime(50);
             });
             expect(logger.error).toHaveBeenCalledWith(
-              expect.stringContaining("Connection error"),
-              expect.objectContaining({
-                readyState: "OPEN",
-              }),
+              expect.stringMatching(
+                /\[WebSocket\] Connection error for execution exec-1:.*readyState=OPEN/,
+              ),
             );
           }
         });
@@ -3889,10 +3862,9 @@ describe("useWebSocket - mutation.advanced", () => {
               await advanceTimersByTime(50);
             });
             expect(logger.error).toHaveBeenCalledWith(
-              expect.stringContaining("Connection error"),
-              expect.objectContaining({
-                readyState: "CLOSING",
-              }),
+              expect.stringMatching(
+                /\[WebSocket\] Connection error for execution exec-1:.*readyState=CLOSING/,
+              ),
             );
           }
         });
@@ -3912,10 +3884,9 @@ describe("useWebSocket - mutation.advanced", () => {
               await advanceTimersByTime(50);
             });
             expect(logger.error).toHaveBeenCalledWith(
-              expect.stringContaining("Connection error"),
-              expect.objectContaining({
-                readyState: "CLOSED",
-              }),
+              expect.stringMatching(
+                /\[WebSocket\] Connection error for execution exec-1:.*readyState=CLOSED/,
+              ),
             );
           }
         });
@@ -3935,10 +3906,9 @@ describe("useWebSocket - mutation.advanced", () => {
               await advanceTimersByTime(50);
             });
             expect(logger.error).toHaveBeenCalledWith(
-              expect.stringContaining("Connection error"),
-              expect.objectContaining({
-                readyState: "UNKNOWN",
-              }),
+              expect.stringMatching(
+                /\[WebSocket\] Connection error for execution exec-1:.*readyState=UNKNOWN/,
+              ),
             );
           }
         });
@@ -4054,10 +4024,9 @@ describe("useWebSocket - mutation.advanced", () => {
               await advanceTimersByTime(50);
             });
             expect(logger.debug).toHaveBeenCalledWith(
-              expect.stringContaining("Disconnected"),
-              expect.objectContaining({
-                reason: "Custom reason",
-              }),
+              expect.stringMatching(
+                /\[WebSocket\] Disconnected from execution exec-1.*reason=Custom reason/,
+              ),
             );
           }
         });
@@ -4114,14 +4083,13 @@ describe("useWebSocket - mutation.advanced", () => {
             await act(async () => {
               ws.simulateOpen();
               await advanceTimersByTime(50);
-              ws.simulateError({ message: "Not an Error instance" });
+              ws.simulateError({});
               await advanceTimersByTime(50);
             });
             expect(logger.error).toHaveBeenCalledWith(
-              expect.stringContaining("Connection error"),
-              expect.objectContaining({
-                message: "Unknown WebSocket error",
-              }),
+              expect.stringMatching(
+                /\[WebSocket\] Connection error for execution exec-1:.*Unknown WebSocket error/,
+              ),
             );
           }
         });

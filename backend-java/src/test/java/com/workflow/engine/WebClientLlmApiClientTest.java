@@ -8,7 +8,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WebClientLlmApiClientTest {
@@ -80,5 +84,77 @@ class WebClientLlmApiClientTest {
         RecordedRequest req = server.takeRequest();
         assertTrue(req.getPath().startsWith("/v1beta/models/gemini-pro:generateContent"));
         assertTrue(req.getPath().contains(":generateContent"));
+    }
+
+    @Test
+    void chatCompletions_whenBodyHasOpenAiError_throwsWithMessage() {
+        server.enqueue(
+                new MockResponse()
+                        .setBody("{\"error\":{\"message\":\"model not found\",\"type\":\"invalid_request\"}}")
+                        .addHeader("Content-Type", "application/json"));
+
+        String base = server.url("/v1").toString();
+        WebClientLlmApiClient client = new WebClientLlmApiClient(webClient, null);
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                client.chatCompletions(
+                                        base,
+                                        "sk",
+                                        "missing-model",
+                                        List.of(Map.of("role", "user", "content", "hi"))));
+        assertTrue(ex.getMessage().contains("model not found"));
+    }
+
+    @Test
+    void chatCompletions_whenBodyLooksLikeGeminiNative_throwsHelpfulHint() {
+        server.enqueue(
+                new MockResponse()
+                        .setBody("{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"x\"}]}}]}")
+                        .addHeader("Content-Type", "application/json"));
+
+        String base = server.url("/v1").toString();
+        WebClientLlmApiClient client = new WebClientLlmApiClient(webClient, null);
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                client.chatCompletions(
+                                        base, "sk", "m", List.of(Map.of("role", "user", "content", "hi"))));
+        assertTrue(ex.getMessage().contains("candidates"));
+        assertTrue(ex.getMessage().contains("choices"));
+    }
+
+    @Test
+    void chatGemini_concatenatesTextFromMultipleParts() throws Exception {
+        server.enqueue(
+                new MockResponse()
+                        .setBody(
+                                "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"a\"},{\"text\":\"b\"}]}}]}")
+                        .addHeader("Content-Type", "application/json"));
+
+        String base = server.url("/v1beta").toString();
+        WebClientLlmApiClient client = new WebClientLlmApiClient(webClient, null);
+        String out = client.chatGemini(base, "k", "gemini-pro", "", "hi", 32, 0.1);
+        assertEquals("ab", out);
+    }
+
+    @Test
+    void chatGemini_whenNoCandidates_includesBlockReason() {
+        server.enqueue(
+                new MockResponse()
+                        .setBody(
+                                "{\"promptFeedback\":{\"blockReason\":\"SAFETY\"},\"usageMetadata\":{\"totalTokenCount\":1}}")
+                        .addHeader("Content-Type", "application/json"));
+
+        String base = server.url("/v1beta").toString();
+        WebClientLlmApiClient client = new WebClientLlmApiClient(webClient, null);
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> client.chatGemini(base, "k", "gemini-pro", "", "bad", 32, 0.1));
+        assertTrue(ex.getMessage().contains("blockReason"));
+        assertTrue(ex.getMessage().contains("SAFETY"));
     }
 }

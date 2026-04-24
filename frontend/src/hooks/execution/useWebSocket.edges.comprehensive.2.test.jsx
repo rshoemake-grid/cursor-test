@@ -105,14 +105,9 @@ describe("useWebSocket - edges.comprehensive.2", () => {
         ws.simulateClose(1e3, "Test reason", true);
         await advanceTimersByTime(50);
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "Disconnected from execution exec-disconnect-test",
+          expect.stringMatching(
+            /\[WebSocket\] Disconnected from execution exec-disconnect-test.*reason=Test reason/,
           ),
-          expect.objectContaining({
-            code: 1e3,
-            reason: "Test reason",
-            wasClean: true,
-          }),
         );
       }
     });
@@ -231,8 +226,10 @@ describe("useWebSocket - edges.comprehensive.2", () => {
           call[0]?.includes("Connection error"),
         );
         expect(errorCalls.length).toBeGreaterThan(0);
-        if (errorCalls.length > 0 && errorCalls[0][1]) {
-          expect(errorCalls[0][1].message).toBeDefined();
+        if (errorCalls.length > 0) {
+          expect(String(errorCalls[0][0])).toMatch(
+            /\[WebSocket\] Connection error for execution/,
+          );
         }
       }
     });
@@ -401,8 +398,10 @@ describe("useWebSocket - edges.comprehensive.2", () => {
           call[0]?.includes("Connection error"),
         );
         expect(errorCalls.length).toBeGreaterThan(0);
-        if (errorCalls.length > 0 && errorCalls[0][1]) {
-          expect(errorCalls[0][1].message).toBeDefined();
+        if (errorCalls.length > 0) {
+          expect(String(errorCalls[0][0])).toMatch(
+            /\[WebSocket\] Connection error for execution/,
+          );
         }
       }
     });
@@ -430,8 +429,8 @@ describe("useWebSocket - edges.comprehensive.2", () => {
           call[0]?.includes("Connection error"),
         );
         expect(errorCalls.length).toBeGreaterThan(0);
-        if (errorCalls.length > 0 && errorCalls[0][1]) {
-          expect(errorCalls[0][1].message).toBe("Unknown WebSocket error");
+        if (errorCalls.length > 0) {
+          expect(String(errorCalls[0][0])).toContain("Unknown WebSocket error");
         }
       }
     });
@@ -458,8 +457,8 @@ describe("useWebSocket - edges.comprehensive.2", () => {
           call[0]?.includes("Connection error"),
         );
         expect(errorCalls.length).toBeGreaterThan(0);
-        if (errorCalls.length > 0 && errorCalls[0][1]) {
-          expect(errorCalls[0][1].message).toBe("Unknown WebSocket error");
+        if (errorCalls.length > 0) {
+          expect(String(errorCalls[0][0])).toContain("Unknown WebSocket error");
         }
       }
     });
@@ -612,8 +611,11 @@ describe("useWebSocket - edges.comprehensive.2", () => {
         ws.simulateClose(1e3, "Test reason", true);
         await advanceTimersByTime(50);
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining(`Disconnected from execution ${executionId}`),
-          expect.any(Object),
+          expect.stringMatching(
+            new RegExp(
+              `\\[WebSocket\\] Disconnected from execution ${executionId}.*reason=Test reason`,
+            ),
+          ),
         );
       }
     });
@@ -808,10 +810,11 @@ describe("useWebSocket - edges.comprehensive.2", () => {
         ws.simulateError(new Error("Test error"));
         await advanceTimersByTime(50);
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `Connection error for execution ${executionId}:`,
+          expect.stringMatching(
+            new RegExp(
+              `\\[WebSocket\\] Connection error for execution ${executionId}:.*Unknown WebSocket error`,
+            ),
           ),
-          expect.any(Object),
         );
       }
     });

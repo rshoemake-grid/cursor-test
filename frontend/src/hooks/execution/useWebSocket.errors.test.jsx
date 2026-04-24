@@ -31,14 +31,9 @@ describe("useWebSocket - errors", () => {
         wsInstances[0].setReadyState(MockWebSocket.CONNECTING);
         wsInstances[0].simulateError(new Error("Connection failed"));
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "[WebSocket] Connection error for execution exec-1:",
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=.*url=/,
           ),
-          expect.objectContaining({
-            message: expect.any(String),
-            readyState: expect.any(String),
-            url: expect.any(String),
-          }),
         );
       }
     });
@@ -122,10 +117,9 @@ describe("useWebSocket - errors", () => {
         ws.simulateError(nonError);
         await advanceTimersByTime(50);
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("[WebSocket] Connection error"),
-          expect.objectContaining({
-            message: "Unknown WebSocket error",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*Unknown WebSocket error/,
+          ),
         );
       }
     });
@@ -190,10 +184,9 @@ describe("useWebSocket - errors", () => {
         ws.simulateClose(1e3, "Custom reason", true);
         await advanceTimersByTime(50);
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("[WebSocket] Disconnected"),
-          expect.objectContaining({
-            reason: "Custom reason",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Disconnected from execution exec-1.*reason=Custom reason/,
+          ),
         );
       }
     });
@@ -209,10 +202,9 @@ describe("useWebSocket - errors", () => {
         ws.simulateClose(1e3, "", true);
         await advanceTimersByTime(50);
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("[WebSocket] Disconnected"),
-          expect.objectContaining({
-            reason: "No reason provided",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Disconnected from execution exec-1.*reason=No reason provided/,
+          ),
         );
       }
     });

@@ -1144,10 +1144,9 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           const error = new Error("WebSocket error");
           wsInstances[0].onerror(error);
           expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining("[WebSocket] Connection error"),
-            expect.objectContaining({
-              message: "WebSocket error",
-            }),
+            expect.stringMatching(
+              /\[WebSocket\] Connection error for execution exec-1:.*WebSocket error/,
+            ),
           );
         }
       });
@@ -1162,10 +1161,9 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           const errorEvent = { toString: () => "Unknown error" };
           wsInstances[0].onerror(errorEvent);
           expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining("[WebSocket] Connection error"),
-            expect.objectContaining({
-              message: "Unknown WebSocket error",
-            }),
+            expect.stringMatching(
+              /\[WebSocket\] Connection error for execution exec-1:.*Unknown WebSocket error/,
+            ),
           );
         }
       });
@@ -1195,9 +1193,7 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             call[0]?.includes("[WebSocket] Disconnected"),
           );
           if (disconnectCall) {
-            expect(disconnectCall[1]).toMatchObject({
-              reason: "No reason provided",
-            });
+            expect(String(disconnectCall[0])).toContain("reason=No reason provided");
           }
         }
       });
@@ -1630,10 +1626,9 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(100);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("[WebSocket] Connection error"),
-          expect.objectContaining({
-            readyState: "CONNECTING",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=CONNECTING/,
+          ),
         );
       });
       it("should verify exact wsState === WebSocket.OPEN", async () => {
@@ -1657,10 +1652,9 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(100);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("[WebSocket] Connection error"),
-          expect.objectContaining({
-            readyState: "OPEN",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=OPEN/,
+          ),
         );
       });
       it("should verify exact wsState === WebSocket.CLOSING", async () => {
@@ -1684,10 +1678,9 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(100);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("[WebSocket] Connection error"),
-          expect.objectContaining({
-            readyState: "CLOSING",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=CLOSING/,
+          ),
         );
       });
       it("should verify exact wsState === WebSocket.CLOSED", async () => {
@@ -1711,10 +1704,9 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(100);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("[WebSocket] Connection error"),
-          expect.objectContaining({
-            readyState: "CLOSED",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=CLOSED/,
+          ),
         );
       });
       it("should verify exact wsState === WebSocket.CLOSED - unknown state", async () => {
@@ -1738,10 +1730,9 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(100);
         });
         expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining("[WebSocket] Connection error"),
-          expect.objectContaining({
-            readyState: "UNKNOWN",
-          }),
+          expect.stringMatching(
+            /\[WebSocket\] Connection error for execution exec-1:.*readyState=UNKNOWN/,
+          ),
         );
       });
     });
