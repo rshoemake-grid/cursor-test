@@ -39,7 +39,11 @@ jest.mock("../hooks/storage", () => ({
   getLocalStorageItem: jest.fn(() => ({})),
   setLocalStorageItem: jest.fn(),
   useAutoSave: jest.fn(),
-  useDraftManagement: jest.fn(),
+  useDraftManagement: jest.fn(() => ({
+    saveDraftsToStorage: jest.fn(),
+  })),
+  loadDraftsFromStorage: jest.fn(() => ({})),
+  shouldApplyDraftCanvas: jest.fn(() => false),
 }));
 jest.mock("./NodePanel", () => {
   const { jsx } = require("react/jsx-runtime");

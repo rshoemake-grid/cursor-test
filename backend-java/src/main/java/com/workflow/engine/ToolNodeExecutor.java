@@ -5,6 +5,7 @@ import com.workflow.dto.NodeType;
 
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -16,7 +17,16 @@ public class ToolNodeExecutor implements NodeExecutor {
 
     @Override
     public Optional<NodeType> getSupportedType() {
-        return Optional.of(NodeType.TOOL);
+        return Optional.empty();
+    }
+
+    @Override
+    public List<NodeType> getSupportedTypes() {
+        return List.of(
+                NodeType.TOOL,
+                NodeType.DATABASE,
+                NodeType.FIREBASE,
+                NodeType.BIGQUERY);
     }
 
     @Override

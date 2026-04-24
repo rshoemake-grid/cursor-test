@@ -73,6 +73,10 @@ jest.mock("@xyflow/react", () => {
     BackgroundVariant: {
       Dots: "dots",
     },
+    useReactFlow: () => ({
+      setViewport: jest.fn(),
+      fitView: jest.fn(),
+    }),
   };
 });
 jest.mock("./nodes", () => {

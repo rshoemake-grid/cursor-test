@@ -42,6 +42,17 @@ function shouldApplyDraftCanvas(draft, workflowId, tabIsUnsaved) {
   const noServerWorkflowYet = workflowId == null || workflowId === "";
   return tabIsUnsaved === true || noServerWorkflowYet;
 }
+
+function buildDraftEntryFromPersistSlice(p) {
+  return {
+    nodes: p.nodes.map(p.normalizeNodeForStorage),
+    edges: p.edges,
+    workflowId: p.localWorkflowId,
+    workflowName: p.localWorkflowName,
+    workflowDescription: p.localWorkflowDescription,
+    isUnsaved: p.tabIsUnsaved,
+  };
+}
 function useDraftManagement({
   tabDraftsRef: externalDraftsRef,
   tabId,
@@ -147,15 +158,25 @@ function useDraftManagement({
   useEffect(() => {
     const tid = tabId;
     return () => {
-      const entry = draftsRef.current[tid];
-      if (!entry) {
+      if (!hydratedRef.current) {
         return;
       }
       const so = storageOptionsRef.current;
-      const merged = loadDraftsFromStorage(so);
-      merged[tid] = entry;
-      saveDraftsToStorage(merged, so);
+      const p = persistSliceRef.current;
+      const merged = { ...loadDraftsFromStorage(so) };
+      // Normal unmount: persist live canvas. If tabId prop changed on this hook instance
+      // (tests), persistSlice may already belong to the next tab — fall back to last flushed entry.
+      if (p.tabId === tid) {
+        merged[tid] = buildDraftEntryFromPersistSlice(p);
+      } else {
+        const entry = draftsRef.current[tid];
+        if (!entry) {
+          return;
+        }
+        merged[tid] = entry;
+      }
       draftsRef.current = merged;
+      saveDraftsToStorage(merged, so);
     };
   }, [tabId, draftsRef]);
 
@@ -169,14 +190,7 @@ function useDraftManagement({
     // Read-merge-write: each WorkflowBuilder keeps its own draftsRef snapshot. Saving the whole
     // object without merging would overwrite other tabs' drafts with stale copies (multi-tab UI).
     const latest = { ...loadDraftsFromStorage(so) };
-    latest[p.tabId] = {
-      nodes: p.nodes.map(p.normalizeNodeForStorage),
-      edges: p.edges,
-      workflowId: p.localWorkflowId,
-      workflowName: p.localWorkflowName,
-      workflowDescription: p.localWorkflowDescription,
-      isUnsaved: p.tabIsUnsaved,
-    };
+    latest[p.tabId] = buildDraftEntryFromPersistSlice(p);
     draftsRef.current = latest;
     saveDraftsToStorage(latest, so);
   };

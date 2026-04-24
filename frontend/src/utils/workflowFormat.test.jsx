@@ -140,6 +140,46 @@ describe("workflowFormat utilities", () => {
       expect(result[0].input_config).toEqual({ mode: "read" });
       expect(result[0].inputs).toEqual([{ name: "input1" }]);
     });
+    it("should parse agent_config.adk_config JSON string for API (Jackson expects object)", () => {
+      const nodes = [
+        {
+          id: "agent-1",
+          type: "agent",
+          position: { x: 0, y: 0 },
+          data: {
+            name: "ADK",
+            agent_config: {
+              agent_type: "adk",
+              model: "gpt-4o-mini",
+              adk_config: '{"name":"my_agent","description":"d","instruction":"hi"}',
+            },
+            inputs: [],
+          },
+        },
+      ];
+      const result = convertNodesToWorkflowFormat(nodes);
+      expect(result[0].agent_config.adk_config).toEqual({
+        name: "my_agent",
+        description: "d",
+        instruction: "hi",
+      });
+    });
+    it("should leave agent_config unchanged when adk_config is already an object", () => {
+      const agentConfig = {
+        agent_type: "adk",
+        adk_config: { name: "x", description: "y" },
+      };
+      const nodes = [
+        {
+          id: "agent-1",
+          type: "agent",
+          position: { x: 0, y: 0 },
+          data: { name: "A", agent_config: agentConfig, inputs: [] },
+        },
+      ];
+      const result = convertNodesToWorkflowFormat(nodes);
+      expect(result[0].agent_config).toBe(agentConfig);
+    });
     it("should handle empty inputs array", () => {
       const nodes = [
         {

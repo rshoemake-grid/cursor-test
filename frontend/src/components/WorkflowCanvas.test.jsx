@@ -1,5 +1,9 @@
-import { render } from "@testing-library/react";
+import { render, act } from "@testing-library/react";
 import WorkflowCanvas from "./WorkflowCanvas";
+
+const mockSetViewport = jest.fn();
+const mockFitView = jest.fn();
+
 jest.mock("@xyflow/react", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
@@ -14,6 +18,10 @@ jest.mock("@xyflow/react", () => {
     BackgroundVariant: {
       Dots: "dots",
     },
+    useReactFlow: () => ({
+      setViewport: mockSetViewport,
+      fitView: mockFitView,
+    }),
   };
 });
 jest.mock("./nodes", () => {
@@ -78,6 +86,107 @@ describe("WorkflowCanvas", () => {
   };
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+  it("applies saved viewport via setViewport when initialViewport is valid", () => {
+    render(
+      <WorkflowCanvas
+        {...mockProps}
+        initialViewport={{ x: 10, y: -20, zoom: 1.25 }}
+        canvasVisible={true}
+      />,
+    );
+    expect(mockSetViewport).toHaveBeenCalledWith(
+      { x: 10, y: -20, zoom: 1.25 },
+      { duration: 0 },
+    );
+  });
+  it("calls fitView when there is no saved viewport and canvas is visible", () => {
+    render(<WorkflowCanvas {...mockProps} canvasVisible={true} />);
+    expect(mockFitView).toHaveBeenCalledWith({
+      padding: 0.2,
+      duration: 0,
+    });
+  });
+  it("calls fitView again when nodes hydrate from empty (server-loaded workflow)", () => {
+    const { rerender } = render(
+      <WorkflowCanvas
+        graph={{ nodes: [], edges: [], nodeExecutionStates: {} }}
+        handlers={mockHandlers}
+        canvasVisible={true}
+      />,
+    );
+    expect(mockFitView).toHaveBeenCalledTimes(1);
+    rerender(
+      <WorkflowCanvas
+        {...mockProps}
+        graph={{
+          nodes: mockNodes,
+          edges: mockEdges,
+          nodeExecutionStates: {},
+        }}
+        handlers={mockHandlers}
+        canvasVisible={true}
+      />,
+    );
+    expect(mockFitView).toHaveBeenCalledTimes(2);
+  });
+  it("runs fitView after canvas becomes visible with existing nodes (remeasure after display:none)", async () => {
+    const { rerender } = render(
+      <WorkflowCanvas
+        graph={{
+          nodes: mockNodes,
+          edges: mockEdges,
+          nodeExecutionStates: {},
+        }}
+        handlers={mockHandlers}
+        canvasVisible={false}
+      />,
+    );
+    expect(mockFitView).not.toHaveBeenCalled();
+    rerender(
+      <WorkflowCanvas
+        graph={{
+          nodes: mockNodes,
+          edges: mockEdges,
+          nodeExecutionStates: {},
+        }}
+        handlers={mockHandlers}
+        canvasVisible={true}
+      />,
+    );
+    await act(async () => {
+      await new Promise((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(resolve);
+        });
+      });
+    });
+    expect(mockFitView).toHaveBeenCalled();
+  });
+  it("does not call fitView on node count change when a saved viewport is applied", () => {
+    const { rerender } = render(
+      <WorkflowCanvas
+        graph={{ nodes: [], edges: [], nodeExecutionStates: {} }}
+        handlers={mockHandlers}
+        initialViewport={{ x: 10, y: -20, zoom: 1.25 }}
+        canvasVisible={true}
+      />,
+    );
+    expect(mockFitView).not.toHaveBeenCalled();
+    rerender(
+      <WorkflowCanvas
+        {...mockProps}
+        graph={{
+          nodes: mockNodes,
+          edges: mockEdges,
+          nodeExecutionStates: {},
+        }}
+        handlers={mockHandlers}
+        initialViewport={{ x: 10, y: -20, zoom: 1.25 }}
+        canvasVisible={true}
+      />,
+    );
+    expect(mockFitView).not.toHaveBeenCalled();
   });
   it("should render ReactFlow component", () => {
     const { getByTestId } = render(<WorkflowCanvas {...mockProps} />);

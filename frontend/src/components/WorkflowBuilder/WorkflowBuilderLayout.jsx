@@ -35,7 +35,8 @@ function WorkflowBuilderLayout({
   } = canvasHandlers;
   const { selectedNodeId, setSelectedNodeId, notifyModified } = selection;
   const { clipboardHasContent, onCopy, onCut, onPaste } = keyboard;
-  const { instanceRef, initialViewport = null } = reactFlow;
+  const { instanceRef, initialViewport = null, canvasVisible = true } =
+    reactFlow;
   const {
     activeWorkflowId,
     workflowTabId,
@@ -71,6 +72,7 @@ function WorkflowBuilderLayout({
           <ReactFlowInstanceCapture instanceRef={instanceRef} />
           <WorkflowCanvas
             initialViewport={initialViewport}
+            canvasVisible={canvasVisible}
             graph={{
               nodes,
               edges,
@@ -157,6 +159,7 @@ WorkflowBuilderLayout.propTypes = {
       y: PropTypes.number,
       zoom: PropTypes.number,
     }),
+    canvasVisible: PropTypes.bool,
   }).isRequired,
   executionConsole: PropTypes.shape({
     activeWorkflowId: nullableString,

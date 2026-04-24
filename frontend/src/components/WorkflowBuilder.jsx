@@ -48,6 +48,8 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
     workflowTabs = [],
     callbacks = {},
     initialViewport = null,
+    /** False while this tab is hidden (display:none) — canvas syncs viewport when shown. */
+    canvasVisible = true,
   },
   ref,
 ) {
@@ -74,6 +76,8 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
   const [edges, setEdges, onEdgesChangeBase] = useEdgesState([]);
   const [nodeExecutionStates] = useState({});
   const reactFlowInstanceRef = useRef(null);
+  const nodesLengthRef = useRef(0);
+  nodesLengthRef.current = nodes.length;
   const notifyModified = useCallback(() => {
     if (onWorkflowModified && !isLoadingRef.current) {
       onWorkflowModified();
@@ -243,8 +247,15 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
       exportWorkflow,
       clearWorkflow,
       getViewport: () => reactFlowInstanceRef.current?.getViewport?.() ?? null,
+      getGraphMeta: () => ({ nodeCount: nodes.length }),
     }),
-    [saveWorkflow, execution.executeWorkflow, exportWorkflow, clearWorkflow],
+    [
+      saveWorkflow,
+      execution.executeWorkflow,
+      exportWorkflow,
+      clearWorkflow,
+      nodes.length,
+    ],
   );
   const onNodesChange = useCallback(
     (changes) => {
@@ -268,6 +279,9 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
     [onEdgesChangeBase, notifyModified],
   );
   const workflowNodeToNode = workflowUpdates.workflowNodeToNode;
+  // Skip GET only when we will hydrate from a matching draft (unsaved or new tab). If the tab is
+  // "unsaved" but there is no applicable draft, we must still load from the API — otherwise the
+  // canvas stays empty (suppress + no draft branch in useDraftManagement).
   const draftForTab = tabDraftsRef.current[tabId];
   const suppressServerLoad =
     tabIsUnsaved === true &&
@@ -286,6 +300,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
     onWorkflowLoaded,
     isLoadingRef,
     lastLoadedWorkflowIdRef,
+    nodesLengthRef,
     isAuthenticated,
   });
   const applyLocalChanges = workflowUpdates.applyLocalChanges;
@@ -406,6 +421,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2(
         reactFlow={{
           instanceRef: reactFlowInstanceRef,
           initialViewport,
+          canvasVisible,
         }}
         executionConsole={{
           activeWorkflowId: localWorkflowId || null,
@@ -500,6 +516,7 @@ WorkflowBuilder.propTypes = {
     y: PropTypes.number,
     zoom: PropTypes.number,
   }),
+  canvasVisible: PropTypes.bool,
   callbacks: PropTypes.shape({
     onExecutionStart: PropTypes.func,
     onWorkflowSaved: PropTypes.func,

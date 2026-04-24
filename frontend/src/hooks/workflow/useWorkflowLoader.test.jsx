@@ -16,6 +16,7 @@ jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
+    warn: jest.fn(),
   },
 }));
 jest.mock("../../utils/notifications", () => ({
@@ -144,6 +145,7 @@ describe("useWorkflowLoader", () => {
     });
     it("should not load if workflowId matches lastLoadedWorkflowId", () => {
       mockLastLoadedWorkflowIdRef.current = "workflow-1";
+      const nodesLengthRef = { current: 2 };
       renderHook(() =>
         useWorkflowLoader({
           workflowId: "workflow-1",
@@ -158,9 +160,45 @@ describe("useWorkflowLoader", () => {
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
           lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          nodesLengthRef,
         }),
       );
       expect(api.getWorkflow).not.toHaveBeenCalled();
+    });
+    it("should refetch when lastLoaded matches but nodesLengthRef is zero", async () => {
+      mockLastLoadedWorkflowIdRef.current = "workflow-1";
+      const nodesLengthRef = { current: 0 };
+      const mockWorkflow = {
+        id: "workflow-1",
+        name: "Test",
+        description: "",
+        nodes: [{ id: "n1", type: "agent", data: {} }],
+        edges: [],
+        variables: {},
+      };
+      api.getWorkflow.mockResolvedValue(mockWorkflow);
+      renderHook(() =>
+        useWorkflowLoader({
+          workflowId: "workflow-1",
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setLocalWorkflowId: mockSetLocalWorkflowId,
+          setLocalWorkflowName: mockSetLocalWorkflowName,
+          setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+          setVariables: mockSetVariables,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          workflowNodeToNode: mockWorkflowNodeToNode,
+          onWorkflowLoaded: mockOnWorkflowLoaded,
+          isLoadingRef: mockIsLoadingRef,
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          nodesLengthRef,
+        }),
+      );
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(api.getWorkflow).toHaveBeenCalledWith("workflow-1");
+      expect(mockSetNodes).toHaveBeenCalled();
     });
     it("should not load if suppressServerLoad is true (draft is source of truth)", () => {
       renderHook(() =>

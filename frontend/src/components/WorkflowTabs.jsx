@@ -79,14 +79,22 @@ function WorkflowTabs({
       }
     }
   }, [tabs]);
-  /** Per-workflow (or per-unsaved-tab) React Flow viewport; same workflowId shares one pan/zoom. */
+  /** Per-tab React Flow viewport (pan/zoom); keyed by {@code canvasViewportStorageKey}. */
   const canvasViewportsRef = useRef(new Map());
   const setActiveTabId = useCallback(
     (nextId) => {
       if (nextId !== activeTabId) {
         const api = builderApisRef.current.get(activeTabId);
         const vp = api?.getViewport?.();
-        if (vp && activeTabId) {
+        const nodeCount = api?.getGraphMeta?.()?.nodeCount ?? 0;
+        if (
+          vp &&
+          activeTabId &&
+          nodeCount > 0 &&
+          Number.isFinite(vp.x) &&
+          Number.isFinite(vp.y) &&
+          Number.isFinite(vp.zoom)
+        ) {
           const prevTab = tabsRef.current.find((t) => t.id === activeTabId);
           if (prevTab) {
             canvasViewportsRef.current.set(canvasViewportStorageKey(prevTab), {
@@ -142,20 +150,6 @@ function WorkflowTabs({
   });
   useEffect(() => {
     const map = canvasViewportsRef.current;
-    for (const tab of tabs) {
-      const wf = tab.workflowId;
-      if (wf != null && wf !== "") {
-        const fromTab = canvasViewportStorageKey({
-          id: tab.id,
-          workflowId: null,
-        });
-        const toWf = canvasViewportStorageKey(tab);
-        if (map.has(fromTab) && fromTab !== toWf) {
-          map.set(toWf, map.get(fromTab));
-          map.delete(fromTab);
-        }
-      }
-    }
     const validKeys = new Set(tabs.map((t) => canvasViewportStorageKey(t)));
     for (const k of [...map.keys()]) {
       if (!validKeys.has(k)) {
@@ -177,6 +171,27 @@ function WorkflowTabs({
     handleWorkflowSaved,
     handleWorkflowModified,
   } = tabOperations;
+  const handleLoadWorkflowRef = useRef(handleLoadWorkflow);
+  handleLoadWorkflowRef.current = handleLoadWorkflow;
+  const workflowLoadedCallbacksRef = useRef(new Map());
+  const getWorkflowLoadedCallback = useCallback((tabId) => {
+    let fn = workflowLoadedCallbacksRef.current.get(tabId);
+    if (!fn) {
+      fn = (workflowId, name) => {
+        handleLoadWorkflowRef.current(tabId, workflowId, name);
+      };
+      workflowLoadedCallbacksRef.current.set(tabId, fn);
+    }
+    return fn;
+  }, []);
+  useEffect(() => {
+    const ids = new Set(tabs.map((t) => t.id));
+    for (const id of workflowLoadedCallbacksRef.current.keys()) {
+      if (!ids.has(id)) {
+        workflowLoadedCallbacksRef.current.delete(id);
+      }
+    }
+  }, [tabs]);
   const executionManagement = useExecutionManagement({
     tabs,
     activeTabId,
@@ -310,6 +325,7 @@ function WorkflowTabs({
           >
             <WorkflowBuilder
               ref={getBuilderRefCallback(tab.id)}
+              canvasVisible={isActive}
               initialViewport={initialVp}
               tab={{
                 tabId: tab.id,
@@ -327,37 +343,10 @@ function WorkflowTabs({
               callbacks={{
                 onExecutionStart: handleExecutionStart,
                 onWorkflowSaved: (workflowId, name) => {
-                  const tabId = tab.id;
-                  const tabOnlyKey = canvasViewportStorageKey({
-                    id: tabId,
-                    workflowId: null,
-                  });
-                  const savedKey = canvasViewportStorageKey({
-                    id: tabId,
-                    workflowId,
-                  });
-                  const api = builderApisRef.current.get(tabId);
-                  const vp =
-                    api?.getViewport?.() ??
-                    canvasViewportsRef.current.get(tabOnlyKey);
-                  if (
-                    vp != null &&
-                    Number.isFinite(vp.x) &&
-                    Number.isFinite(vp.y) &&
-                    Number.isFinite(vp.zoom)
-                  ) {
-                    canvasViewportsRef.current.set(savedKey, {
-                      x: vp.x,
-                      y: vp.y,
-                      zoom: vp.zoom,
-                    });
-                    canvasViewportsRef.current.delete(tabOnlyKey);
-                  }
-                  handleWorkflowSaved(tabId, workflowId, name);
+                  handleWorkflowSaved(tab.id, workflowId, name);
                 },
                 onWorkflowModified: () => handleWorkflowModified(tab.id),
-                onWorkflowLoaded: (workflowId, name) =>
-                  handleLoadWorkflow(tab.id, workflowId, name),
+                onWorkflowLoaded: getWorkflowLoadedCallback(tab.id),
                 onCloseWorkflow: handleCloseWorkflow,
                 onClearExecutions: handleClearExecutions,
                 onExecutionLogUpdate: handleExecutionLogUpdate,

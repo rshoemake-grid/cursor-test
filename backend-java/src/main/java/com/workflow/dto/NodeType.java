@@ -17,7 +17,11 @@ public enum NodeType {
     GCP_BUCKET("gcp_bucket"),
     AWS_S3("aws_s3"),
     GCP_PUBSUB("gcp_pubsub"),
-    LOCAL_FILESYSTEM("local_filesystem");
+    LOCAL_FILESYSTEM("local_filesystem"),
+    /** Frontend palette / React Flow types — execution uses tool pass-through until dedicated executors exist. */
+    DATABASE("database"),
+    FIREBASE("firebase"),
+    BIGQUERY("bigquery");
 
     private final String value;
 

@@ -7,6 +7,7 @@ import {
 } from "./nullCoalescing";
 import { safeGetProperty } from "./safeAccess";
 import { isDefined } from "./typeGuards";
+import { normalizeAdkConfig } from "./adkConfigUtils";
 const CONFIG_TYPES = [
   "agent_config",
   "condition_config",
@@ -61,6 +62,24 @@ function generateEdgeId(edge, sourceHandle) {
   }
   return `${edge.source}-${edge.target}`;
 }
+/**
+ * Ensures {@code agent_config.adk_config} is a plain object for PUT /api/workflows.
+ * String values (double-encoded JSON) break Jackson deserialization of {@code ADKAgentConfig}.
+ */
+function normalizeAgentConfigForApi(agentConfig) {
+  if (agentConfig == null || typeof agentConfig !== "object") {
+    return agentConfig;
+  }
+  if (!Object.prototype.hasOwnProperty.call(agentConfig, "adk_config")) {
+    return agentConfig;
+  }
+  const normalized = normalizeAdkConfig(agentConfig.adk_config);
+  if (normalized === agentConfig.adk_config) {
+    return agentConfig;
+  }
+  return { ...agentConfig, adk_config: normalized };
+}
+
 function convertEdgesToWorkflowFormat(edges) {
   return edges.map((edge) => ({
     id: edge.id,
@@ -89,7 +108,7 @@ function convertNodesToWorkflowFormat(nodes) {
         typeof node.data.description === "string"
           ? node.data.description
           : void 0,
-      agent_config: node.data.agent_config,
+      agent_config: normalizeAgentConfigForApi(node.data.agent_config),
       condition_config: node.data.condition_config,
       loop_config: node.data.loop_config,
       input_config: node.data.input_config,

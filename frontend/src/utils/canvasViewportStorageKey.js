@@ -1,19 +1,18 @@
 /**
- * Stable key for persisting React Flow pan/zoom per logical workflow.
- * Saved workflows share one viewport per {@code workflowId} (including duplicate tabs).
- * Unsaved tabs use {@code tab:${tabId}} so new drafts stay independent.
+ * Stable key for persisting React Flow pan/zoom per editor tab.
+ * Each tab keeps its own pan/zoom even when multiple tabs edit the same {@code workflowId}.
  */
 function canvasViewportStorageKey(tab) {
   if (tab == null || typeof tab !== "object") {
     return "tab:unknown";
   }
-  const wid = tab.workflowId;
-  if (wid != null && wid !== "") {
-    return `wf:${wid}`;
-  }
   const tid = tab.id;
   if (tid != null && tid !== "") {
     return `tab:${tid}`;
+  }
+  const wid = tab.workflowId;
+  if (wid != null && wid !== "") {
+    return `wf:${wid}`;
   }
   return "tab:unknown";
 }

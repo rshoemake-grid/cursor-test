@@ -26,6 +26,8 @@ function useWorkflowLoader({
   onWorkflowLoaded,
   isLoadingRef,
   lastLoadedWorkflowIdRef,
+  /** When set, duplicate-fetch skip is disabled if graph is empty (avoids stuck blank after draft/race). */
+  nodesLengthRef = null,
   isAuthenticated = true,
   showError = defaultShowError,
 }) {
@@ -51,11 +53,20 @@ function useWorkflowLoader({
       lastLoadedWorkflowIdRef.current = null;
     }
     if (workflowId && workflowId === lastLoadedWorkflowIdRef.current) {
+      const nodeCount = nodesLengthRef ? nodesLengthRef.current : null;
+      const graphLooksLoaded = nodeCount == null || nodeCount > 0;
+      if (graphLooksLoaded) {
+        logger.debug(
+          "[useWorkflowLoader] Skip fetch: already loaded in this tab",
+          { workflowId },
+        );
+        return;
+      }
       logger.debug(
-        "[useWorkflowLoader] Skip fetch: already loaded in this tab",
+        "[useWorkflowLoader] Workflow id marked loaded but graph is empty; refetching",
         { workflowId },
       );
-      return;
+      lastLoadedWorkflowIdRef.current = null;
     }
     if (workflowId) {
       if (suppressServerLoad) {
@@ -106,6 +117,15 @@ function useWorkflowLoader({
         })
         .catch((err) => {
           logger.error("Failed to load workflow:", err);
+          const status = err?.response?.status;
+          const data = err?.response?.data;
+          if (status != null || data != null) {
+            logger.error("[useWorkflowLoader] HTTP error context", {
+              workflowId,
+              status,
+              data,
+            });
+          }
           isLoadingRef.current = false;
           const detail = extractApiErrorMessage(err, "Request failed");
           showError(
@@ -133,6 +153,7 @@ function useWorkflowLoader({
     onWorkflowLoaded,
     isLoadingRef,
     lastLoadedWorkflowIdRef,
+    nodesLengthRef,
     isAuthenticated,
     showError,
   ]);
